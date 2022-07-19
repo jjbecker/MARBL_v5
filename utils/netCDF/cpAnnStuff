@@ -1,0 +1,8 @@
+ncdump -h  /DFS-L/SCRATCH/moore/abardin/archive/hdev0003/rest/4051-01-01-00000/hdev0003.pop.r.4051-01-01-00000.nc | grep PO4_OLD
+ncdump -h  /DFS-L/SCRATCH/moore/abardin/archive/hdev0003i/ocn/hist/hdev0003i.pop.h.4051-01.nc | grep TEND_PO4
+ncdump -h  /DFS-L/SCRATCH/moore/abardin/archive/hdev0003m/ocn/hist/hdev0003m.pop.h.4051.nc | grep TEND_PO4
+ncdump -h  /DFS-L/SCRATCH/moore/abardin/archive/hdev0003m2/ocn/hist/hdev0003m2.pop.h.4051.nc | grep TEND_PO4
+ncdump -h  /DFS-L/SCRATCH/moore/abardin/archive/hdev0003q4/ocn/hist/hdev0003q4.pop.h.4051-01-05.nc | grep TEND_PO4
+ncdump -h  /DFS-L/SCRATCH/moore/abardin/archive/hdev0003o/ocn/hist/hdev0003o.pop.h.4051-01-01-06912.nc | grep TEND_PO4
+ncdump -h  /DFS-L/SCRATCH/moore/abardin/archive/hdev0003o2/ocn/hist/hdev0003o2.pop.h.4051-01-01-06912.nc | grep TEND_PO4
+ncdump -h  /DFS-L/SCRATCH/moore/abardin/archive/hdev0003q4/ocn/hist/hdev0003q4.pop.h.4051-01-05.nc | grep TEND_PO4
