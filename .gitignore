@@ -1,1 +1,20 @@
 # List of untracked files to ignore
+#
+.DS_Store
+*.asv
+*.fig
+diary
+# don't check in files in Data directory into git
+Data/
+Data_GP/
+Data\ old/
+Data\ new/
+# don't check in MEX include (object code), library, or executable files
+MEX/marbl_include
+MEX/marbl_lib
+MEX/mex_marbl_driver.mexmaci64
+MEX/mex_marbl_driver.mexa64
+MEX/marbl_interface_wrapper_mod.o
+MEX/marbl_interface_wrapper_mod.mod
+# don't check in files in bak
+bak/
