@@ -5,15 +5,16 @@ function [accept,r,x0] = G(x0,Npt,c0,sim,bgc,time_series,forcing,MTM,PQ_inv)
 persistent gFileCnt x0_prev
 if isempty(gFileCnt)
     gFileCnt = 1;
-%     fprintf('call #%d to G\n', gFileCnt);
-    fprintf('first norm(x0   ) = %f\n', norm(x0         ));
+    fprintf('call #%d to G\n', gFileCnt);
+    fprintf('norm(x0         ) = %f\n', norm(x0         ));
 % checkNegAndHisto(sim, x0, 100.0, 'x0', 900);
 else
     gFileCnt = gFileCnt +1;
     fprintf('call #%d to G\n', gFileCnt);
     fprintf('norm(x0_prev    ) = %f\n', norm(x0_prev    ));
     fprintf('norm(x0         ) = %f\n', norm(x0         ));
-    fprintf('norm(x0 -x0_prev) = %.6f\n', norm(x0 -x0_prev));
+    dx0 = x0 -x0_prev;
+    fprintf('norm(x0 -x0_prev) = %.6f\n', norm(dx0) );
 end
 x0_prev = x0;
 
@@ -194,15 +195,23 @@ res_moles = res_moles(sim.selection);
 % res_moles ./ final_moles(sim.selection) *1e6
 fprintf('%s.m: Npt = %d P*dx moles   = %1.7g\n',  mfilename, Npt, res_moles);
 
-% if (0)
-%     myGfile = sprintf('%s/G_%d.mat', sim.outputRestartDir, round(gFileCnt));
-%     fprintf('%s.m: Saving "%s"...\n', mfilename,myGfile);
+if (1)
+    myGfile = sprintf('%s/G_%d.mat', sim.outputRestartDir, round(gFileCnt));
+    fprintf('%s.m: Saving "%s"...\n', mfilename,myGfile);
+    save(myGfile,'-v7.3');
+    figure(123)
+    qqplot(r)
+    figure (124)
+    plot(r)
 %     tracer = bgc.tracer;
 %     copyfile( sim.inputRestartFile, myGfile);
 %     save( myGfile, 'tracer', '-append' ); % overwrites tracer from input
-%     save( myGfile, 'c', '-append' );      % overwrites tracer from input
-%     save(myGfile,'-v7.3');
-% end
+%     save( myGfile, 'r', '-append' );      % overwrites tracer from input
+%     save( myGfile, 'x0', '-append' );      % overwrites tracer from input
+%     save( myGfile, 'x0_prev', '-append' );      % overwrites tracer from input
+%     save( myGfile, 'x0_prev', '-append' );      % overwrites tracer from input
+% Save everything in G, which is not everything in the whole sim
+end
 
 
 end % G()
