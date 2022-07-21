@@ -64,8 +64,8 @@ marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 
 start_yr = 0; 
 % inputRestartFile = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
-% start_yr = 113; inputRestartFile = 'Data_GP/restart_113.mat';
-start_yr = 4101; inputRestartFile = 'Data/InputFromAnn/restart4101.mat';
+start_yr = 113; inputRestartFile = 'Data_GP/restart_113.mat';
+% start_yr = 4101; inputRestartFile = 'Data/InputFromAnn/restart4101.mat';
 
 fprintf('%s.m: Reading OFFline input restart file with tracers and transports: %s\n', mfilename, inputRestartFile);
 load(inputRestartFile,'sim','MTM');
@@ -277,6 +277,7 @@ disp([num2str(sim.num_time_steps),' time steps, each time step is ', num2str(sim
     ' (h), simulating ', num2str(tot_t /sim.const.sec_y, '%1.3f'),' years'])
 
 bgc.tracer(sim.time_series_loc,sim.time_series_lvl,sim.selection) = 1234.567 +bgc.tracer(sim.time_series_loc,sim.time_series_lvl,sim.selection);
+% bgc.tracer(sim.time_series_loc,sim.time_series_lvl,sim.selection) = 39040 +bgc.tracer(sim.time_series_loc,sim.time_series_lvl,sim.selection);
 c0 = bgc2nsoli(sim, bgc.tracer);    % nsoli format; unitless; aka scaled FP
 sz = [ numel(sim.domain.iwet_JJ) , size(bgc.tracer,3) ];
 c = reshape(c0, sz);    
