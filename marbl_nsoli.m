@@ -276,8 +276,13 @@ tot_t = sim.dt*sim.num_time_steps;  % used only for debug output
 disp([num2str(sim.num_time_steps),' time steps, each time step is ', num2str(sim.dt/sim.const.sec_h), ...
     ' (h), simulating ', num2str(tot_t /sim.const.sec_y, '%1.3f'),' years'])
 
-bgc.tracer(sim.time_series_loc,sim.time_series_lvl,sim.selection) = 1234.567 +bgc.tracer(sim.time_series_loc,sim.time_series_lvl,sim.selection);
-% bgc.tracer(sim.time_series_loc,sim.time_series_lvl,sim.selection) = 39040 +bgc.tracer(sim.time_series_loc,sim.time_series_lvl,sim.selection);
+% DEBUG: add a known spike to see if it gets removed by Nsoli()spike_size = 1234.567;
+spike_size = 0;
+% spike_size = 1234.567;
+fprintf('\n**** %s.m: Adding a spike of %g to water parcel (%d,%d,%d) ****\n\n', mfilename, spike_size, sim.time_series_loc, sim.time_series_lvl,sim.selection);
+bgc.tracer(sim.time_series_loc,sim.time_series_lvl,sim.selection) = spike_size +bgc.tracer(sim.time_series_loc,sim.time_series_lvl,sim.selection);
+
+
 c0 = bgc2nsoli(sim, bgc.tracer);    % nsoli format; unitless; aka scaled FP
 sz = [ numel(sim.domain.iwet_JJ) , size(bgc.tracer,3) ];
 c = reshape(c0, sz);    
@@ -302,8 +307,8 @@ x0 = x0(:);             % unitless
 % 
 % % % Calculate J or load saved?
 % % if (0)
-% %     J = calc_J_full(@calc_f, packMarbl(bgc.tracer, sim.domain.iwet_JJ), sim, bgc, time_series);
-% %     Q_inv = calc_Q_inv(J, bgc, sim);
+    J = calc_J_full(@calc_f, packMarbl(bgc.tracer, sim.domain.iwet_JJ), sim, bgc, time_series);
+    Q_inv = calc_Q_inv(J, bgc, sim);
 % %     save('/Users/jj/Desktop/UCI/MARBL/MARBL_v4/J.mat','J');
 % %     save('/Users/jj/Desktop/UCI/MARBL/MARBL_v4/Q_inv.mat','Q_inv');
 % %     %     keyboard
