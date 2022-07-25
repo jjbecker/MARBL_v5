@@ -32,27 +32,24 @@ timer_total = tic;
 % Setup the big picture parts of a simulation and/or NK solution.
 % FIXME: Someday, when we know what inputs need to be, put all this a file
 
-forwardIntegrationOnly = 0;
-ck_years = 1;   % Newton-Kryrlov -requires- 1 year, but might want to run long time_step_hr = 3;
-time_step_hr = 3;
-logTracers = 0;
-
-yearsBetweenRestartFiles = 10;
-
-captureAllSelectedTracers = 0;
-selection = 0;
-
-% DEBUG stuff
-logTracers = 1;
-ck_years = 1;
-time_step_hr = 12; % FAST debug
-yearsBetweenRestartFiles = 1;
-% % time_step_hr = 6912/60/60;
 tName = tracer_names(0);    % no CISO tracers
 selection = [ ...
     %     find(strcmp(tName,'SiO3')),...
     %     find(strcmp(tName,'DIC')),...
     find( strcmp(tName,'O2') ) ];
+forwardIntegrationOnly = 0;
+ck_years = 1;   % Newton-Kryrlov -requires- 1 year, but might want to run long time_step_hr = 3;
+time_step_hr = 3;
+logTracers = 0;
+yearsBetweenRestartFiles = 1;
+captureAllSelectedTracers = 0;
+
+% DEBUG stuff
+logTracers = 1;
+% ck_years = 1;
+% time_step_hr = 12; % FAST debug
+% yearsBetweenRestartFiles = 1;
+% % time_step_hr = 6912/60/60;
 
 % captureAllSelectedTracers = 1;
 
@@ -62,9 +59,8 @@ marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 
 %%%%%% INput restart file
 
-start_yr = 0; 
-% inputRestartFile = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
-start_yr = 113; inputRestartFile = 'Data_GP/restart_113.mat';
+% start_yr = 0; inputRestartFile = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
+start_yr = 60; inputRestartFile = 'Data_GP/restart_60.mat';
 % start_yr = 4101; inputRestartFile = 'Data/InputFromAnn/restart4101.mat';
 
 fprintf('%s.m: Reading OFFline input restart file with tracers and transports: %s\n', mfilename, inputRestartFile);
@@ -307,8 +303,8 @@ x0 = x0(:);             % unitless
 % 
 % % % Calculate J or load saved?
 % % if (0)
-    J = calc_J_full(@calc_f, packMarbl(bgc.tracer, sim.domain.iwet_JJ), sim, bgc, time_series);
-    Q_inv = calc_Q_inv(J, bgc, sim);
+% %     J = calc_J_full(@calc_f, packMarbl(bgc.tracer, sim.domain.iwet_JJ), sim, bgc, time_series);
+% %     Q_inv = calc_Q_inv(J, bgc, sim);
 % %     save('/Users/jj/Desktop/UCI/MARBL/MARBL_v4/J.mat','J');
 % %     save('/Users/jj/Desktop/UCI/MARBL/MARBL_v4/Q_inv.mat','Q_inv');
 % %     %     keyboard
