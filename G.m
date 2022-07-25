@@ -7,7 +7,8 @@ if isempty(gFileCnt)
     gFileCnt = 1;
     fprintf('call #%d to G\n', gFileCnt);
     fprintf('norm(x0         ) = %f\n', norm(x0         ));
-% checkNegAndHisto(sim, x0, 100.0, 'x0', 900);
+    % checkNegAndHisto(sim, x0, 100.0, 'x0', 900);
+    figure (501); plot(x0); title('x0')
 else
     gFileCnt = gFileCnt +1;
     fprintf('call #%d to G\n', gFileCnt);
@@ -15,8 +16,10 @@ else
     fprintf('norm(x0         ) = %f\n', norm(x0         ));
     dx0 = x0 -x0_prev;
     fprintf('norm(x0 -x0_prev) = %.6f\n', norm(dx0) );
+    figure (500); plot(x0_prev); title('x0_prev', 'Interpreter', 'none')
+    figure (501); plot(x0)     ; title('x0')
+    figure (502); plot(dx0)    ; title('dx0')
 end
-x0_prev = x0;
 
 
 % Check for negative tracers
@@ -24,7 +27,7 @@ x0_prev = x0;
 accept = 1;
 % c0 = bgc2nsoli(sim, bgc.tracer);    % nsoli format; unitless; aka scaled FP
 % [~,c0] = ck_constraints(c0,-2);     % corrected any negatives
-% 
+%
 % tmp = x0;
 % [accept,x0] = ck_constraints(x0,Npt);
 % if (accept == false)
@@ -49,9 +52,9 @@ sz = [numWaterParcels, numTracers];
 x0_bgc = replaceSelectedTracers(sim, c0, x0, sim.selection);
 bgc.tracer = nsoli2bgc(sim, bgc, x0_bgc);   % marbl format
 
-    initial_moles = global_moles(bgc.tracer, sim);  % DEBUG
+initial_moles = global_moles(bgc.tracer, sim);  % DEBUG
 [sim, bgc, ~] = phi(sim, bgc, time_series, forcing, MTM);
-    final_moles = global_moles(bgc.tracer, sim);    % DEBUG
+final_moles = global_moles(bgc.tracer, sim);    % DEBUG
 
 x1_bgc = bgc2nsoli(sim, bgc.tracer); % unitless end of year values
 % checkNegAndHisto(sim, selectedTracers(sim, x1_bgc, sim.selection), 100.0, 'x', 900+gFileCnt);
@@ -72,7 +75,7 @@ r = res(:);
 % % Normal case. Plot histo of difference of starting and ending tracers.
 % %     figure(700); histogram(log10(abs(dx_selected(abs(dx_selected)>eps)))); xlabel('log10(all global mean normalized tracers'); title('G: Histogram in sim.selection x1-x0')
 % % figure(700); histogram(log10(abs(dx_selected))); xlabel('log10(all global mean normalized tracers'); title('G: Histogram in sim.selection x1-x0')
-% 
+%
 % % % Debug output
 % % if (sim.logTracers)
 % % %     small_plots(sim, time_series, sim.num_time_steps, sim.time_series_loc, sim.time_series_lvl);
@@ -82,16 +85,16 @@ r = res(:);
 % % ecdf(log10(abs(dx_selected))); grid on
 % % xlabel('log10(global mean normalized tracers');
 % % title('G: Empirical CDF in sim.selection tracers (x-x0)')
-% 
-% 
+%
+%
 % % Precondition residual...
-% 
+%
 % % Apply precondition to residual. Don't waste time preconditioning tracers
 % % not going back to nsoli. Code is a little tricky. Breaks full nsoli
 % % vector into chunks by tracer.
-% 
+%
 % % c3d = NaN(size(sim.domain.M3d));
-% 
+%
 % % keyboard
 % % for idx = 1:sz(2)
 % %
@@ -132,10 +135,10 @@ r = res(:);
 % % % Keep only tracers we are manipulating and return to nsoli format.
 % % res = res(:,sim.selection);
 % % r = res(:);
-% 
+%
 % % r = PQ_inv*(dx_selected .* sim.tracerScaleFactor);
-% 
-% 
+%
+%
 % % dx_selected = dx_selected .* sim.tracerScaleFactor;
 % % if (0)
 % %     checkSum = 0;
@@ -148,21 +151,21 @@ r = res(:);
 % %         % water parcels in col, aka number of wet levels in this column
 % %         %
 % %         % Location of these elements in nsoli vector is hard to picture...
-% % 
+% %
 % %         % Have to be very careful. "Q_inv" is not full inverse, just the
 % %         % elements of J for this column... So we can --NOT-- take whole row.
-% % 
+% %
 % %         tmp = bgc.tracer*0;
 % %         tmp(k,:,sim.selection) = 1;
 % %         idx_iCol = find(bgc2nsoli(sim,tmp));
-% % 
+% %
 % %         r(idx_iCol) = PQ_inv(idx_iCol,idx_iCol) *dTr(idx_iCol);
-% % 
+% %
 % %         % debug
 % %         checkSum    = checkSum+numel(idx_iCol);
 % %         checkIdx(idx_iCol) = 1;
 % %         max_r(k)    = max(abs(norm(r(idx_iCol))));
-% % 
+% %
 % %     end
 % %     % debug
 % %     if (nnz(checkIdx) ~= numel(dx_selected))
@@ -170,7 +173,7 @@ r = res(:);
 % %         keyboard
 % %     end
 % %     figure(51);plot(log10(max_r+eps));title('log10(max_r)', 'Interpreter', 'none');xlabel('col');
-% % 
+% %
 % % end
 
 
@@ -198,20 +201,38 @@ fprintf('%s.m: Npt = %d P*dx moles   = %1.7g\n',  mfilename, Npt, res_moles);
 if (1)
     myGfile = sprintf('%s/G_%d.mat', sim.outputRestartDir, round(gFileCnt));
     fprintf('%s.m: Saving "%s"...\n', mfilename,myGfile);
-    save(myGfile,'-v7.3');
-    figure(123)
-    qqplot(r)
-    figure (124)
-    plot(r)
-%     tracer = bgc.tracer;
-%     copyfile( sim.inputRestartFile, myGfile);
-%     save( myGfile, 'tracer', '-append' ); % overwrites tracer from input
-%     save( myGfile, 'r', '-append' );      % overwrites tracer from input
-%     save( myGfile, 'x0', '-append' );      % overwrites tracer from input
-%     save( myGfile, 'x0_prev', '-append' );      % overwrites tracer from input
-%     save( myGfile, 'x0_prev', '-append' );      % overwrites tracer from input
-% Save everything in G, which is not everything in the whole sim
+    variables = who;
+    toexclude = {'MTM'};
+    variables = variables(~ismember(variables, toexclude));
+    save(myGfile, variables{:}, '-v7.3');
+
+    figure(699); qqplot(r); title("r")
+    figure (700); plot(r); title("r")
+    figure (701); scatter(x0,r); title("r vs x0");xlabel('x0');ylabel('r')
+
+    myRng = 1:20;
+    [maxR,idxMaxR]     = sort(   (r),"descend",'MissingPlacement','last');
+    fprintf("max(r) %g\n", maxR(1));
+    [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxMaxR(myRng), sim, 702);  title('Most postive')
+
+    [minR,idxMinR]     = sort(   (r),"ascend",'MissingPlacement','last');
+    fprintf("min(r) %g\n", minR(1));
+    [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxMinR(myRng), sim, 703);  title('Most Negative')
+
+    [maxAbsR,idxAbsR]  = sort(abs(r),"descend",'MissingPlacement','last');
+    [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxAbsR(myRng), sim, 704); title('Largest Abs')
+
+    %     tracer = bgc.tracer;
+    %     copyfile( sim.inputRestartFile, myGfile);
+    %     save( myGfile, 'tracer', '-append' ); % overwrites tracer from input
+    %     save( myGfile, 'r', '-append' );      % overwrites tracer from input
+    %     save( myGfile, 'x0', '-append' );      % overwrites tracer from input
+    %     save( myGfile, 'x0_prev', '-append' );      % overwrites tracer from input
+    %     save( myGfile, 'x0_prev', '-append' );      % overwrites tracer from input
+    % Save everything in G, which is not everything in the whole sim
 end
+
+x0_prev = x0;
 
 
 end % G()
