@@ -24,6 +24,8 @@ days_in_month    = [31 28 31 30 31 30 31 31 30 31 30 31];
 steps_per_period = tsperDay*days_in_month(month);
 %%
 
+% DEBUG: n = n+steps_per_period; return; % quick return to debug G
+
 % forcing, river, and transport created monthly. We get only this month's
 %  in this routine
 
