@@ -71,10 +71,10 @@ load(inputRestartFile,'sim','MTM');
 % We just over wrote sim struct, but now we can save the file stuff in it.
 % Need input restart name to make our output...
 
-sim.forwardIntegrationOnly = forwardIntegrationOnly ;
+sim.forwardIntegrationOnly  = forwardIntegrationOnly ;
 sim.inputRestartFile        = inputRestartFile; 
-sim.start_yr = start_yr;
-sim.selection        = selection;
+sim.start_yr                = start_yr;
+sim.selection               = selection;
 sim.captureAllSelectedTracers = captureAllSelectedTracers;
 
 sim.logTracers = logTracers;
