@@ -9,7 +9,9 @@
 
 fprintf('Start of %s.m: %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 
-clear all;
+% Need this to clear the "persistent" variables in "G()", "time_step()" and "calculate_forcing()"             
+clear all; 
+
 dbstop if error
 format short g
 
@@ -60,7 +62,7 @@ marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 %%%%%% INput restart file
 
 % start_yr = 0; inputRestartFile = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
-start_yr = 60; inputRestartFile = 'Data_GP/restart_60.mat';
+start_yr = 70; inputRestartFile = 'Data_GP/restart_70.mat';
 % start_yr = 4101; inputRestartFile = 'Data/InputFromAnn/restart4101.mat';
 
 fprintf('%s.m: Reading OFFline input restart file with tracers and transports: %s\n', mfilename, inputRestartFile);
@@ -79,7 +81,7 @@ sim.logTracers = logTracers;
 sim.logDiags   = and (0, sim.logTracers) ; % Usually no diags..
 
 % FIXME: lots of old code floating around...
-clear inputRestartFile start_yr selection captureAllSelectedTracers logTracers
+clear inputRestartFile start_yr selection captureAllSelectedTracers logTracers 
 
 sim.checkNeg = 0;
 
@@ -94,6 +96,8 @@ disp(['Results will be saved in directory ', sim.outputRestartDir]); disp (' ');
 if status ~=1
     disp(msg); disp(msgID); disp(' ')
     keyboard
+else
+    clear status msg msgID
 end
 
 
@@ -144,20 +148,23 @@ if (or (sim.logDiags, sim.logTracers))
     % iLat = 49; iLon = 11; iLvl = 10;    % Zulu =  ( 0.3N, 0.7E)     iFp = 1049
     % iLat = 58; iLon = 50; iLvl = 10;    % Palau = ( 5.6N, 139.7E)   iFp = 3704
     % iLat = 50; iLon = 28; iLvl = 10;    % IO      ( 0.3N,  50.5E)   iFp = 2080
-    iLat = 57; iLon =  3; iLvl = 10;    % AF 447 =  ( 4.7N, -29.5E)     iFp = 1049
+%     iLat = 57; iLon =  3; iLvl = 10;    % AF 447 =  ( 4.7N, -29.5E)     iFp = 1049
+%     iLat = 20; iLon =  95; iLvl = 4;    % "-48" =  ( -45.695N, -58.3E)     iFp = 31045 iCol 7462
+    iLat = 22; iLon =  97; iLvl = 5;    % "+44" =  ( -40.425N, -51.1E)     iFp = 31045 icol 7587
     % Check that! Make a map!
     % first get iFp on level 1, Simpy put: on level 1, iFp = iCol...
 
     iFp = coordTransform_xyz2fp(iLat, iLon, 1, sim);
-%     [~, ~, ~, latitude, longitude, ~] = coordTransform_fp2xyz(iFp, sim, 999); title('Time Series Localtion')
-    [~, ~, ~, latitude, longitude, ~] = coordTransform_fp2xyz(iFp, sim); 
+    [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(iFp, sim, 999); title('Time Series Localtion')
+%     [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(iFp, sim); 
     sim.time_series_loc = iFp ;
     % % % ... now set the level
     sim.time_series_lvl = iLvl;
     disp(['Time series(loc,lvl) = (', num2str(sim.time_series_loc), ', ', num2str(sim.time_series_lvl),')']);
-    [~,~,~, lat, lon, water_depth_km] = col2latlon(sim, sim.time_series_loc);
+    [~,~,~, lat, lon, ~] = col2latlon(sim, sim.time_series_loc);
     disp(['Time series(lat,lon, depth) = (', num2str(lat,'%.1f'), ' N, ', num2str(lon,'%.1f'),' E, ',num2str(sim.grd.zt(sim.time_series_lvl),'%.1f'),' m))'])
     disp(' ')
+    clear iLat iLon iLvl lat lon iFp
 else
     % avoid messy code in parallel;
     % just set a default legal array idx
@@ -184,6 +191,7 @@ end
 
 sim = calc_global_moles_and_means(bgc, sim);
 
+clear forwardIntegrationOnly marbl_file
 %%%%%%
 
 toc(timer_total)
@@ -202,42 +210,14 @@ end
 
 % bgc of default
 
-c0 = bgc2nsoli(sim, bgc.tracer);
-
-% sim.sim.selection = [1,2,  8, 7];                         % rough cut vertical
-% sim.sim.selection = 1:17; idx = ismember(sim.sim.selection, [9 11 4 12 13 14]);  sim.sim.selection(idx)=[];
-% sim.selection = 5;                                      % nail down Fe
-% sim.selection = 1:32;             % fit everything;
-% sim.selection = [1,2, 7, 8];        % rough cut vertical
-
-tName = tracer_names(sim.lciso_on);
-
-% This is what Ann uses to test for "leakage"
-% sim.selection = [3, 8, 1, 10, 5, 7];        % SiO3, DIC, PO4, ALK, Fe, O2
-%
-% This is what Ann uses to test for "leakage"
-
-sim.selection = [ ...
-    find(strcmp(tName,'SiO3')),...
-    find(strcmp(tName,'DIC')),...
-    find(strcmp(tName,'PO4')),...
-    find(strcmp(tName,'ALK')),...
-    find(strcmp(tName,'Fe')),...
-    find(strcmp(tName,'O2'))];
-
-% % FP wants
-sim.selection = [ find( strcmp(tName,'O2') ) ];
-
-% JJ wants
-% sim.selection = [ find( strcmp(tName,'DOCr') ) ];
-
+% c0 = bgc2nsoli(sim, bgc.tracer);
 
 % ALWAYS punt "alt" methods that do NOT depend on any other tracers...
+
 idx = ismember(sim.selection, [9,11]); 
 sim.selection(idx)=[];
 
 sim.selection = unique(sort(sim.selection));
-
 if (min(sim.selection)<1) || (max(sim.selection)>32)
     keyboard   % bogus tracer selected
 end
@@ -247,22 +227,16 @@ cstr = tName(sim.selection)'; fprintf(1,'Selected tracers: '); fprintf(1,'%s ',c
 % keyboard
 disp('Parameters nsoli()...')
 
-lmeth  = 2;             % method 2 = GMRES(m)
-atol = 1e-3;
-rtol = 1e-9;            % stop when norm is less than atol+rtol*norm of init_resid as seen by nsoli
-tol    = [atol,rtol];   % [absolute error, relative tol]
-etamax = 0.9;           % maximum error tol for residual in inner iteration, default = 0.9
-
-maxit  = 30;            % maximum number of nonlinear iterations (Newton steps) default = 40
-maxitl = 10;            % maximum number of inner iterations before restart in GMRES(m), default = 40;
-                        % also number of directional derivative calls, also num of gmres calls
-restart_limit = 10;     % max number of restarts for GMRES if lmeth = 2, default = 20;
-
-% maxit  = 3;
-
-parms  = [maxit,maxitl,etamax,lmeth,restart_limit];
-
-
+nsoli.lmeth  = 2;               % method 2 = GMRES(m)
+nsoli.atol   = 1e-3;
+nsoli.rtol   = 1e-9;            % stop when norm is less than atol+rtol*norm of init_resid as seen by nsoli
+nsoli.tol    = [nsoli.atol,nsoli.rtol];     % [absolute error, relative tol]
+nsoli.etamax = 0.9;             % maximum error tol for residual in inner iteration, default = 0.9
+nsoli.maxit  = 30;              % maximum number of nonlinear iterations (Newton steps) default = 40
+nsoli.maxitl = 10;              % maximum number of inner iterations before restart in GMRES(m), default = 40;
+                                % also number of directional derivative calls, also num of gmres calls
+nsoli.restart_limit = 10;       % max number of restarts for GMRES if lmeth = 2, default = 20;
+parms  = [nsoli.maxit, nsoli.maxitl, nsoli.etamax, nsoli.lmeth, nsoli.restart_limit];
 
 
 fprintf('%s.m: Starting nsoli()...\n',mfilename);
@@ -343,8 +317,28 @@ x0 = x0(:);             % unitless
 disp('FIXME: Set PQ_inv = 1 for now, but we need preconditioner...')
 PQ_inv = 1;
 
-% keyboard
-[sol,it_hist,ierr,x_hist] = Cnsoli(x0, @(x0,Npt) G(x0,Npt,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), tol, parms);
+x = x0;
+
+x_hist = x;
+r_hist = zeros(size(x));
+it_histx = zeros(nsoli.maxit,1);
+Npt = -1;
+
+for itc = 1:nsoli.maxit
+    % FIXME: note "x" not "x0"
+
+    [accept,r,x1] = G(x,Npt,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
+
+    x_hist = [x_hist,x];
+    r_hist = [r_hist,r];
+    it_histx(itc,1) = norm(r);
+
+    x = x -r;
+
+end
+
+keyboard
+[sol,it_hist,ierr,x_hist] = Cnsoli(x0, @(x0,Npt) G(x0,Npt,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), nsoli.tol, parms);
 
 % convert solution to include all tracers, even ones not optimized x = reshape(c0,sz);
 
