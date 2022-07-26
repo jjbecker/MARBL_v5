@@ -9,7 +9,9 @@
 
 fprintf('Start of %s.m: %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 
-clear all;
+% Need this to clear the "persistent" variables in "G()", "time_step()" and "calculate_forcing()"             
+clear all; 
+
 dbstop if error
 format short g
 
@@ -32,6 +34,11 @@ timer_total = tic;
 % Setup the big picture parts of a simulation and/or NK solution.
 % FIXME: Someday, when we know what inputs need to be, put all this a file
 
+tName = tracer_names(0);    % no CISO tracers
+selection = [ ...
+    %     find(strcmp(tName,'SiO3')),...
+    %     find(strcmp(tName,'DIC')),...
+    find( strcmp(tName,'O2') ) ];
 forwardIntegrationOnly = 1;
 ck_years = 1000;
 time_step_hr = 3;
@@ -40,7 +47,6 @@ logTracers = 0;
 yearsBetweenRestartFiles = 10;
 
 captureAllSelectedTracers = 0;
-selection = 0;
 
 % DEBUG stuff
 % logTracers = 1;
@@ -48,12 +54,7 @@ selection = 0;
 % time_step_hr = 12; % FAST debug
 % yearsBetweenRestartFiles = 1;
 % % time_step_hr = 6912/60/60;
-% tName = tracer_names(0);    % no CISO tracers
-% selection = [ ...
-%     %     find(strcmp(tName,'SiO3')),...
-%     %     find(strcmp(tName,'DIC')),...
-%     find( strcmp(tName,'O2') ) ];
-% 
+
 % captureAllSelectedTracers = 1;
 
 %%%%%%
@@ -82,7 +83,7 @@ sim.logTracers = logTracers;
 sim.logDiags   = and (0, sim.logTracers) ; % Usually no diags..
 
 % FIXME: lots of old code floating around...
-clear inputRestartFile start_yr selection captureAllSelectedTracers logTracers
+clear inputRestartFile start_yr selection captureAllSelectedTracers logTracers 
 
 sim.checkNeg = 0;
 
@@ -93,10 +94,12 @@ sim.checkNeg = 0;
 
 sim.outputRestartDir = myRestartDir(ck_years);
 disp(['Results will be saved in directory ', sim.outputRestartDir]); disp (' ');
-[status, msg, msgID] = mkdir(sim.outputRestartDir);
+[status, msg, msgID] = mkdir(sim.outputRestartDir); 
 if status ~=1
     disp(msg); disp(msgID); disp(' ')
     keyboard
+else
+    clear status msg msgID
 end
 
 
@@ -147,20 +150,23 @@ if (or (sim.logDiags, sim.logTracers))
     % iLat = 49; iLon = 11; iLvl = 10;    % Zulu =  ( 0.3N, 0.7E)     iFp = 1049
     % iLat = 58; iLon = 50; iLvl = 10;    % Palau = ( 5.6N, 139.7E)   iFp = 3704
     % iLat = 50; iLon = 28; iLvl = 10;    % IO      ( 0.3N,  50.5E)   iFp = 2080
-    iLat = 57; iLon =  3; iLvl = 10;    % AF 447 =  ( 4.7N, -29.5E)     iFp = 1049
+%     iLat = 57; iLon =  3; iLvl = 10;    % AF 447 =  ( 4.7N, -29.5E)     iFp = 1049
+%     iLat = 20; iLon =  95; iLvl = 4;    % "-48" =  ( -45.695N, -58.3E)     iFp = 31045 iCol 7462
+    iLat = 22; iLon =  97; iLvl = 5;    % "+44" =  ( -40.425N, -51.1E)     iFp = 31045 icol 7587
     % Check that! Make a map!
     % first get iFp on level 1, Simpy put: on level 1, iFp = iCol...
 
     iFp = coordTransform_xyz2fp(iLat, iLon, 1, sim);
-    %     [~, ~, ~, latitude, longitude, ~] = coordTransform_fp2xyz(iFp, sim, 999); title('Time Series Localtion')
-    [~, ~, ~, latitude, longitude, ~] = coordTransform_fp2xyz(iFp, sim);
+    [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(iFp, sim, 999); title('Time Series Localtion')
+%     [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(iFp, sim); 
     sim.time_series_loc = iFp ;
     % % % ... now set the level
     sim.time_series_lvl = iLvl;
     disp(['Time series(loc,lvl) = (', num2str(sim.time_series_loc), ', ', num2str(sim.time_series_lvl),')']);
-    [~,~,~, lat, lon, water_depth_km] = col2latlon(sim, sim.time_series_loc);
+    [~,~,~, lat, lon, ~] = col2latlon(sim, sim.time_series_loc);
     disp(['Time series(lat,lon, depth) = (', num2str(lat,'%.1f'), ' N, ', num2str(lon,'%.1f'),' E, ',num2str(sim.grd.zt(sim.time_series_lvl),'%.1f'),' m))'])
     disp(' ')
+    clear iLat iLon iLvl lat lon iFp
 else
     % avoid messy code in parallel;
     % just set a default legal array idx
@@ -169,7 +175,6 @@ else
 end
 
 %%%%%% End of "inputs"
-
 toc(timer_total)
 
 % Stuff below is not a simulation input. It is code to setup grids, etc a
