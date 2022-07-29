@@ -163,20 +163,8 @@ for it = 1:steps_per_period
             %         autoArrangeFigures(0,0);
         end
     end
-
-    % fld=2; lvl=1;
-    % Convert MARBL coordinates to FP
-    % packed_data = packMarbl(bgc.forcing,sim.domain.iwet_JJ);%
-    % Convert FP to xyz, but just the tracer/forcing of interest
-    % data = nan(size(sim.domain.M3d)); data(sim.domain.iwet_FP) = packed_data(:,fld);
-    % figure (100+fld); surf (data(:,:, 1), 'EdgeColor', 'none', 'FaceColor', 'interp'); view(2); colorbar;
-    % % plot_global_interior_forcing(sim.domain.iwet_FP, sim.domain.M3d, sim.domain.zt, packed_data, 1)
-
-    % [negativesFound] = negative_tracer_catcher(sim,bgc);
-    % c0 = bgc2nsoli(sim, bgc.tracer);
-    % fprintf('Fraction of tracers(:) <0 = %s\n', num2str(sum(c0<0)/numel(c0)));
-
 end % steps_per_period
+
 % mpiprofile viewer
 
 if k <4 % error
