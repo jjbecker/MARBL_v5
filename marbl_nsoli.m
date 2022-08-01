@@ -47,7 +47,7 @@ yearsBetweenRestartFiles = 1;
 captureAllSelectedTracers = 0;
 
 % DEBUG stuff
-logTracers = 1;
+% logTracers = 1;
 % ck_years = 1;
 % time_step_hr = 12; % FAST debug
 % yearsBetweenRestartFiles = 1;
@@ -62,7 +62,7 @@ marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 %%%%%% INput restart file
 
 % start_yr = 0; inputRestartFile = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
-start_yr = 70; inputRestartFile = 'Data_GP/restart_70.mat';
+start_yr = 100; inputRestartFile = 'Data_GP/restart_100.mat';
 % start_yr = 4101; inputRestartFile = 'Data/InputFromAnn/restart4101.mat';
 
 fprintf('%s.m: Reading OFFline input restart file with tracers and transports: %s\n', mfilename, inputRestartFile);
@@ -150,7 +150,7 @@ if (or (sim.logDiags, sim.logTracers))
     % iLat = 50; iLon = 28; iLvl = 10;    % IO      ( 0.3N,  50.5E)   iFp = 2080
 %     iLat = 57; iLon =  3; iLvl = 10;    % AF 447 =  ( 4.7N, -29.5E)     iFp = 1049
 %     iLat = 20; iLon =  95; iLvl = 4;    % "-48" =  ( -45.695N, -58.3E)     iFp = 31045 iCol 7462
-    iLat = 22; iLon =  97; iLvl = 5;    % "+44" =  ( -40.425N, -51.1E)     iFp = 31045 icol 7587
+    iLat = 2; iLon =  95; iLvl = 1;    % 7445
     % Check that! Make a map!
     % first get iFp on level 1, Simpy put: on level 1, iFp = iCol...
 
@@ -317,27 +317,6 @@ x0 = x0(:);             % unitless
 disp('FIXME: Set PQ_inv = 1 for now, but we need preconditioner...')
 PQ_inv = 1;
 
-x = x0;
-
-x_hist = x;
-r_hist = zeros(size(x));
-it_histx = zeros(nsoli.maxit,1);
-Npt = -1;
-
-for itc = 1:nsoli.maxit
-    % FIXME: note "x" not "x0"
-
-    [accept,r,x1] = G(x,Npt,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
-
-    x_hist = [x_hist,x];
-    r_hist = [r_hist,r];
-    it_histx(itc,1) = norm(r);
-
-    x = x -r;
-
-end
-
-keyboard
 [sol,it_hist,ierr,x_hist] = Cnsoli(x0, @(x0,Npt) G(x0,Npt,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), nsoli.tol, parms);
 
 % convert solution to include all tracers, even ones not optimized x = reshape(c0,sz);
