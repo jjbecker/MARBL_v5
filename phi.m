@@ -26,11 +26,13 @@ n = 0;
 current_month = 0;
 years_gone_by = -1; % allow for case of total_months==0, etc etc
 
+x0_bgc = bgc2nsoli(sim, bgc.tracer);    % unitless start of year values
+
 while current_month < total_months
     current_month = current_month+1;
     years_gone_by = floor((current_month-1)/12);
     month = mod(current_month-1,12)+1;
-    fakeMonth = mod(6+current_month-1,12)+1;
+    %     fakeMonth = mod(6+current_month-1,12)+1;
 
     [sim, bgc, time_series, n] = time_step_ann (sim, bgc, time_series, n, forcing(month), MTM(month), month);
 
@@ -47,11 +49,31 @@ while current_month < total_months
 
     if mod(current_month, 12) == 0    % This runs after last time step of every y
 
-        fprintf('%s.m: Finished integration of year %s: ',mfilename, int2str(1+years_gone_by))
-        fprintf('%s, rate = %s hr/sim_y\n', ...
-            datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')), ...
-            num2str((toc(timer_total)/3600/(current_month/12)),'%.2f'))
+        x1_bgc = bgc2nsoli(sim, bgc.tracer);    % unitless end of year values
+        
+        numWaterParcels = numel(sim.domain.iwet_JJ);
+        numTracers = sim.bgc_struct_base.size.tracer(2);
+        sz = [numWaterParcels, numTracers];
+        
+        x0 = reshape(x0_bgc, sz);
+        x0 = x0(:,sim.selection);             % just selected cols
+        
+        r = -reshape(x1_bgc -x0_bgc, sz);     % needed r size is sz; aka 32 col
+        r = r(:,sim.selection);             % just selected cols
+        r = r(:);                           % nsoli format
+        
+        figure(699); qqplot(r); title("r")
+        figure (700); plot(r); title("r")
+        figure (701); scatter(x0,r); title("r vs x0");xlabel('x0');ylabel('r')
 
+        x0_bgc = x1_bgc;
+
+        fprintf('%s.m: Finished integration of year %s: ',mfilename, int2str(sim.start_yr+years_gone_by))
+        fprintf('%s, rate = %s hr/sim_y, norm(r) = %1.10g\n', ...
+            datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')), ...
+            num2str((toc(timer_total)/3600/(current_month/12)),'%.2f'), ...
+            norm(r));
+        
     end
 
     if mod(current_month, 12*sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
