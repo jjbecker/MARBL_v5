@@ -62,10 +62,13 @@ C_1 = packMarbl( bgc.tracer, sim.domain.iwet_JJ );
 %
 %     C(:,k) = mfactor(FLHS,RHS);           % aka time stepped tracers
 
-LHS  = d0(1+dt*TR.dxidt) + dt.*(-TR.D);   % LHS on all tracers
+A    = TR.A;
+H    = TR.H;
+% tau  = 1/sim.const.sec_y/1e+6;            % 1/1e+6 years (s)
+% msk = sim.domain.M3d;
+% R    = d0( msk(sim.domain.iwet_JJ ) / tau );   % (1/sec)
+LHS  = d0(1+dt*TR.dxidt) + dt.*(-TR.D);     % LHS on all tracers
 FLHS = mfactor(LHS);    % run time = 0.44 sec for 3x3 any amount of tracers
-A = TR.A;
-H = TR.H;
 
 for it = 1:steps_per_period
 

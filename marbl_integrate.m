@@ -49,8 +49,8 @@ yearsBetweenRestartFiles = 10;
 captureAllSelectedTracers = 0;
 
 % DEBUG stuff
-% logTracers = 1;
-% ck_years = 1;
+logTracers = 1;
+ck_years = 3;
 % time_step_hr = 12; % FAST debug
 % yearsBetweenRestartFiles = 1;
 % % time_step_hr = 6912/60/60;
@@ -64,7 +64,8 @@ marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 %%%%%% INput restart file
 
 % start_yr = 0; inputRestartFile = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
-start_yr = 70; inputRestartFile = 'Data_GP/restart_70.mat';
+start_yr =  70; inputRestartFile = 'Data_GP/restart_70_integrate_from_0.mat';
+start_yr = 260; inputRestartFile = 'Data_GP/restart_260_integrate_from_0.mat';
 % start_yr = 4101; inputRestartFile = 'Data/InputFromAnn/restart4101.mat';
 
 fprintf('%s.m: Reading OFFline input restart file with tracers and transports: %s\n', mfilename, inputRestartFile);

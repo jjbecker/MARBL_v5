@@ -1,7 +1,12 @@
-function J = calc_J_full(f,x0,sim, bgc, time_series)
+function J = calc_J_full(f,x0,sim, bgc, time_series, forcing)
 %calc_J Summary of this function goes here
-%
-%   Input is in "fp" format eg. sz=[8500,32] MARBL wants sz=[545,20,32]
+
+numWetLoc = numel(sim.domain.wet_loc);  % = 8500 in 8x8 grid, 379913 in 3x3
+nmWetLvl  = numel(sim.domain.zt);       % = 20 in 8x8 grid, 60 in 3x3
+numTracer = size(bgc.tracer,3);         % = 32 in MARBL circa 2020
+
+%   Input is in "fp" format eg. 8x8 grid sz=[8500,32] MARBL wants
+%   sz=[545,20,32] = [col,lvl,tr]
 %
 % calculate partial of MARBL with respect to tracers
 %
@@ -23,12 +28,12 @@ function J = calc_J_full(f,x0,sim, bgc, time_series)
 
 dbstop if error
 
-disp('Starting calc_J; takes 60 seconds, on ONE level...');
+disp([mfilename,'.m: Starting full Jacobian; takes long time...]']);
 ticAll = tic;
 
 % Do one easy part of this index festival...
 
-f0 = f(x0,sim, bgc, time_series);     % = size(M3d)
+f0 = f(x0,sim, bgc, time_series, forcing);     % = size(M3d)
 
 % Simple so far, use ppm of each tracer as step size, then forward diff...
 
@@ -53,13 +58,14 @@ h_3d  = unpackMarbl( dh*abs(x0), sim.domain.iwet, size(bgc.tracer)); % [545,20,3
 
 % Tricky! We need PER LEVEL -and- per tracer. Need to pack/unpack, etc.
 
-% J_3d = zeros( [545 20 32 20 32] );  % size = [8500 32 [20 32]] = 272000*20*32
+% J_3d = zeros( [545 20 32 20 32] );  % size = [8500 32 [20 32]] = 272000*20*32 = 175M for 8x8 grid!!!
 % delta_tendency = zeros([545 20 32]);
+
 J = sparse(8500*32, 8500*32);
 rows_visted = zeros(8500*32,1);
 myName = tracer_names(sim.lciso_on);
-for idx_tr = 1: size(x0,2)                       % loop over tracers
-% for idx_tr = 1:23
+for idx_tr = 1: size(x0,2)  % loop over input tracers, but not all !!
+% for idx_tr = 1:23 % FIXME: 23? why 23?
     ticLevel = tic;
     
     parcelTouched = zeros(8500,1);

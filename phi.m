@@ -56,23 +56,24 @@ while current_month < total_months
         sz = [numWaterParcels, numTracers];
         
         x0 = reshape(x0_bgc, sz);
-        x0 = x0(:,sim.selection);             % just selected cols
+        x0 = x0(:,sim.selection);               % just selected cols
         
-        r = -reshape(x1_bgc -x0_bgc, sz);     % needed r size is sz; aka 32 col
-        r = r(:,sim.selection);             % just selected cols
-        r = r(:);                           % nsoli format
+        tmpG = -reshape(x1_bgc -x0_bgc, sz);    % needed G size is sz; aka 32 col
+        tmpG = tmpG(:,sim.selection);           % just selected cols
+        tmpG = tmpG(:);                         % nsoli format
         
-        figure(699); qqplot(r); title("r")
-        figure (700); plot(r); title("r")
-        figure (701); scatter(x0,r); title("r vs x0");xlabel('x0');ylabel('r')
+        figure (700); scatter(x0,tmpG); title('scatter(x0,G)'); xlabel('x0');   ylabel('G')
+        figure (701); plot(tmpG);       title("plot(G)");       xlabel('idxFP');ylabel('G')
+        figure (702); qqplot(tmpG);     title("qqplot(G)")
+        figure (601); histogram(tmpG);  title("histogram(G)");  xlabel('x0');   ylabel('Count')
 
         x0_bgc = x1_bgc;
 
         fprintf('%s.m: Finished integration of year %s: ',mfilename, int2str(sim.start_yr+years_gone_by))
-        fprintf('%s, rate = %s hr/sim_y, norm(r) = %1.10g\n', ...
+        fprintf('%s, rate = %s hr/sim_y, norm(G) = %1.10g\n', ...
             datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')), ...
             num2str((toc(timer_total)/3600/(current_month/12)),'%.2f'), ...
-            norm(r));
+            norm(tmpG));
         
     end
 

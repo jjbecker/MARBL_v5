@@ -62,7 +62,8 @@ marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 %%%%%% INput restart file
 
 % start_yr = 0; inputRestartFile = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
-start_yr = 100; inputRestartFile = 'Data_GP/restart_100.mat';
+start_yr =  70; inputRestartFile = 'Data_GP/restart_70_integrate_from_0.mat';
+start_yr = 260; inputRestartFile = 'Data_GP/restart_260_integrate_from_0.mat';
 % start_yr = 4101; inputRestartFile = 'Data/InputFromAnn/restart4101.mat';
 
 fprintf('%s.m: Reading OFFline input restart file with tracers and transports: %s\n', mfilename, inputRestartFile);
@@ -317,7 +318,7 @@ x0 = x0(:);             % unitless
 disp('FIXME: Set PQ_inv = 1 for now, but we need preconditioner...')
 PQ_inv = 1;
 
-[sol,it_hist,ierr,x_hist] = Cnsoli(x0, @(x0,Npt) G(x0,Npt,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), nsoli.tol, parms);
+[sol,it_hist,ierr,x_hist] = Cnsoli(x0, @(x0,Npt) calc_G(x0,Npt,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), nsoli.tol, parms);
 
 % convert solution to include all tracers, even ones not optimized x = reshape(c0,sz);
 

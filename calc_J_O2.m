@@ -1,17 +1,11 @@
-function J = calc_J_simplified(fsdfsfs,x0, sim, bgc, time_series, forcing)
+function J = calc_J_O2(x0,sim, bgc, time_series, forcing)
 %calc_J Summary of this function goes here
-% calculate partial of MARBL with respect to tracers
 %
-%   Input:
+%   x0 Input is O2 in "fp" format eg. sz=[8500,1] MARBL wants sz=[545,20,32]
+%
+% calculate partial of MARBL with respect to O2 in its own col
 %
 % f = MARBL() = tendency = time rate of change of all tracers at all loc
-% x0 = one or more tracers is in "nsoli" format eg. sz=[8500,32] 
-%           MARBL wants sz=[545,20,32]!!
-%
-% sim, bgc, time_series, forcing are the usual inputs to G, phi, and
-% time_step
-%
-%   Output:
 %
 % J = simple numberical approximation of Jacobian(f)
 %
@@ -21,7 +15,9 @@ function J = calc_J_simplified(fsdfsfs,x0, sim, bgc, time_series, forcing)
 %   second is index of tendency
 %   third is index of tracer being changed
 %
-%   J(:,i,j) = d(MARBL(i)) / d(tracer(j) @ all locations
+%   J(:,i,j) = d(MARBL(O2(i))) / d(tracer(O2(j)) @ all water col, lvl i,
+%   wrt O2 on lvl j
+
 %
 %   J(1,2,3) = d(MARBL(2)) / d(tracer(3) @ loc 1
 %
@@ -31,29 +27,31 @@ disp([mfilename,'.m: Starting simplified Jacobian; takes 30 seconds/tracer (mayb
 
 tic
 
-x0 = packMarbl(bgc.tracer,sim.domain.iwet_JJ);
-x0 = x0(:,7);
-sz = size(x0);              % e.g. [num_wet_loc, numel(selected)]
-J = zeros([sz, sz(2)]);     % e.g. [num_wet_loc, numel(selected), numel(selected)]
+sz = size(bgc.tracer);
+J = zeros([sz(1) sz(2) sz(2)]);
 
 
 % FIXME: always tricky to guess "delta"
 % FIXME: need to have correct uinit for h; what is that? median x0(iTr)??? or...
 
 % h = x0 /1e3;
-% h = x0 *sqrt(eps);
-h = sqrt(eps);
+x0 = packMarbl(bgc.tracer,sim.domain.iwet_JJ);
+x0 = x0(:,7);
+h = x0 *sqrt(eps);
+% h = sqrt(eps) *ones(size(x0));
 
 % calculate d(Tracer)/dt with tracer values x0
 
-initial_moles = global_moles(bgc.tracer, sim);  % DEBUG
+tmp = time_series;
+
+% initial_moles = global_moles(bgc.tracer, sim);  % DEBUG
 % f0 = f(x0, sim, bgc, time_series);                % sz=[379913,32]
-f0 = calc_f(x0, sim, bgc, time_series, forcing);    % sz=[379913,32]
-final_moles = global_moles(bgc.tracer, sim);    % DEBUG
-tend_moles = global_moles(unpackMarbl(f0, sim.domain.iwet_JJ,size(bgc.tracer)), sim);    
+f0 = calc_f(sim, bgc, time_series, forcing);    % sz=[379913,32]
+% final_moles = global_moles(bgc.tracer, sim);    % DEBUG
+% tend_moles = global_moles(unpackMarbl(f0, sim.domain.iwet_JJ,size(bgc.tracer)), sim);    
 
 tName = tracer_names(0);    % no CISO tracers
-for idx = 1:numel(bgc.tracer)       % loop over all tracers
+for lvl = 1:sz(2)       % loop over all lvl
 
     dx = h(:,idx);
 

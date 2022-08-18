@@ -9,8 +9,8 @@
 
 fprintf('Start of %s.m: %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 
-% Need this to clear the "persistent" variables in "G()", "time_step()" and "calculate_forcing()"             
-clear all; 
+% Need this to clear the "persistent" variables in "G()", "time_step()" and "calculate_forcing()"
+clear all;
 
 dbstop if error
 format short g
@@ -47,8 +47,8 @@ yearsBetweenRestartFiles = 1;
 captureAllSelectedTracers = 0;
 
 % DEBUG stuff
-logTracers = 1;
-% ck_years = 1;
+logTracers = 0;
+ck_years = 1;
 time_step_hr = 12; % FAST debug
 % yearsBetweenRestartFiles = 1;
 % % time_step_hr = 6912/60/60;
@@ -62,9 +62,9 @@ marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 %%%%%% INput restart file
 
 % start_yr = 0; inputRestartFile = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
-start_yr = 100; inputRestartFile = 'Data_GP/restart_100.mat';
+start_yr =  70; inputRestartFile = 'Data_GP/restart_70_integrate_from_0.mat';
+start_yr = 260; inputRestartFile = 'Data_GP/restart_260_integrate_from_0.mat';
 % start_yr = 4101; inputRestartFile = 'Data/InputFromAnn/restart4101.mat';
-start_yr = 0; inputRestartFile = 'Data/restart_0_1_output_GP_100_dt_12/restart_1.mat';
 
 fprintf('%s.m: Reading OFFline input restart file with tracers and transports: %s\n', mfilename, inputRestartFile);
 load(inputRestartFile,'sim','MTM');
@@ -73,7 +73,7 @@ load(inputRestartFile,'sim','MTM');
 % Need input restart name to make our output...
 
 sim.forwardIntegrationOnly  = forwardIntegrationOnly ;
-sim.inputRestartFile        = inputRestartFile; 
+sim.inputRestartFile        = inputRestartFile;
 sim.start_yr                = start_yr;
 sim.selection               = selection;
 sim.captureAllSelectedTracers = captureAllSelectedTracers;
@@ -82,7 +82,7 @@ sim.logTracers = logTracers;
 sim.logDiags   = and (0, sim.logTracers) ; % Usually no diags..
 
 % FIXME: lots of old code floating around...
-clear inputRestartFile start_yr selection captureAllSelectedTracers logTracers 
+clear inputRestartFile start_yr selection captureAllSelectedTracers logTracers
 
 sim.checkNeg = 0;
 
@@ -93,7 +93,7 @@ sim.checkNeg = 0;
 
 sim.outputRestartDir = myRestartDir(ck_years);
 disp(['Results will be saved in directory ', sim.outputRestartDir]); disp (' ');
-[status, msg, msgID] = mkdir(sim.outputRestartDir); 
+[status, msg, msgID] = mkdir(sim.outputRestartDir);
 if status ~=1
     disp(msg); disp(msgID); disp(' ')
     keyboard
@@ -149,15 +149,15 @@ if (or (sim.logDiags, sim.logTracers))
     % iLat = 49; iLon = 11; iLvl = 10;    % Zulu =  ( 0.3N, 0.7E)     iFp = 1049
     % iLat = 58; iLon = 50; iLvl = 10;    % Palau = ( 5.6N, 139.7E)   iFp = 3704
     % iLat = 50; iLon = 28; iLvl = 10;    % IO      ( 0.3N,  50.5E)   iFp = 2080
-%     iLat = 57; iLon =  3; iLvl = 10;    % AF 447 =  ( 4.7N, -29.5E)     iFp = 1049
-%     iLat = 20; iLon =  95; iLvl = 4;    % "-48" =  ( -45.695N, -58.3E)     iFp = 31045 iCol 7462
-    iLat = 2; iLon =  95; iLvl = 1;    % 7445
+    %     iLat = 57; iLon =  3; iLvl = 10;    % AF 447 =  ( 4.7N, -29.5E)     iFp = 1049
+    iLat = 20; iLon =  95; iLvl = 4;    % "-48" =  ( -45.695N, -58.3E)     iFp = 31045 iCol 7462
+    %     iLat = 2; iLon =  95; iLvl = 1;    % 7445
     % Check that! Make a map!
     % first get iFp on level 1, Simpy put: on level 1, iFp = iCol...
 
     iFp = coordTransform_xyz2fp(iLat, iLon, 1, sim);
     [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(iFp, sim, 999); title('Time Series Localtion')
-%     [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(iFp, sim); 
+    %     [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(iFp, sim);
     sim.time_series_loc = iFp ;
     % % % ... now set the level
     sim.time_series_lvl = iLvl;
@@ -215,7 +215,7 @@ end
 
 % ALWAYS punt "alt" methods that do NOT depend on any other tracers...
 
-idx = ismember(sim.selection, [9,11]); 
+idx = ismember(sim.selection, [9,11]);
 sim.selection(idx)=[];
 
 sim.selection = unique(sort(sim.selection));
@@ -228,16 +228,16 @@ cstr = tName(sim.selection)'; fprintf(1,'Selected tracers: '); fprintf(1,'%s ',c
 % keyboard
 disp('Parameters nsoli()...')
 
-% nsoli.lmeth  = 2;               % method 2 = GMRES(m)
-% nsoli.atol   = 1e-3;
-% nsoli.rtol   = 1e-9;            % stop when norm is less than atol+rtol*norm of init_resid as seen by nsoli
-% nsoli.tol    = [nsoli.atol,nsoli.rtol];     % [absolute error, relative tol]
-% nsoli.etamax = 0.9;             % maximum error tol for residual in inner iteration, default = 0.9
-% nsoli.maxit  = 30;              % maximum number of nonlinear iterations (Newton steps) default = 40
-% nsoli.maxitl = 10;              % maximum number of inner iterations before restart in GMRES(m), default = 40;
+% nsoliParam.lmeth  = 2;               % method 2 = GMRES(m)
+% nsoliParam.atol   = 1e-3;
+% nsoliParam.rtol   = 1e-9;            % stop when norm is less than atol+rtol*norm of init_resid as seen by nsoli
+% nsoliParam.tol    = [nsoliParam.atol,nsoliParam.rtol];     % [absolute error, relative tol]
+% nsoliParam.etamax = 0.9;             % maximum error tol for residual in inner iteration, default = 0.9
+% nsoliParam.maxit  = 30;              % maximum number of nonlinear iterations (Newton steps) default = 40
+% nsoliParam.maxitl = 10;              % maximum number of inner iterations before restart in GMRES(m), default = 40;
 %                                 % also number of directional derivative calls, also num of gmres calls
-% nsoli.restart_limit = 10;       % max number of restarts for GMRES if lmeth = 2, default = 20;
-% parms  = [nsoli.maxit, nsoli.maxitl, nsoli.etamax, nsoli.lmeth, nsoli.restart_limit];
+% nsoliParam.restart_limit = 10;       % max number of restarts for GMRES if lmeth = 2, default = 20;
+% parms  = [nsoliParam.maxit, nsoliParam.maxitl, nsoliParam.etamax, nsoliParam.lmeth, nsoliParam.restart_limit];
 
 
 fprintf('%s.m: Starting r iteration for tracer selection = [%d]...\n',mfilename, sim.selection);
@@ -256,55 +256,102 @@ bgc.tracer(sim.time_series_loc,sim.time_series_lvl,sim.selection) = spike_size +
 
 c0 = bgc2nsoli(sim, bgc.tracer);    % nsoli format; unitless; aka scaled FP
 sz = [ numel(sim.domain.iwet_JJ) , size(bgc.tracer,3) ];
-c = reshape(c0, sz);    
+c = reshape(c0, sz);
 
 % use nsoli() only on selected tracers
 
 x0 = c(:,sim.selection);    % initial condition for Nsoli()
-x0 = x0(:);             % unitless
+x0 = x0(:);                 % unitless
 
 disp('FIXME: Set PQ_inv = 1 for now, but we need preconditioner...')
+% %     J = calc_J_full(@calc_f, x0, sim, bgc, time_series);
 PQ_inv = 1;
 
-num_r_iterations = 0;
+
+% From NK-EXAMPLES: make a sparse operator that restores the surface to zero with a time scale of tau
+msk  = sim.domain.M3d;     % wet == 1, dry == 0
+iwet = sim.domain.iwet_FP;
+% tau = 24 * 60^2;                % (sec/d)
+% tau = 7*sim.const.sec_d;        % (sec/wk)
+tau = sim.const.sec_h;          % (sec/hr)
+temp = msk;
+temp(:,:,2:end) = 0;
+R   =  d0( temp(iwet) / tau );   % (1/sec)
+
+Q =  MTM(1).A + MTM(1).H + MTM(1).D - R;
+for k = 2:12;
+    Q = Q + MTM(k).A + MTM(k).H + MTM(k).D - R;
+end
+%         T = 12*num_step_per_month*dt;
+Q = Q/12; % annually averaged transport and surface restoring (aka birth)
+fprintf('  Factoring the preconditioner...');
+tic;
+FQ = mfactor(sim.T*Q);
+%         sim.FQ = FQ;
+%         toc
+%         x0_age = sim.domain.M3d + nan;
+%         x0_age(sim.domain.iwet_FP) = -mfactor(FQ,0*iwet+sim.T);
+%
+% %     J = calc_J_full(@calc_f, x0, sim, bgc, time_series);
+PQ_inv = FQ;
+toc
+
+
+% for jj=1:5
+%     J_wrong = calc_J_simplified(@calc_f, x0, sim, bgc, time_series, forcing);
+% %     J_o2 = calc_J_O2(@calc_f, x0, sim, bgc, time_series, forcing);
+% end
+num_r_iterations = 40;
 x = x0;
 % x = load('Data/restart_0_1_output_rIter/G_30.mat', 'x0').x0;
-% load('Data/restart_0_1_output_rIter/rRecurseAll.mat', 'x_hist');
-% x = x_hist(:,29);
+% load('Data_GP/saveRes_25.mat', 'x_hist');
+% x = x_hist(:,25);
+clear x_hist
 
 x_hist = x;
 r_hist = zeros(size(x));
 it_histx = zeros(num_r_iterations,1);
 Npt = -1;
 
+% num_r_iterations = 0;
 for itc = 1:num_r_iterations
     % FIXME: note "x" not "x0"
 
-    [accept,r,x1] = G(x,Npt,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
+    [r,G] = calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
+% disp('FIXME: hacking r = -G')
+% r = -G;
+    fnrm = norm(r);
+    fprintf('%s.m: itc %d norm(G) = %g\n',mfilename, itc, norm(G))
+    fprintf('%s.m: itc %d norm(r) = %g\n',mfilename, itc, fnrm)
 
     x_hist = [x_hist,x];
     r_hist = [r_hist,r];
     it_histx(itc,1) = norm(r);
 
-    x = x -r;
+    % recursion:    x <- x -r;
+    % w = 1;    % x = 2x -phi if iterating with G
+    w = 0.9;
+    x = x -w*r;     % e.g. x = x +w*f(x) - w*x = (1-w)x + wf(x)
 
 end
 sol = x;
 
-% Convert the solution into a standard MARBL format 
+% % Convert the solution into a standard MARBL format
+% %
+% % [sol, it_hist, ierr, x_hist] = Cnsoli(x0, @(x0) calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), nsoliParam.tol, parms);
+% [sol, it_hist, ierr, x_hist] = nsoli(x0, @(x0) calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), nsoliParam.tol, parms);
+% 
+% x0_bgc = replaceSelectedTracers(sim, c0, sol, sim.selection);
+% bgc.tracer = nsoli2bgc(sim, bgc, x0_bgc);   % marbl format
 %
-% [sol,it_hist,ierr,x_hist] = Cnsoli(x0, @(x0,Npt) G(x0,Npt,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), nsoli.tol, parms);
-x0 = reshape(c0, sz);
-x0(:,sim.selection) = reshape(sol,[sz(1),numel(sim.selection)]);
-x0 = x0(:);
-bgc.tracer(:) = nsoli2bgc(sim, bgc, x0);
+
 
 % Run the solution forward a few years to let the non-optimized tracers
 % "relax" to the new values.
 
 for num_r_relax_iterations = 1:10
-    fprintf("%s.m: starting relaxition year #%d\n", mfilename, num_r_relax_iterations)
-   [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
+    fprintf("%s.m: starting relaxation year #%d\n", mfilename, num_r_relax_iterations)
+    [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
 end
 
 disp('r_iterate() finished...')

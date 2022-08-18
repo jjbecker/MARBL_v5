@@ -1,6 +1,8 @@
-function [accept,r,x0] = G(x0,Npt,c0,sim,bgc,time_series,forcing,MTM,PQ_inv)
+function [r,G] = calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv)
 %UNTITLED Take an initial value of tracers, return change at end of a year
 %   Detailed explanation goes here
+
+Npt = -123;
 
 persistent gFileCnt x0_prev
 if isempty(gFileCnt)
@@ -8,7 +10,7 @@ if isempty(gFileCnt)
     fprintf('call #%d to G\n', gFileCnt);
     fprintf('norm(x0         ) = %f\n', norm(x0         ));
     % checkNegAndHisto(sim, x0, 100.0, 'x0', 900);
-    figure (501); plot(x0); title('x0')
+    figure (500); plot(x0); title('x0')
 else
     gFileCnt = gFileCnt +1;
     fprintf('call #%d to G\n', gFileCnt);
@@ -16,9 +18,9 @@ else
     fprintf('norm(x0         ) = %f\n', norm(x0         ));
     dx0 = x0 -x0_prev;
     fprintf('norm(x0 -x0_prev) = %.6f\n', norm(dx0) );
-    figure (500); plot(x0_prev); title('x0_prev', 'Interpreter', 'none')
-    figure (501); plot(x0)     ; title('x0')
-    figure (502); plot(dx0)    ; title('dx0')
+    figure (501); plot(x0_prev); title('x0_prev', 'Interpreter', 'none')
+    figure (502); plot(x0)     ; title('x0')
+    figure (503); plot(dx0)    ; title('dx0')
 end
 
 
@@ -59,18 +61,25 @@ final_moles = global_moles(bgc.tracer, sim);    % DEBUG
 x1_bgc = bgc2nsoli(sim, bgc.tracer); % unitless end of year values
 % checkNegAndHisto(sim, selectedTracers(sim, x1_bgc, sim.selection), 100.0, 'x', 900+gFileCnt);
 
+G = reshape(x1_bgc -x0_bgc, sz);    % x1 -x0 = phi(x0) -x0
+G = G(:,sim.selection);             % just selected cols
+G = G(:);                           % nsoli format
+fprintf('||G(x)|| = (max(abs(G))) = %g \n', max(abs(G)));
 
 % depending on preconditioner used, might need all residuals in actual
 % units, or just selected ones, or something else.
+% 
+% res = -reshape(x1_bgc -x0_bgc, sz); % needed res size is sz; aka 32 col
+% res = res(:,sim.selection);         % just selected cols
+% res = res(:);                       % nsoli format
+% 
 
-res = -reshape(x1_bgc -x0_bgc, sz);     % needed res size is sz; aka 32 col
-res = res(:,sim.selection);                 % just selected cols
-res = res(:);                           % nsoli format
-
-% keep res, actual diff, and find the preconditioned(res), r
-r = res(:);
 
 % Precondition the residual
+
+r = mfactor(PQ_inv, G) - G;
+fprintf('||Precon( G(x) )|| = (max(abs(r))) = %g \n', max(abs(r)));
+
 
 % % Normal case. Plot histo of difference of starting and ending tracers.
 % %     figure(700); histogram(log10(abs(dx_selected(abs(dx_selected)>eps)))); xlabel('log10(all global mean normalized tracers'); title('G: Histogram in sim.selection x1-x0')
@@ -184,43 +193,45 @@ disp([mfilename,'.m: Moles  delta          = ',num2str(final_moles-initial_moles
 ppm = ((final_moles-initial_moles)./ final_moles *1e6);
 disp([mfilename,'.m: Moles  delta (ppm)    = ',num2str(ppm,7)])
 
-fprintf('%s.m: Npt = %d P*dx norm    = %1.10g\n', mfilename, Npt, norm(r));
-fprintf('%s.m: Npt = %d P*dx max     = %1.7g\n',  mfilename, Npt, max((r)));
-fprintf('%s.m: Npt = %d P*dx min     = %1.7g\n',  mfilename, Npt, min((r)));
-fprintf('%s.m: Npt = %d P*dx median  = %1.7g\n',  mfilename, Npt, median(r));
-fprintf('%s.m: Npt = %d P*dx mean    = %1.7g\n',  mfilename, Npt, mean(r));
-fprintf('%s.m: Npt = %d P*dx std     = %1.7g\n',  mfilename, Npt, std(r));
-fprintf('%s.m: Npt = %d P*dx mad(avg)= %1.7g\n',  mfilename, Npt, mad(r,0));
-fprintf('%s.m: Npt = %d P*dx mad(med)= %1.7g\n',  mfilename, Npt, mad(r,1));
-tmp = replaceSelectedTracers(sim, c0, r, sim.selection);
+fprintf('%s.m: Npt = %d G norm    = %1.10g\n', mfilename, Npt, norm(G));
+fprintf('%s.m: Npt = %d G max     = %1.7g\n',  mfilename, Npt, max((G)));
+fprintf('%s.m: Npt = %d G min     = %1.7g\n',  mfilename, Npt, min((G)));
+fprintf('%s.m: Npt = %d G median  = %1.7g\n',  mfilename, Npt, median(G));
+fprintf('%s.m: Npt = %d G mean    = %1.7g\n',  mfilename, Npt, mean(G));
+fprintf('%s.m: Npt = %d G std     = %1.7g\n',  mfilename, Npt, std(G));
+fprintf('%s.m: Npt = %d G mad(avg)= %1.7g\n',  mfilename, Npt, mad(G,0));
+fprintf('%s.m: Npt = %d G mad(med)= %1.7g\n',  mfilename, Npt, mad(G,1));
+tmp = replaceSelectedTracers(sim, c0, G, sim.selection);
 res_moles = global_moles(nsoli2bgc(sim, bgc, tmp), sim);
 res_moles = res_moles(sim.selection);
 % res_moles ./ final_moles(sim.selection) *1e6
-fprintf('%s.m: Npt = %d P*dx moles   = %1.7g\n',  mfilename, Npt, res_moles);
+fprintf('%s.m: Npt = %d G moles   = %1.7g\n',  mfilename, Npt, res_moles);
 
-if (1)
+if (0)
     myGfile = sprintf('%s/G_%d.mat', sim.outputRestartDir, round(gFileCnt));
     fprintf('%s.m: Saving "%s"...\n', mfilename,myGfile);
     variables = who;
-    toexclude = {'MTM'};
+    toexclude = {'MTM','PQ_inv'};
     variables = variables(~ismember(variables, toexclude));
     save(myGfile, variables{:}, '-v7.3');
+end
 
-    figure(699); qqplot(r); title("r")
-    figure (700); plot(r); title("r")
-    figure (701); scatter(x0,r); title("r vs x0");xlabel('x0');ylabel('r')
+    figure (900); scatter(x0,r); title("scatter(x0,r)");    xlabel('x0');   ylabel('r')
+    figure (901); plot(r);       title("plot(r)");          xlabel('idxFP');ylabel('r')
+    figure (902); qqplot(r);     title("qqplot(r)")
+    figure (602); histogram(r);  title("histogram(r)");     xlabel('r');   ylabel('Count')
 
     myRng = 1:20;
-    [maxR,idxMaxR]     = sort(   (r),"descend",'MissingPlacement','last');
-    fprintf("max(r) %g\n", maxR(1));
-    [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxMaxR(myRng), sim, 702);  title('Most postive')
+    [maxR,idxMaxR]     = sort(   (G),"descend",'MissingPlacement','last');
+    fprintf("max(G) %g\n", maxR(1));
+    [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxMaxR(myRng), sim, 996);  title('Most postive')
 
-    [minR,idxMinR]     = sort(   (r),"ascend",'MissingPlacement','last');
-    fprintf("min(r) %g\n", minR(1));
-    [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxMinR(myRng), sim, 703);  title('Most Negative')
+    [minR,idxMinR]     = sort(   (G),"ascend",'MissingPlacement','last');
+    fprintf("min(G) %g\n", minR(1));
+    [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxMinR(myRng), sim, 997);  title('Most Negative')
 
-    [maxAbsR,idxAbsR]  = sort(abs(r),"descend",'MissingPlacement','last');
-    [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxAbsR(myRng), sim, 704); title('Largest Abs')
+    [maxAbsR,idxAbsR]  = sort(abs(G),"descend",'MissingPlacement','last');
+    [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxAbsR(myRng), sim, 998); title('Largest Abs')
 
     %     tracer = bgc.tracer;
     %     copyfile( sim.inputRestartFile, myGfile);
@@ -230,7 +241,6 @@ if (1)
     %     save( myGfile, 'x0_prev', '-append' );      % overwrites tracer from input
     %     save( myGfile, 'x0_prev', '-append' );      % overwrites tracer from input
     % Save everything in G, which is not everything in the whole sim
-end
 
 x0_prev = x0;
 
