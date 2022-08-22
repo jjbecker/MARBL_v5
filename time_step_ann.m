@@ -71,7 +71,12 @@ LHS  = d0(1+dt*TR.dxidt) + dt.*(-TR.D);     % LHS on all tracers
 FLHS = mfactor(LHS);    % run time = 0.44 sec for 3x3 any amount of tracers
 
 for it = 1:steps_per_period
-
+    if n<0
+        n = 0;
+        returnAfterOneTimeStep = true;
+    else
+        returnAfterOneTimeStep = false;
+    end
     n = n+1;
     [~,bgc] = calculate_forcing(sim, bgc, n);
 
@@ -166,12 +171,15 @@ for it = 1:steps_per_period
             %         autoArrangeFigures(0,0);
         end
     end
+    if returnAfterOneTimeStep
+        break
+    end
 end % steps_per_period
 
 % mpiprofile viewer
 
 if k <4 % error
-    keyboard
+%     keyboard
 end
 
 % if (sim.logTracers)
