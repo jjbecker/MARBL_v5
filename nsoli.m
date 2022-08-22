@@ -33,7 +33,7 @@ function [sol, it_hist, ierr, x_hist] = nsoli(x,f,tol, parms)
 %                iteration. The inner iteration terminates
 %                when the relative linear residual is
 %                smaller than eta*| F(x_c) |. eta is determined
-%               by the modified Eisenstat-Walker formula if etamax > 0.
+%                by the modified Eisenstat-Walker formula if etamax > 0.
 %                If etamax < 0, then eta = |etamax| for the entire
 %                iteration.
 %                default: etamax = .9
@@ -88,7 +88,7 @@ debug = 0;
 %
 % Set internal parameters.
 %
-alpha = 1.d-4; sigma0 = .1; sigma1 = .5; maxarm = 30; gamma = .9;
+alpha = 1.d-4; sigma0 = .1; sigma1 = .5; maxarm = 20; gamma = .9;
 %
 % Initialize it_hist, ierr, x_hist, and set the default values of
 % those iteration parameters which are optional inputs.
@@ -118,12 +118,11 @@ rtol = tol(2); atol = tol(1); n = length(x); fnrm = 1; itc = 0;
 % Evaluate f at the initial iterate,and
 % compute the stop tolerance.
 %
-f0 = f(x);
+f0 = feval(f,x);
 fnrm = norm(f0);
 it_histx(itc+1,1) = fnrm; it_histx(itc+1,2) = 0; it_histx(itc+1,3) = 0;
 fnrmo = 1;
 stop_tol = atol + rtol*fnrm;
-        fprintf('%s.m: fnrm = %g, stop_tol = %g\n',mfilename, fnrm, stop_tol)
 outstat(itc+1, :) = [itc fnrm 0 0 0];
 %
 % main iteration loop
@@ -146,7 +145,7 @@ while(fnrm > stop_tol & itc < maxit)
     xold = x;
     lambda = 1; lamm = 1; lamc = lambda; iarm = 0;
     xt = x + lambda*step;
-    ft = f(xt);
+    ft = feval(f,xt);
     nft = norm(ft); nf0 = norm(f0); ff0 = nf0*nf0; ffc = nft*nft; ffm = nft*nft;
     while nft >= (1 - alpha*lambda) * nf0;
 %
@@ -166,7 +165,7 @@ while(fnrm > stop_tol & itc < maxit)
 %
 % Keep the books on the function norms.
 %
-        ft = f(xt);
+        ft = feval(f,xt);
         nft = norm(ft);
         ffm = ffc;
         ffc = nft*nft;
@@ -211,8 +210,7 @@ while(fnrm > stop_tol & itc < maxit)
     end
 %
     outstat(itc+1, :) = [itc fnrm inner_it_count rat iarm];
-    fprintf('\n Newton Step \n');
-    %
+%
 end
 sol = x;
 it_hist = it_histx(1:itc+1,:);
@@ -375,18 +373,6 @@ else
 end
 %
 %
-function z = mydirder(x,w,f,f0)
-% complex step directional derivative
-% Approximate f'(x) w
-% F. W. Primeau August 20, 2019
-% 
-    n = length(x);
-    if norm(w) == 0
-        z = zeros(n,1);
-        return
-    end
-    z = imag(f(x+eps^3*sqrt(-1)*w))/eps^3;
-
 function z = dirder(x,w,f,f0)
 % Finite difference directional derivative
 % Approximate f'(x) w
@@ -430,7 +416,7 @@ epsnew=epsnew/norm(w);
 % is more important than clarity.
 %
 del = x+epsnew*w;
-f1 = f(del);
+f1 = feval(f,del);
 z = (f1 - f0)/epsnew;
 %
 %
