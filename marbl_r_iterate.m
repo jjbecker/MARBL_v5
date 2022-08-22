@@ -1,5 +1,9 @@
 % "main" of cyclostationary transport version of MARBL,
 %
+% Try to solve MARBL using "Newton Like" methods from Kelley            
+%
+%        https://ctk.math.ncsu.edu/newtony.html
+%
 %   matlab -nodisplay -nodesktop -nosplash -noFigureWindows -logfile batch.txt < marbl_nsoli.m &
 %
 % MARBL code being used is https://github.com/marbl-ecosys/MARBL
