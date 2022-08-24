@@ -1,5 +1,12 @@
-function J = calc_J_O2(x0,sim, bgc, time_series, forcing)
+function J = calc_J_O2(x0, sim, bgc, time_series, forcing, MTM)
+fprintf('%s.m: Start at %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 %calc_J Summary of this function goes here
+%   Detailed explanation goes here
+%
+% To avoid mysterous memory leaks, need to use "time_step_ann()" which
+% requires a accurate struct for time_series, and obviously needs correct
+% forcing and treansport.
+%
 %
 %   x0 Input is O2 in "fp" format eg. sz=[8500,1] MARBL wants sz=[545,20,32]
 %
@@ -23,9 +30,9 @@ function J = calc_J_O2(x0,sim, bgc, time_series, forcing)
 %
 %            = d(d(NO3)/dt)/ d(SiO3)     @ loc 1
 
-disp([mfilename,'.m: Starting simplified Jacobian; takes 30 seconds/tracer (maybe?) ...']);
+fprintf('%s.m: Simplified Jacobian; takes ~600 seconds/tracer\n',mfilename);
 
-tic
+tStart = tic;
 
 sz = size(bgc.tracer);
 J = zeros([sz(1) sz(2) sz(2)]);
@@ -35,69 +42,48 @@ J = zeros([sz(1) sz(2) sz(2)]);
 % FIXME: need to have correct uinit for h; what is that? median x0(iTr)??? or...
 
 % h = x0 /1e3;
-x0 = packMarbl(bgc.tracer,sim.domain.iwet_JJ);
-x0 = x0(:,7);
+% x0 = packMarbl(bgc.tracer,sim.domain.iwet_JJ);
+% x0 = x0(:,7);
 h = x0 *sqrt(eps);
+h = unpackMarbl(h, sim.domain.iwet_JJ,[7881,60,1]);
 % h = sqrt(eps) *ones(size(x0));
 
 % calculate d(Tracer)/dt with tracer values x0
 
-tmp = time_series;
-
-% initial_moles = global_moles(bgc.tracer, sim);  % DEBUG
-% f0 = f(x0, sim, bgc, time_series);                % sz=[379913,32]
-f0 = calc_f(sim, bgc, time_series, forcing);    % sz=[379913,32]
-% final_moles = global_moles(bgc.tracer, sim);    % DEBUG
-% tend_moles = global_moles(unpackMarbl(f0, sim.domain.iwet_JJ,size(bgc.tracer)), sim);    
-
-tName = tracer_names(0);    % no CISO tracers
+% tName = tracer_names(0);    % no CISO tracers
+f0 = calc_f(x0, sim, bgc, time_series, forcing, MTM,1);
 for lvl = 1:sz(2)       % loop over all lvl
 
-    dx = h(:,idx);
+    dx = h*0;
+    dx(:,lvl) = h(:,lvl);
+    dx = dx(sim.domain.iwet_JJ);
 
-    x1 = x0;
-    x1(:,idx) = x0(:,idx) +dx;
+    x1 = x0 +dx;
 
     % calculate d(Tracer)/dt with tracer values x1
 
-%     f1 = f(x1,sim, bgc, time_series);
-    f1 = calc_f(x1, sim, bgc, time_series, forcing);
+    f1 = calc_f(x1, sim, bgc, time_series, forcing, MTM,1);
 
-    % deltaF = d(Tracer)
     df = f1 -f0;
-
-%     fprintf('%s:m: norm of d(%s) = %.2g\n', mfilename, string(tName(idx)), norm(df(:,idx)));
-    fprintf('%s:m: norm of d(%s)\t/d(%s) = %.2g\n', mfilename, string(tName(idx)), string(tName(idx)),norm(df(:,idx)./dx));
-%     if idx == 7
-%         keyboard
-%     end
+    idx = 7;
 
     %     its too late to be cute, just use a loop...
-    for j=1:sz(2)
-        J(:,j,idx) = df(:,j) ./dx;
-        if idx == 7
-            fprintf('%s:m: norm of d(%s)\t/d(%s) = %.2g\n', mfilename, string(tName(j)), string(tName(idx)),norm(df(:,j)./dx));
-        end
-    end
-    % debug deltaF at loc 1 all tracers wrt to Fe
-    %     loc = 152; iTr = 5;
-    %     foo = deltaF./dx./x0;
-    %     tmp = [f0(loc,:)', f1(loc,:)', deltaF(loc,:)', J(loc,:,idx)', foo(loc,:)', J(loc,:,iTr)'];
-
+    J(:,:,lvl) = df(:,:,idx)./h(:,lvl);
+    %     for j=1:sz(2)
+    % %         J(:,j,lvl) = df(:,j) ./(dx+eps);
+    %         J(:,j,lvl) = df(:,j,idx)./h(:,j);
+    % %         if idx == 7
+    % %             fprintf('%s:m: norm of d(%s)\t/d(%s) = %.2g\n', mfilename, string(tName(j)), string(tName(idx)),norm(df(:,j)./dx));
+    % %         end
+    %     end
     % https://duckduckgo.com/?q=181+This+sparse+indexing+expression+is+likely+to+be+slow.&t=osx&ia=web
-%     toc
 end
-% tmp = [f0(loc,:)', f1(loc,:)', deltaF(loc,:)', J(loc,:,idx)', foo(loc,:)', J(loc,:,iTr)'];
 
-elapsedTime = toc;
-disp(['J: ', num2str(elapsedTime*1, '%1.3f'),' (s) for partial of MARBL tendency (all tracers), WRT all tracers, at all locations']);
+elapsedTime = toc(tStart);
+fprintf('%s.m: %1.3f (s) for partial of MARBL (O2 only) tendency WRT tracers (O2 only), on all levels of same column, and for all columns\n', mfilename, elapsedTime);
 
 logJ=log10(abs(nonzeros(J(:))));
-figure(504); histogram(logJ); title("hist(log10(J))");
+figure(455); histogram(logJ); title("hist(log10(J))");
 
-% sz = size(J)tmp = zeros(prod(size()));
-% tmp = zeros([sz(1)*sz(2),sz(3));
-% for idx = 1:sz(2)       % loop over tracers
-%     tmp(:,idx) = J(:,idx,:);
-% end
+fprintf('End of %s.m: %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 end

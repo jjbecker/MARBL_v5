@@ -34,7 +34,7 @@ bgc.surf_forcing = forcing.surf_forcing;
 
 % river flux is not a tendency until divided by surface layer thickness
 % *** IN CM ***
-% Yes! Units are mixed m and cm because MARBL depths are cm. 
+% Yes! Units are mixed m and cm because MARBL depths are cm.
 
 surfaceLayerThickness_MARBL = (sim.domain.dzt(1) *sim.domain.MARBL_depth_per_m);
 
@@ -71,12 +71,17 @@ LHS  = d0(1+dt*TR.dxidt) + dt.*(-TR.D);     % LHS on all tracers
 FLHS = mfactor(LHS);    % run time = 0.44 sec for 3x3 any amount of tracers
 
 for it = 1:steps_per_period
+
+    % This "short circuit is to calc the Jacobian withOUT getting transport
+    % involved...
+
     if n<0
         n = 0;
         returnAfterOneTimeStep = true;
     else
         returnAfterOneTimeStep = false;
     end
+
     n = n+1;
     [~,bgc] = calculate_forcing(sim, bgc, n);
 
@@ -90,6 +95,14 @@ for it = 1:steps_per_period
         [bgc, time_series] = MARBL_loop_parallel (n, sim, bgc,time_series);
     else
         [bgc, time_series] = MARBL_loop          (n, sim, bgc,time_series);
+    end
+
+    % This "short circuit is to calc the Jacobian withOUT getting transport
+    % involved...
+    % 
+    % we have the MARBL output, and that is ALL we want. No transport, etc.
+    if returnAfterOneTimeStep
+        break
     end
 
     if (sim.captureAllSelectedTracers == 1)
@@ -171,15 +184,15 @@ for it = 1:steps_per_period
             %         autoArrangeFigures(0,0);
         end
     end
-    if returnAfterOneTimeStep
-        break
-    end
+    %     if returnAfterOneTimeStep
+    %         break
+    %     end
 end % steps_per_period
 
 % mpiprofile viewer
 
 if k <4 % error
-%     keyboard
+    %     keyboard
 end
 
 % if (sim.logTracers)
@@ -192,10 +205,10 @@ if (sim.captureAllSelectedTracers == 1 && month == 12)
     myFileName = sprintf('%s/all_tracers_all_times.mat', sim.outputRestartDir);
     fprintf('%s.m: Saving "%s"...\n', mfilename, myFileName);
     tracer = tracerCapture;
-% tmp_time_series = squeeze(time_series.tracer(sim.time_series_lvl,7,:));
-% tmp = unpackMarbl(tracerCapture,sim.domain.iwet_JJ,[7881,60,730]);
-% tmp_log = squeeze(tmp(sim.time_series_loc, sim.time_series_lvl,:));
-% tst = [tmp_time_series tmp_log];
+    % tmp_time_series = squeeze(time_series.tracer(sim.time_series_lvl,7,:));
+    % tmp = unpackMarbl(tracerCapture,sim.domain.iwet_JJ,[7881,60,730]);
+    % tmp_log = squeeze(tmp(sim.time_series_loc, sim.time_series_lvl,:));
+    % tst = [tmp_time_series tmp_log];
     save( myFileName, 'tracer' ,'-v7.3');
 
     myFileName = sprintf('%s/all_tendency_all_times.mat', sim.outputRestartDir);

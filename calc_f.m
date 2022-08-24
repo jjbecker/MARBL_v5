@@ -1,4 +1,4 @@
-function tendency = calc_f( sim, bgc, time_series, forcing)
+function tendency = calc_f( x0, sim, bgc, time_series, forcing, MTM, month)
 
 % calc_f: Calls MARBL with given tracers "C" in "fp" format [8500,32] etc.
 %
@@ -27,6 +27,19 @@ function tendency = calc_f( sim, bgc, time_series, forcing)
 % tmp.tracer = nsoli2bgc(sim, bgc, x);   % marbl format
 
 % make sure call to MARBL initializes it; aka n=1
+
+c = packMarbl(bgc.tracer,sim.domain.iwet_JJ);
+c = replaceSelectedTracers(sim, c(:), x0, sim.selection);
+numWaterParcels = numel(sim.domain.iwet_JJ);
+numTracers = sim.bgc_struct_base.size.tracer(2);
+c = reshape(c, [numWaterParcels, numTracers]);
+bgc.tracer = unpackMarbl(c, sim.domain.iwet_JJ,size(bgc.tracer));  
+
+[~, tmp, ~, ~] = time_step_ann (sim, bgc, time_series, -1, forcing(month), MTM(month), month);
+tendency = tmp.tendency;
+clear c tmp
+return
+
 
 tmp = bgc;
 tmp.forcing      = forcing.interior;

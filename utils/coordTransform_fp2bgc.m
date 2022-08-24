@@ -57,6 +57,7 @@ num_parcels  = numel(sim.domain.iwet_FP);
 idx = sim.domain.iwet_JJ( mod(idx_fp-1,num_parcels) +1 )';
 
 if (idx_fp <=0)
+    fprintf("\nERROR! idx_fp inconsistent with M3d\n\n");
     keyboard        % FIXME: return 0 ???  Error???
 else
 
@@ -98,7 +99,12 @@ else
 
         %         myColors = 1:numel(iLat);
         myColors = iTr;
-        geoscatter(lat, lon, 100, myColors,'^','filled');
+        mySize = 100;
+
+        myColors = 'black';
+        mySize = 10;
+
+        geoscatter(lat, lon, mySize, myColors,'^','filled');
 
         %         a = myColors;                  c = num2cell(a); % strings to label
         %         dx = 0.; dy = 0.; % displacement so the text does not overlay the data points
