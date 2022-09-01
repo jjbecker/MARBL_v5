@@ -31,10 +31,10 @@ x0_bgc = bgc2nsoli(sim, bgc.tracer);    % unitless start of year values
 while current_month < total_months
     current_month = current_month+1;
     years_gone_by = floor((current_month-1)/12);
-    month = mod(current_month-1,12)+1;
+    myMonth = mod(current_month-1,12)+1;
     %     fakeMonth = mod(6+current_month-1,12)+1;
 
-    [sim, bgc, time_series, n] = time_step_ann (sim, bgc, time_series, n, forcing(month), MTM(month), month);
+    [sim, bgc, time_series, n] = time_step_ann (sim, bgc, time_series, n, forcing(myMonth), MTM(myMonth), myMonth);
 
     if (sim.logTracers)
         %         toc(timer_total);
@@ -43,7 +43,7 @@ while current_month < total_months
         %         toc(timer_total);
     end
 
-    %         fprintf('%s.m: Runtime to end of month %d: %s min, rate = %s hr/sim_y\n', mfilename, current_month, ...
+    %         fprintf('%s.m: Runtime to end of myMonth %d: %s min, rate = %s hr/sim_y\n', mfilename, current_month, ...
     %             num2str(toc(timer_total)/60,'%.2f'), ...
     %             num2str((toc(timer_total)/3600/(current_month/12)),'%.2f'));
 
