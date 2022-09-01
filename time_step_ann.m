@@ -1,4 +1,4 @@
-function [sim, bgc, time_series, n] = time_step_ann (sim, bgc, time_series, n, forcing, TR, month)
+function [sim, bgc, time_series, n] = time_step_ann (sim, bgc, time_series, n, forcing, TR, myMonth)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -21,12 +21,12 @@ end
 dt               = sim.dt;
 tsperDay         = round(sim.const.sec_d/dt);
 days_in_month    = [31 28 31 30 31 30 31 31 30 31 30 31];
-steps_per_period = tsperDay*days_in_month(month);
+steps_per_period = tsperDay*days_in_month(myMonth);
 %%
 
 % DEBUG: n = n+steps_per_period; return; % quick return to debug G
 
-% forcing, river, and transport created monthly. We get only this month's
+% forcing, river, and transport created monthly. We get only this myMonth's
 %  in this routine
 
 bgc.forcing      = forcing.interior;
@@ -197,10 +197,10 @@ end
 
 % if (sim.logTracers)
 % %     small_plots(sim, time_series, n, sim.time_series_loc, sim.time_series_lvl);
-% %     disp(['Volume Integral: ',mfilename,' end of Month #',num2str(month),' = ',num2str(time_series.moles(:, n)',12)])
+% %     disp(['Volume Integral: ',mfilename,' end of Month #',num2str(myMonth),' = ',num2str(time_series.moles(:, n)',12)])
 % end
 
-if (sim.captureAllSelectedTracers == 1 && month == 12)
+if (sim.captureAllSelectedTracers == 1 && myMonth == 12)
 
     myFileName = sprintf('%s/all_tracers_all_times.mat', sim.outputRestartDir);
     fprintf('%s.m: Saving "%s"...\n', mfilename, myFileName);
