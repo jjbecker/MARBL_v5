@@ -36,31 +36,11 @@ c = reshape(c, [numWaterParcels, numTracers]);
 bgc.tracer = unpackMarbl(c, sim.domain.iwet_JJ,size(bgc.tracer));  
 
 [~, tmp, ~, ~] = time_step_ann (sim, bgc, time_series, -1, forcing(month), MTM(month), month);
+
 tendency = tmp.tendency;
+
 clear c tmp
+
 return
-
-
-tmp = bgc;
-tmp.forcing      = forcing.interior;
-tmp.surf_forcing = forcing.surf_forcing;
-n = 1;
-[~,tmp] = calculate_forcing(sim, tmp, n);
-
-if (sim.runInParallel)
-    [tmp, ~] = MARBL_loop_parallel ( n, sim, tmp, time_series);
-else
-    [tmp, ~] = MARBL_loop          ( n, sim, tmp, time_series);
-end
-
-tendency = tmp.tendency;
-
-% tendency = packMarbl( tmp.tendency, sim.domain.iwet_JJ );
-
-clear tmp
-clear x x0
-
-% elapsedTime = toc(t1);
-% disp(' ');disp(['f: ', num2str(elapsedTime*1, '%1.3f'),' (s) for 1 tendency of all columns'])
 
 end
