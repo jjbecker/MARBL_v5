@@ -22,6 +22,10 @@ dt               = sim.dt;
 tsperDay         = round(sim.const.sec_d/dt);
 days_in_month    = [31 28 31 30 31 30 31 31 30 31 30 31];
 steps_per_period = tsperDay*days_in_month(myMonth);
+
+    steps_between_plots = 1e+10;
+    %    steps_between_plots = 8*7;
+    %    steps_between_plots = 8*1;
 %%
 
 % DEBUG: n = n+steps_per_period; return; % quick return to debug G
@@ -62,25 +66,25 @@ C_1 = packMarbl( bgc.tracer, sim.domain.iwet_JJ );
 %
 %     C(:,k) = mfactor(FLHS,RHS);           % aka time stepped tracers
 
-A    = TR.A;
-H    = TR.H;
-% tau  = 1/sim.const.sec_y/1e+6;            % 1/1e+6 years (s)
-% msk = sim.domain.M3d;
-% R    = d0( msk(sim.domain.iwet_JJ ) / tau );   % (1/sec)
-LHS  = d0(1+dt*TR.dxidt) + dt.*(-TR.D);     % LHS on all tracers
-FLHS = mfactor(LHS);    % run time = 0.44 sec for 3x3 any amount of tracers
+if n<0
+    n = 0;
+    returnAfterOneTimeStep = true;
+else
+    returnAfterOneTimeStep = false;
+    A    = TR.A;
+    H    = TR.H;
+    % tau  = 1/sim.const.sec_y/1e+6;            % 1/1e+6 years (s)
+    % msk = sim.domain.M3d;
+    % R    = d0( msk(sim.domain.iwet_JJ ) / tau );   % (1/sec)
+    LHS  = d0(1+dt*TR.dxidt) + dt.*(-TR.D);     % LHS on all tracers
+    FLHS = mfactor(LHS);    % run time = 0.44 sec for 3x3 any amount of tracers
+end
+
 
 for it = 1:steps_per_period
 
     % This "short circuit is to calc the Jacobian withOUT getting transport
     % involved...
-
-    if n<0
-        n = 0;
-        returnAfterOneTimeStep = true;
-    else
-        returnAfterOneTimeStep = false;
-    end
 
     n = n+1;
     [~,bgc] = calculate_forcing(sim, bgc, n);
@@ -99,7 +103,7 @@ for it = 1:steps_per_period
 
     % This "short circuit is to calc the Jacobian withOUT getting transport
     % involved...
-    % 
+    %
     % we have the MARBL output, and that is ALL we want. No transport, etc.
     if returnAfterOneTimeStep
         break
@@ -175,9 +179,6 @@ for it = 1:steps_per_period
     %%
     % Make occasional plots (slow) to monitor progress of sim and debug
 
-    steps_between_plots = 1e+10;
-    %    steps_between_plots = 8*7;
-    %    steps_between_plots = 8*1;
     if mod(n, steps_between_plots) == 0
         if (sim.logTracers)
             small_plots(sim, time_series, n, sim.time_series_loc, sim.time_series_lvl);
