@@ -83,7 +83,7 @@ while current_month < total_months
         %         allFile = sprintf('%s/all_%d.mat', sim.outputRestartDir, round(1+years_gone_by));
         %         fprintf('%s.m: Saving "%s"...\n', mfilename, allFile);
         %         save(allFile,'-v7.3');
-        myRestartFile = sprintf('%s/restart_%d.mat', sim.outputRestartDir, round(1+years_gone_by));
+        myRestartFile = sprintf('%s/restart_%d.mat', sim.outputRestartDir, round(sim.start_yr+years_gone_by));
         fprintf('%s.m: Saving "%s"...\n', mfilename,myRestartFile);
         % copy original restart file, then replace original "tracer" with
         % the current bgc.tracer. Surprisingly fast!
