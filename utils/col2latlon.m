@@ -58,7 +58,7 @@ else
     c = cellstr(b); % strings to label
     dx = 0.; dy = 0.; % displacement so the text does not overlay the data points
     text(lat+dx, lon+dy, c);
-    title(debugStr);
+    title(debugStr, 'Interpreter', 'none');
     geobasemap topographic
 end
 
