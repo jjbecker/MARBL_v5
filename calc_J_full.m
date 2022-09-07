@@ -1,7 +1,7 @@
 function J = calc_J_full(sim, bgc, time_series, forcing, MTM)
 
 fprintf('%s.m: Start at %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
-%calc_J Caclulate complete J, all tracers all levels, but at one location
+%calc_J Summary of this function goes here
 %   Detailed explanation goes here
 %
 % To avoid mysterous memory leaks, need to use "time_step_ann()" which
@@ -95,7 +95,7 @@ for iTr = 1:sz(3)
 
         % first 2 cols specify location of --> h <--, col 3 and 4 are
         % change in tend for all tracers and lvl
-        J(lvl, iTr, :, :) = df_dh;
+        J(:, :, lvl, iTr) = df_dh;
 
         elapsedTime = toc(tStart);
         fprintf('%s.m: %1.3f (s) for partial of all MARBL tendency all levels, w.r.t. (%s) thru lvl %d of same column, for all columns. h %g, dh %g, norm(df_dh(:)) %g\n', mfilename, elapsedTime, tStr, lvl, h, dh, norm(df_dh(:)));
