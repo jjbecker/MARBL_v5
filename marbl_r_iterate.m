@@ -230,7 +230,7 @@ sim.selection = unique(sort(sim.selection));
 if (min(sim.selection)<1) || (max(sim.selection)>32)
     keyboard   % bogus tracer selected
 end
-cstr = tName(sim.selection)'; 
+cstr = tName(sim.selection)';
 fprintf('%s: Selected tracers: %s \n', mfilename, cstr{:});
 
 %%%%
@@ -244,7 +244,7 @@ nsoliParam.tol    = [nsoliParam.atol,nsoliParam.rtol];     % [absolute error, re
 nsoliParam.etamax = 0.9;             % maximum error tol for residual in inner iteration, default = 0.9
 nsoliParam.maxit  = 30;              % maximum number of nonlinear iterations (Newton steps) default = 40
 nsoliParam.maxitl = 10;              % maximum number of inner iterations before restart in GMRES(m), default = 40;
-                                % also number of directional derivative calls, also num of gmres calls
+% also number of directional derivative calls, also num of gmres calls
 nsoliParam.restart_limit = 10;       % max number of restarts for GMRES if lmeth = 2, default = 20;
 parms  = [nsoliParam.maxit, nsoliParam.maxitl, nsoliParam.etamax, nsoliParam.lmeth, nsoliParam.restart_limit];
 
@@ -287,32 +287,17 @@ if(0)
     Q = Q/12; % annually averaged transport and surface restoring (aka birth)
     toc
 
-    % fprintf('  Factoring the preconditioner...');
-    % tic;
-    % FQ = mfactor(sim.T*Q);
-    %         sim.FQ = FQ;
-    %         toc
-    %         x0_age = sim.domain.M3d + nan;
-    %         x0_age(sim.domain.iwet_FP) = -mfactor(FQ,0*iwet+sim.T);
-    %
-    % %     J = calc_J_full(@calc_f, x0, sim, bgc, time_series);
-    % PQ_inv = FQ;
-    % J = ones(7881, 60, 60);
-    
-    
     tStart = tic;
+    J = calc_J_Single_Tracer(sim, bgc, time_series, forcing, MTM);
 
-    J = calc_J_O2(x0, sim, bgc, time_series, forcing, MTM);
-    
     J_FP = sparse(numel(sim.domain.iwet_JJ),numel(sim.domain.iwet_JJ));
     fprintf('%s.m: "FP" format of Jacobian of O2 will be size [%d, %d]\n', mfilename, size(J_FP));
-    
+
     [iCol, iLvl] = coordTransform_fp2bgc(1:379913, sim);
     for myCol = 1:sim.domain.num_wet_loc
         myLvl = 1:bgc.kmt(myCol);
 
         tmp = squeeze(J(myCol,myLvl,myLvl));
-%         tmp(:) = 1:numel(myLvl)^2;
 
         rowsOfJ_FP = coordTransform_bgc2fp(myCol, myLvl, sim);
         J_FP( rowsOfJ_FP, rowsOfJ_FP ) = tmp;
@@ -321,9 +306,9 @@ if(0)
     elapsedTime = toc(tStart);
     disp([]);
     fprintf('%s.m: %1.3f (s) for calculating J in MARBL coords, then converting Jacobian to FP\n', mfilename, elapsedTime)
-disp([myCol, bgc.kmt(myCol), nnz(J_FP)]);
-    
-PQ = Q+J_FP;
+    disp([myCol, bgc.kmt(myCol), nnz(J_FP)]);
+
+    PQ = Q+J_FP;
 
     figure(456); spy(Q); title ('Q', 'Interpreter', 'none')
     figure(457); spy(J_FP); title('J_FP', 'Interpreter', 'none')
@@ -352,7 +337,7 @@ else
     %     load('QJ',      'Q', 'J', 'J_FP','PQ');     % ~  5 (s) to load a 1/4 GB
     elapsedTime = toc(tStart);
     fprintf('%s.m: %1.3f (s) to load PQinv \n',mfilename, toc(tStart));
-    end
+end
 
 num_r_iterations = 40;
 x = x0;
@@ -383,11 +368,13 @@ tol    = [atol,rtol];   % [absolute error, relative tol]
 etamax = 0.9;           % maximum error tol for residual in inner iteration, default = 0.9
 maxit  = 40;            % maximum number of nonlinear iterations (Newton steps) default = 40
 maxitl = 15;            % maximum number of inner iterations before restart in GMRES(m), default = 40;
-                        % also number of directional derivative calls, also num of gmres calls
+% also number of directional derivative calls, also num of gmres calls
 restart_limit = 10;     % max number of restarts for GMRES if lmeth = 2, default = 20;
 parms  = [maxit,maxitl,etamax,lmeth,restart_limit];
+% [sol,it_hist,ierr,x_hist] = nsoli (x0, @(x) calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), tol, parms);
 [sol,it_hist,ierr,x_hist] = brsola(x0, @(x) calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), tol, parms);
 
+keyboard
 timer_loop = tic;
 for itc = 1:num_r_iterations
     % FIXME: note "x" not "x0"
