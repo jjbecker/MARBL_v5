@@ -113,30 +113,19 @@ for h_lvl = 1:sz(2)       % loop over all levels
 
 end
 
-J_perm   = permute(J,[1 3 2]);                      % [7881, 60, 60] = [iCOl,hLvl, iLvl]
-J_packed = packMarbl(J_perm,sim.domain.iwet_JJ);    % [379913, 60)
-% [iCol, iLvl, iLat, iLon, lat, lon, depth] = coordTransform_fp2bgc(379893, sim, 666,'');
+J        = permute(J,[1 3 2]);                      % [7881, 60, 60] = [iCOl,hLvl, iLvl]
 
 elapsedTime = toc(tStart);
-fprintf('%s.m: %1.3f (s) for partial of MARBL tendency(%s) on all levels, w.r.t. (%s) of all levels of same column, for all columns\n', mfilename, elapsedTime, tStr, tStr);
-
-logJ=log10(abs(nonzeros(J(:))));
-figure(400+sim.selection); histogram(logJ); title(sprintf("hist( log10( abs( J( %s ))))",tStr), 'Interpreter', 'none');
-
-logJT=log10(sim.T *abs(nonzeros(J(:))));
-figure(500+sim.selection); histogram(logJT); title(sprintf("hist( log10( abs( sim.T *J( %s ))))",tStr), 'Interpreter', 'none');
-
-J = J_perm;
+fprintf('%s.m: %1.3f (s) for partial of MARBL tendency(%s) in MARBL 3d format\n', mfilename, elapsedTime, tStr);
 
 
-fprintf('%s.m: nnz(J) = %f\n', mfilename, nnz(J));
-fprintf('%s.m: nnz(J)/numel(x0(:) = %f\n', mfilename, nnz(J)/numel(x0(:)));
-
+fprintf('%s.m: Converting partial of MARBL tendency(%s) to FP format\n', mfilename, tStr);
+J_packed = packMarbl(J,sim.domain.iwet_JJ);         % [379913, 60)
+% convert to FP corordinates
 [iCol, iLvl] = coordTransform_fp2bgc(1:379913, sim);
-
 numRows = numel(iCol);
-J_2d = sparse(numRows,numRows);
 
+J_FP = sparse(numRows,numRows);
 tic;
 for row = 1:numRows
     myLvl = find(J_packed(row,:) ~=0);
@@ -144,22 +133,37 @@ for row = 1:numRows
         rows = repelem(row, numel(myLvl));
         cols = coordTransform_bgc2fp(iCol(rows), myLvl, sim);
         vals = squeeze(J_packed(row,myLvl));
-        J_2d(row, cols) = vals;
+        % Does this the slow, but certain way...
+        J_FP(row, cols) = vals;
     end
-    if mod(row,7881) == 0
+    if mod(row,7881*5) == 0
         fprintf('row %d ', row)
         toc;
     end
 end
 toc;
-save('J', 'J', 'J_packed', 'J_2d');
-toc;
+elapsedTime = toc(tStart);
+fprintf('%s.m: %1.3f (s) for partial of MARBL tendency(%s) on all levels, w.r.t. (%s) of all levels of same column, for all columns\n', mfilename, elapsedTime, tStr, tStr);
 
-spy(J_2d)
+
+
+fprintf('%s.m: nnz(J) = %f\n', mfilename, nnz(J_FP));
+fprintf('%s.m: nnz(J)/numel(x0(:) = %f\n', mfilename, nnz(J_FP)/numel(x0(:)));
+
+logJ=log10(abs(nonzeros(J_FP(:))));
+figure(400+sim.selection); histogram(logJ); title(sprintf("hist( log10( abs( J( %s ))))",tStr), 'Interpreter', 'none');
+
+logJT=log10(sim.T *abs(nonzeros(J_FP(:))));
+figure(500+sim.selection); histogram(logJT); title(sprintf("hist( log10( abs( sim.T *J( %s ))))",tStr), 'Interpreter', 'none');
+
+figure(666)
+spy(J_FP)
 title('Partial of d(O2)/dt wrt to O2 everywhere');
 xlabel('water level FP index)')
 ylabel('water level FP index)')
 
 fprintf('End of %s.m: %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
+
+J = J_FP;
 
 end
