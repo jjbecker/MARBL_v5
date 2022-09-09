@@ -18,3 +18,5 @@ MEX/marbl_interface_wrapper_mod.o
 MEX/marbl_interface_wrapper_mod.mod
 # don't check in files in bak
 bak/
+PQ_inv.mat
+QJ.mat
