@@ -53,7 +53,7 @@ captureAllSelectedTracers = 0;
 % DEBUG stuff
 logTracers = 0;
 ck_years = 1;
-time_step_hr = 12; % FAST debug
+% time_step_hr = 12; % FAST debug
 % yearsBetweenRestartFiles = 1;
 % % time_step_hr = 6912/60/60;
 
@@ -336,7 +336,7 @@ if(0)
     clear Q J J_FP
 
     tStart = tic;
-    fprintf('%s.m: Factoring 13 GB preconditioner PQ...\n', mfilename)
+    fprintf('%s.m: Factoring 23 GB preconditioner PQ...\n', mfilename)
 
 %     keyboard
     PQ_inv = mfactor(sim.T*PQ);     % 22 GB!  aka 2.4133e+10 bytes
@@ -345,12 +345,12 @@ if(0)
     elapsedTime = toc(tStart);
     fprintf('%s.m: %1.3f (s) to calculate and mfactor of PQ\n', mfilename, toc(tStart));
 
-    fprintf('%s.m: Saving 13 GB preconditioner...\n', mfilename)
+    fprintf('%s.m: Saving 23 GB preconditioner...\n', mfilename)
     save('PQ_inv', 'PQ_inv');       % 22 GB!  aka 2.4133e+10 bytes
     elapsedTime = toc(tStart);
     fprintf('%s.m: %1.3f (s) to calculate and save PQinv \n',mfilename, toc(tStart));
 else
-    fprintf('\n%s.m: Loading 13 GB mfactored preconditioner PQ...\n', mfilename)
+    fprintf('\n%s.m: Loading 23 GB mfactored preconditioner PQ...\n', mfilename)
     tStart = tic;
     load('PQ_inv',  'PQ_inv');                  % ~120 (s) to load 22GB
     %     load('QJ',      'Q', 'J', 'J_FP','PQ');     % ~  5 (s) to load a 1/4 GB
