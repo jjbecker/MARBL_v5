@@ -63,9 +63,9 @@ while current_month < total_months
         tmpG = tmpG(:);                         % nsoli format
         
         figure (700); scatter(x0,tmpG); title('scatter(x0,G)'); xlabel('x0');   ylabel('G')
-        figure (701); plot(tmpG);       title("plot(G)");       xlabel('idxFP');ylabel('G')
+        figure (701); plot(tmpG);       title("plot(G)");       xlabel('idx FP');ylabel('G')
         figure (702); qqplot(tmpG);     title("qqplot(G)")
-        figure (601); histogram(tmpG);  title("histogram(G)");  xlabel('x0');   ylabel('Count')
+        figure (601); histogram(tmpG);  title("histogram(G)");  xlabel('G');   ylabel('Count')
 
         x0_bgc = x1_bgc;
 

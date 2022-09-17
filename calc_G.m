@@ -10,7 +10,7 @@ if isempty(gFileCnt)
     fprintf('call #%d to G\n', gFileCnt);
     fprintf('norm(x0         ) = %f\n', norm(x0         ));
     % checkNegAndHisto(sim, x0, 100.0, 'x0', 900);
-    figure (500); plot(x0); title('x0')
+%     figure (500); plot(x0); title('x0')
 else
     gFileCnt = gFileCnt +1;
     fprintf('call #%d to G\n', gFileCnt);
@@ -18,8 +18,8 @@ else
     fprintf('norm(x0         ) = %f\n', norm(x0         ));
     dx0 = x0 -x0_prev;
     fprintf('norm(x0 -x0_prev) = %.6f\n', norm(dx0) );
-    figure (501); plot(x0_prev); title('x0_prev', 'Interpreter', 'none')
-    figure (502); plot(x0)     ; title('x0')
+%     figure (501); plot(x0_prev); title('x0_prev', 'Interpreter', 'none')
+%     figure (502); plot(x0)     ; title('x0')
     figure (503); plot(dx0)    ; title('dx0')
 end
 
@@ -217,7 +217,7 @@ if (0)
 end
 
     figure (900); scatter(x0,r); title("scatter(x0,r)");    xlabel('x0');   ylabel('r')
-    figure (901); plot(r);       title("plot(r)");          xlabel('idxFP');ylabel('r')
+    figure (901); plot(r);       title("plot(r)");          xlabel('idx FP');ylabel('r')
     figure (902); qqplot(r);     title("qqplot(r)")
     figure (602); histogram(r);  title("histogram(r)");     xlabel('r');   ylabel('Count')
 
