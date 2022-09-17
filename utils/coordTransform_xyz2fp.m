@@ -48,13 +48,13 @@ function [idx_fp] = coordTransform_xyz2fp(iLat, iLon, iLvl, sim)
 sz = size(sim.domain.M3d,[1 2]);    % dimension of a single layer in M3d
 iCol = sub2ind(sz,iLat,iLon);       % linear index of (ilat,ilon) in level
 
-if numel(iLat)>1 && (numel(iLvl) ~=numel(iLat))
+if numel(iLat)>1 && (numel(iLvl) ~= numel(iLat))
 % FIXME: this works if iLvl is a scalar or if iLat (hence iLon) have the
 % same dimension as iLvl; which makes sense but tempting to use a couple of
-% level rather than the intenrion of a lvl for every lat and lon
-
+% level rather than the intersection of a lvl for every lat and lon
     keyboard
 end
+
 idx_xyz = iCol + prod(sz)*(iLvl-1); % linear index of xyz in all of M3d
 
 % This is the tricky bit use sim.domain.iwet_FP,idx_xyz) to convert to 
@@ -63,7 +63,13 @@ idx_xyz = iCol + prod(sz)*(iLvl-1); % linear index of xyz in all of M3d
 % There are several clever ways to do this. "ismemeber" is fastest
 
 xyz_is_wet = ismember(sim.domain.iwet_FP,idx_xyz); % This sorts idx_xyz
-idx_fp = find(xyz_is_wet);                              
+idx_fp = find(xyz_is_wet);
+% tmp = 1:numel(xyz_is_wet);
+% tmp2= tmp (xyz_is_wet);
+% if(idx_fp ~= tmp2)
+%     keyboard
+% end
+
 if (isempty(idx_fp))
     fprintf("\nERROR! iCol and/or iLvl are inconsistent with M3d\n\n");
     keyboard
