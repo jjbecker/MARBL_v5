@@ -52,6 +52,28 @@ month = 1;
 
 f0 = bgc.tendency;
 f0 = squeeze(f0(:,:,sim.selection));            % size(f0) = [7881,60]
+% remember that f0, f1 and df are SUPPOSED to be zero below the bottom
+% this check and the isfinite next takes total of 11 milli seconds...
+% tic
+for j = 1 : numel(bgc.kmt)
+    f0(j, bgc.kmt(j)+1:60 ) = 0;
+end
+if sum(~isfinite(f0(:))) > 0, keyboard; end     % Always be checking MARBL
+% toc
+
+% FIXME: something clever like this SHOULD work...
+% tmp2 = f0;
+% tmp2(:, bgc.kmt+1:60 ) = 0;
+% if sum(~isfinite(tmp2(:))) > 0, keyboard; end
+% if (tmp1(:) ~= tmp2(:))
+%     keyboard;
+% end
+% 
+% if sum(~isfinite(f0(:))) > 0
+%     keyboard
+%     bad_idx =find(~isfinite(f0(:)));
+%     [bad_row, bad_col] = ind2sub(size(f0),bad_idx);
+% end
 
 for h_lvl = 1:sz(2)       % loop over all levels
 
@@ -74,30 +96,44 @@ for h_lvl = 1:sz(2)       % loop over all levels
     [sim, bgc, time_series, n] = time_step_ann (sim, bgc, time_series, -1, forcing(month), MTM(month), month);
 
     f1 = bgc.tendency;                      % f1(x1) = tendency all tracers
-    f1 = squeeze(f1(:,:,sim.selection));    % tendency of selected tracer 
+    f1 = squeeze(f1(:,:,sim.selection));    % tendency of selected tracer
+    % remember that f0, f1 and df are SUPPOSED to be zero below the bottom
+    for j = 1 : numel(bgc.kmt)
+        f1(j, bgc.kmt(j)+1:60 ) = 0;
+    end
+    if sum( ~isfinite(f1(:)) ) > 0, keyboard; end     % Always be checking MARBL
 
+
+    % remember that f0, f1 and df are SUPPOSED to be zero below the bottom
     df = f1 -f0;                            % delta(tend)
 
-    % remember that f0, f1 and df are zero below the bottom
+    % only do df_dx calculation where kmt >= h_lvl (wet at depth)
+    for j = 1 : numel(bgc.kmt)
+        df(j, bgc.kmt(j)+1:60 ) = 0;
+    end
+    % check it!
+    if sum( ~isfinite(df(:)) ) > 0, keyboard; end     % Always be checking MARBL
 
     % divide df, the change of tendency of every water column on every 
     % level by dh the change of of its own water columnm tracer but ONLY 
     % on the given level
     
-    % only do calculation on columns where kmt >= h_lvl (aka wet at this
-    % depth)
-
-    valid_col = find(bgc.kmt >= h_lvl);
-
     dh = x1 - x0;
     dh = dh(:,h_lvl);                       % [7881,1]
+
+    % remember that f0, f1 and df are SUPPOSED to be zero below the bottom
+    %
+    % only do calculation on columns where kmt >= h_lvl (aka wet at this
+    % depth)
+    valid_col = find(bgc.kmt >= h_lvl);
 
     df_dx = 0 * f0;
     df_dx(valid_col,:) = df(valid_col,:) ./dh(valid_col);
 
     % check it!
-    if sum(~isfinite(df_dx(:))) > 0
+    if sum( ~isfinite(df_dx(:)) ) > 0
         keyboard
+%         [bad_row, bad_col] = ind2sub(size(df_dx),bad_idx);
     end
 
     % To be clear!
@@ -113,7 +149,7 @@ for h_lvl = 1:sz(2)       % loop over all levels
 
 end
 
-J        = permute(J,[1 3 2]);                      % [7881, 60, 60] = [iCOl,hLvl, iLvl]
+J = permute(J,[1 3 2]);                      % [7881, 60, 60] = [iCOl,hLvl, iLvl]
 
 elapsedTime = toc(tStart);
 fprintf('%s.m: %1.3f (s) for partial of MARBL tendency(%s) in MARBL 3d format\n', mfilename, elapsedTime, tStr);
@@ -121,49 +157,66 @@ fprintf('%s.m: %1.3f (s) for partial of MARBL tendency(%s) in MARBL 3d format\n'
 
 fprintf('%s.m: Converting partial of MARBL tendency(%s) to FP format\n', mfilename, tStr);
 J_packed = packMarbl(J,sim.domain.iwet_JJ);         % [379913, 60)
-% convert to FP corordinates
-[iCol, iLvl] = coordTransform_fp2bgc(1:379913, sim);
-numRows = numel(iCol);
+fprintf('%s.m: nnz(J_packed) = %.0f\n', mfilename, nnz(J_packed));
 
-J_FP = sparse(numRows,numRows);
+
+% convert to FP corordinates
+[iCol, iLvl] = coordTransform_fp2bgc(1:numel(sim.domain.iwet_JJ), sim);
+numRows = numel(iCol);
+% calculate non zero elements as vectors, then make sparse 
+i_row = 0*(1:nnz(J_packed)); 
+j_col = i_row; 
+k_val = i_row;
+idx = 1;
+
 tic;
 for row = 1:numRows
+
     myLvl = find(J_packed(row,:) ~=0);
+    if sum( myLvl > bgc.kmt (iCol(row)) ) > 0
+        keyboard
+    end
+
     if numel(myLvl) > 0
-        rows = repelem(row, numel(myLvl));
+        rows = repelem(row, numel(myLvl));  % just repeat this row num as we want all cols 
         cols = coordTransform_bgc2fp(iCol(rows), myLvl, sim);
         vals = squeeze(J_packed(row,myLvl));
-        % Does this the slow, but certain way...
-        J_FP(row, cols) = vals;
+        % Do this slow, but certain way...
+%         J_FP(row, cols) = vals;
+        myRange = idx:idx+numel(myLvl)-1;
+        i_row(myRange) = row;
+        j_col(myRange) = cols;
+        k_val(myRange) = vals;
+        idx = idx+numel(myLvl);
     end
+
+    % DEBUG: show elapsed time...
     if mod(row,7881*5) == 0
         fprintf('row %d ', row)
         toc;
     end
 end
-toc;
+toc
+J_FP = sparse(i_row, j_col, k_val, numel(sim.domain.iwet_JJ), numel(sim.domain.iwet_JJ));
+% FIXME: we seem to have calculated J' above...
+J = J_FP';
+
 elapsedTime = toc(tStart);
-fprintf('%s.m: %1.3f (s) for partial of MARBL tendency(%s) on all levels, w.r.t. (%s) of all levels of same column, for all columns\n', mfilename, elapsedTime, tStr, tStr);
+fprintf('%s.m: nzmax(J_FP) = %.0f\n\n', mfilename, nzmax(J_FP));
+fprintf('%s.m: %1.0f (s) for partial of MARBL tendency(%s) on all levels, w.r.t. %s on all levels of same column, for all columns\n', mfilename, elapsedTime, tStr, tStr);
 
+fprintf('%s.m: nnz(J) = %.0f\n', mfilename, nnz(J));
+fprintf('%s.m: nnz(J)/numel(x0(:) = %1.2f\n', mfilename, nnz(J)/numel(x0(:)));
 
-
-fprintf('%s.m: nnz(J) = %f\n', mfilename, nnz(J_FP));
-fprintf('%s.m: nnz(J)/numel(x0(:) = %f\n', mfilename, nnz(J_FP)/numel(x0(:)));
-
-logJ=log10(abs(nonzeros(J_FP(:))));
+logJ=log10(abs(nonzeros(J(:))));
 figure(400+sim.selection); histogram(logJ); title(sprintf("hist( log10( abs( J( %s ))))",tStr), 'Interpreter', 'none');
 
-logJT=log10(sim.T *abs(nonzeros(J_FP(:))));
+logJT=log10(sim.T *abs(nonzeros(J(:))));
 figure(500+sim.selection); histogram(logJT); title(sprintf("hist( log10( abs( sim.T *J( %s ))))",tStr), 'Interpreter', 'none');
 
-figure(666)
-spy(J_FP)
-title('Partial of d(O2)/dt wrt to O2 everywhere');
-xlabel('water level FP index)')
-ylabel('water level FP index)')
+figure(600+sim.selection); spy(J); title(sprintf('Partial of d(%s)/dt wrt to %s everywhere',tStr,tStr)); xlabel('FP index)'); ylabel('FP index)')
+
 
 fprintf('End of %s.m: %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
-
-J = J_FP;
 
 end
