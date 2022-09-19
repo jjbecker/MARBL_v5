@@ -85,6 +85,7 @@ outstat(itc+1, :) = [itc fnrm 0 0];
 %
 if fnrm < stop_tol
     sol=x;
+    it_hist=it_histx(1:itc+1,:);
     return
 end
 %
