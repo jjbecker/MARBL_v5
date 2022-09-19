@@ -1,4 +1,4 @@
-function [r,G] = calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv)
+function [r,G,x1] = calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv)
 %UNTITLED Take an initial value of tracers, return change at end of a year
 %   Detailed explanation goes here
 
@@ -60,11 +60,14 @@ final_moles = global_moles(bgc.tracer, sim);    % DEBUG
 
 x1_bgc = bgc2nsoli(sim, bgc.tracer); % unitless end of year values
 % checkNegAndHisto(sim, selectedTracers(sim, x1_bgc, sim.selection), 100.0, 'x', 900+gFileCnt);
+% x1 = reshape(x1_bgc, sz);
+% x1 = x1(:,sim.selection); 
 
 G = reshape(x1_bgc -x0_bgc, sz);    % x1 -x0 = phi(x0) -x0
 G = G(:,sim.selection);             % just selected cols
 G = G(:);                           % nsoli format
 fprintf('||G(x)|| = (max(abs(G))) = %g \n', max(abs(G)));
+x1 = x0 +G;
 
 % depending on preconditioner used, might need all residuals in actual
 % units, or just selected ones, or something else.
