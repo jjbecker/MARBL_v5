@@ -23,6 +23,8 @@ addpath('MEX');
 addpath(genpath('utils'));
 addpath(genpath('plotting'));
 
+addpath '/Users/jj/Desktop/UCI/MARBL/MARBL_v5/sol'
+
 % % FIXME: diary behavior is such that if renamed it's still active diary!!
 diary off; diary off; diary on; diary off; diary on; diary on;
 
@@ -47,7 +49,9 @@ tName = tracer_names(0);    % no CISO tracers
 %     find( strcmp(tName,'DONr') ) ];     % #16
 %     find( strcmp(tName,'DOCr') ) ];     % #17
 % tracer_str = 'Fe';
-tracer_str = 'DONr';
+% tracer_str = 'DONr';
+tracer_str = 'PO4';     % DIP
+% tracer_str = 'DOP';     % DOP
 selection = [ find( strcmp(tName,tracer_str) ) ];
 forwardIntegrationOnly = 0;
 ck_years = 1;   % Newton-Kryrlov -requires- 1 year, but might want to run long time_step_hr = 3;
@@ -293,78 +297,40 @@ c = reshape(c0, sz);
 
 % PQ_inv = 1;
 if(0)
-    fprintf('\n%s.m: Takes about 20 mins to average transport, compute a single tracer J, and mfactor PQ...\n', mfilename)
-    % From NK-EXAMPLES: make a sparse operator that restores the surface to zero with a time scale of tau
-    % msk  = sim.domain.M3d;     % wet == 1, dry == 0
-    % iwet = sim.domain.iwet_FP;
-    % % tau = 24 * 60^2;                % (sec/d)
-    % % tau = 7*sim.const.sec_d;        % (sec/wk)
-    % tau = sim.const.sec_h;          % (sec/hr)
-    % temp = msk;
-    % temp(:,:,2:end) = 0;
-    % R =  d0( temp(iwet) / tau );   % (1/sec)
-    % T = 12*num_step_per_month*dt;
-
-    fprintf('%s.m: Averaging transport...\n', mfilename)
-    tic
-    Q =  MTM(1).A + MTM(1).H + MTM(1).D;
-    for k = 2:12
-        Q = Q + MTM(k).A + MTM(k).H + MTM(k).D;
-    end
-    Q = Q/12; % annually averaged transport and surface restoring (aka birth)
-    toc
-
-    tStart = tic;
-
-    %     keyboard
-    J_FP = calc_J_Single_Tracer(sim, bgc, time_series, forcing, MTM);
-
-    elapsedTime = toc(tStart);
-    tName = tracer_names(0);    % no CISO tracers
-
-    PQ = Q+J_FP;
-
-    tStart = tic;
-    fprintf('%s.m: Factoring 23 GB preconditioner PQ...\n', mfilename)
-
-%     keyboard
-    PQ_inv = mfactor(sim.T*PQ);     % 22 GB!  aka 2.4133e+10 bytes
-    elapsedTime = toc(tStart);
-    fprintf('%s.m: %1.3f (s) to mfactor of PQ\n', mfilename, toc(tStart));
-
-    fprintf('%s.m: Saving 23 GB preconditioner...\n', mfilename)
-    save (strcat(string(tName(sim.selection)),'_QJ'), 'PQ_inv', 'PQ', 'Q', 'J_FP')
-    clear Q J J_FP PQ
-
-    elapsedTime = toc(tStart);
-    fprintf('%s.m: %1.0f (s) to factor and save PQinv \n',mfilename, toc(tStart));
+    [PQ_inv, J_FP] = calc_PQ_inv(sim, bgc, time_series, forcing, MTM);
 else
-    fprintf('\n%s.m: Loading 23 GB mfactored preconditioner PQ_inv from %s...\n', mfilename, strcat(string(tName(sim.selection)),'_QJ'))
+    fprintf('\n%s.m: Loading 23 GB mfactored preconditioner PQ_inv from %s...\n', mfilename, strcat('sol/',string(tName(sim.selection)),'_QJ'))
     tStart = tic;
     load (strcat(string(tName(sim.selection)),'_QJ'), 'PQ_inv')
     elapsedTime = toc(tStart);
     fprintf('%s.m: %1.0f (s) to init sim and load PQinv \n',mfilename, toc(tStart));
 end
 
-lmeth  = 2;             % method 2 = GMRES(m)
 atol   = 5e-2;
-rtol   = 1e-6;          % stop when norm is less than atol+rtol*norm of init_resid as seen by nsoli
+rtol   = 1e-6;          % stop when norm is less than atol+rtol*norm of init_resid as seen by nsoli or brsola
 
 atol   = eps;           % sum of the squares in (1/s), IOW average error = 1/sec_y/379,913 = 8e-14 years
 rtol   = 1e-7;          % stop when norm is less than atol+rtol*norm of init_resid as seen by nsoli
+
 atol   = 1;
+rtol   = 1e-7;          % stop when norm is less than atol+rtol*norm of init_resid as seen by nsoli
 
 tol    = [atol,rtol];   % [absolute error, relative tol]
-etamax = 0.9;           % maximum error tol for residual in inner iteration, default = 0.9
+
 maxit  = 40;            % maximum number of nonlinear iterations (Newton steps) default = 40
 maxitl = 15;            % maximum number of inner iterations before restart in GMRES(m), default = 40;
-% also number of directional derivative calls, also num of gmres calls
+                        % also number of directional derivative calls, also num of gmres calls
+
+etamax = 0.9;           % maximum error tol for residual in inner iteration, default = 0.9
+lmeth  = 2;             % Nsoli() method 2 = GMRES(m), not used by brsola().
 restart_limit = 10;     % max number of restarts for GMRES if lmeth = 2, default = 20;
-parms  = [maxit,maxitl,etamax,lmeth,restart_limit];
+
+% first 2 of these parms are used by brsola, reat are specific to nsoli
+parms  = [maxit,maxitl,etamax,lmeth,restart_limit]; 
 
 [sol,it_hist,ierr,x_hist] = brsola(x0, @(x) calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), tol, parms);
 
-keyboard
+% keyboard
 save (strcat(string(tName(sim.selection)),'_sol'), 'sol')
 
 num_r_iterations = 5;

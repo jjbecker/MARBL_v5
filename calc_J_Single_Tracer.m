@@ -192,7 +192,7 @@ for row = 1:numRows
 
     % DEBUG: show elapsed time...
     if mod(row,7881*5) == 0
-        fprintf('row %d ', row)
+        fprintf('row %d of %d, ', row, numRows )
         toc;
     end
 end

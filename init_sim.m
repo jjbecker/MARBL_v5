@@ -130,8 +130,6 @@ time_series = init_time_series(sim, bgc_struct);
 
 toc
 checkRestartFile(sim, bgc, forcing)
-elapsedTime = toc;
-
 %%
 if (sim.runInParallel)
     tic;

@@ -26,7 +26,7 @@ end
 
 % Check for negative tracers
 
-accept = 1;
+% accept = 1;
 % c0 = bgc2nsoli(sim, bgc.tracer);    % nsoli format; unitless; aka scaled FP
 % [~,c0] = ck_constraints(c0,-2);     % corrected any negatives
 %
