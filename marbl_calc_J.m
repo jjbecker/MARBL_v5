@@ -39,10 +39,16 @@ timer_total = tic;
 % FIXME: Someday, when we know what inputs need to be, put all this a file
 
 tName = tracer_names(0);    % no CISO tracers
-selection = [ ...
-    %     find(strcmp(tName,'SiO3')),...
-    %     find(strcmp(tName,'DIC')),...
-    find( strcmp(tName,'O2') ) ];
+% selection = [ ...
+%     find( strcmp(tName,'SiO3') ) ];     % #3
+%     find( strcmp(tName,'O2') ) ];       % #7
+%     find( strcmp(tName,'DIC') ) ];      % #8
+%     find( strcmp(tName,'DOPr') ) ];     % #15
+%     find( strcmp(tName,'DONr') ) ];     % #16
+%     find( strcmp(tName,'DOCr') ) ];     % #17
+% tracer_str = 'Fe';
+tracer_str = 'DONr';
+selection = [ find( strcmp(tName,tracer_str) ) ];
 forwardIntegrationOnly = 0;
 ck_years = 1;   % Newton-Kryrlov -requires- 1 year, but might want to run long time_step_hr = 3;
 time_step_hr = 3;
@@ -53,7 +59,7 @@ captureAllSelectedTracers = 0;
 % DEBUG stuff
 logTracers = 0;
 ck_years = 1;
-% time_step_hr = 12; % FAST debug
+time_step_hr = 12; % FAST debug
 % yearsBetweenRestartFiles = 1;
 % % time_step_hr = 6912/60/60;
 
@@ -285,7 +291,7 @@ c = reshape(c0, sz);
 % end
 %
 
-PQ_inv = 1;
+% PQ_inv = 1;
 if(0)
     fprintf('\n%s.m: Takes about 20 mins to average transport, compute a single tracer J, and mfactor PQ...\n', mfilename)
     % From NK-EXAMPLES: make a sparse operator that restores the surface to zero with a time scale of tau
@@ -299,8 +305,8 @@ if(0)
     % R =  d0( temp(iwet) / tau );   % (1/sec)
     % T = 12*num_step_per_month*dt;
 
-    tic
     fprintf('%s.m: Averaging transport...\n', mfilename)
+    tic
     Q =  MTM(1).A + MTM(1).H + MTM(1).D;
     for k = 2:12
         Q = Q + MTM(k).A + MTM(k).H + MTM(k).D;
@@ -315,73 +321,38 @@ if(0)
 
     elapsedTime = toc(tStart);
     tName = tracer_names(0);    % no CISO tracers
-    tStr = string(tName(sim.selection));
-    fprintf('%s.m: %1.3f (s) for partial of MARBL tendency(%s) on all levels, w.r.t. (%s) of all levels of same column, for all columns\n', mfilename, elapsedTime, tStr, tStr);
 
-    logJ=log10(abs(nonzeros(J_FP(:))));
-    figure(400+sim.selection); histogram(logJ); title(sprintf("hist( log10( abs( J( %s ))))",tStr), 'Interpreter', 'none');
-
-    logJT=log10(sim.T *abs(nonzeros(J_FP(:))));
-    figure(500+sim.selection); histogram(logJT); title(sprintf("hist( log10( abs( sim.T *J( %s ))))",tStr), 'Interpreter', 'none');
-
-    
-    
     PQ = Q+J_FP;
-
-    figure(456); spy(Q); title ('Q', 'Interpreter', 'none')
-    figure(457); spy(J_FP); title('J_FP', 'Interpreter', 'none')
-    figure(458); spy(PQ); title('PQ', 'Interpreter', 'none')
-
-    save('QJ', 'Q', 'J_FP','PQ');
-    clear Q J J_FP
 
     tStart = tic;
     fprintf('%s.m: Factoring 23 GB preconditioner PQ...\n', mfilename)
 
 %     keyboard
     PQ_inv = mfactor(sim.T*PQ);     % 22 GB!  aka 2.4133e+10 bytes
-    clear PQ
-
     elapsedTime = toc(tStart);
-    fprintf('%s.m: %1.3f (s) to calculate and mfactor of PQ\n', mfilename, toc(tStart));
+    fprintf('%s.m: %1.3f (s) to mfactor of PQ\n', mfilename, toc(tStart));
 
     fprintf('%s.m: Saving 23 GB preconditioner...\n', mfilename)
-    save('PQ_inv', 'PQ_inv');       % 22 GB!  aka 2.4133e+10 bytes
+    save (strcat(string(tName(sim.selection)),'_QJ'), 'PQ_inv', 'PQ', 'Q', 'J_FP')
+    clear Q J J_FP PQ
+
     elapsedTime = toc(tStart);
-    fprintf('%s.m: %1.3f (s) to calculate and save PQinv \n',mfilename, toc(tStart));
+    fprintf('%s.m: %1.0f (s) to factor and save PQinv \n',mfilename, toc(tStart));
 else
-    fprintf('\n%s.m: Loading 23 GB mfactored preconditioner PQ...\n', mfilename)
+    fprintf('\n%s.m: Loading 23 GB mfactored preconditioner PQ_inv from %s...\n', mfilename, strcat(string(tName(sim.selection)),'_QJ'))
     tStart = tic;
-    load('PQ_inv',  'PQ_inv');                  % ~120 (s) to load 22GB
-    %     load('QJ',      'Q', 'J', 'J_FP','PQ');     % ~  5 (s) to load a 1/4 GB
+    load (strcat(string(tName(sim.selection)),'_QJ'), 'PQ_inv')
     elapsedTime = toc(tStart);
-    fprintf('%s.m: %1.3f (s) to init sim and load PQinv \n',mfilename, toc(tStart));
+    fprintf('%s.m: %1.0f (s) to init sim and load PQinv \n',mfilename, toc(tStart));
 end
-
-num_r_iterations = 40;
-x = x0;
-% x = load('Data/restart_0_1_output_rIter/G_30.mat', 'x0').x0;
-% load('Data_GP/saveRes_25.mat', 'x_hist');
-% x = x_hist(:,25);
-clear x_hist
-
-x_hist = x;
-r_hist = zeros(size(x));
-it_histx = zeros(num_r_iterations,1);
-Npt = -1;
-
-% num_r_iterations = 0;
-fprintf('\n%s.m: Now we actually start Richardson solver with preconditioner in hand: %s\n',mfilename,datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
-fprintf('%s.m: Starting Richardson iteration for tracer selection = [%d]...\n',mfilename, sim.selection);
-fprintf('%s.m: %d time steps, each time step is %1.1f (h), simulating %1.1f years\n', ...
-    mfilename, sim.T/sim.dt, sim.dt/sim.const.sec_h, tot_t /sim.const.sec_y)
 
 lmeth  = 2;             % method 2 = GMRES(m)
 atol   = 5e-2;
 rtol   = 1e-6;          % stop when norm is less than atol+rtol*norm of init_resid as seen by nsoli
 
-atol   = 1;             % sum of the squares in (s), IOW average error = 1/sec_y/379,913 = 8e-14 years
-rtol   = 6.67e-34;      % stop when norm is less than atol+rtol*norm of init_resid as seen by nsoli
+atol   = eps;           % sum of the squares in (1/s), IOW average error = 1/sec_y/379,913 = 8e-14 years
+rtol   = 1e-7;          % stop when norm is less than atol+rtol*norm of init_resid as seen by nsoli
+atol   = 1;
 
 tol    = [atol,rtol];   % [absolute error, relative tol]
 etamax = 0.9;           % maximum error tol for residual in inner iteration, default = 0.9
@@ -390,30 +361,54 @@ maxitl = 15;            % maximum number of inner iterations before restart in G
 % also number of directional derivative calls, also num of gmres calls
 restart_limit = 10;     % max number of restarts for GMRES if lmeth = 2, default = 20;
 parms  = [maxit,maxitl,etamax,lmeth,restart_limit];
-% [sol,it_hist,ierr,x_hist] = nsoli (x0, @(x) calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), tol, parms);
+
 [sol,it_hist,ierr,x_hist] = brsola(x0, @(x) calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), tol, parms);
+
+keyboard
+save (strcat(string(tName(sim.selection)),'_sol'), 'sol')
+
+num_r_iterations = 5;
+% x = load('Data/restart_0_1_output_rIter/G_30.mat', 'x0').x0;
+% load('Data_GP/saveRes_25.mat', 'x_hist');
+% x = x_hist(:,25);
+% clear x_hist
+
+x = sol;
+x_hist = x;
+r_hist = zeros(size(x));
+it_histx = zeros(num_r_iterations,1);
+Npt = -1;
+
+% num_r_iterations = 0;
+fprintf('\n%s.m: Now we "relax" or forward integtration single variable solution a few iterations: %s\n',mfilename,datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
+fprintf('%s.m: Starting Picard Integration for tracer selection = [%d]...\n',mfilename, sim.selection);
+fprintf('%s.m: %d time steps, each time step is %1.1f (h), simulating %1.1f years\n', ...
+    mfilename, sim.T/sim.dt, sim.dt/sim.const.sec_h, tot_t /sim.const.sec_y)
 
 timer_loop = tic;
 for itc = 1:num_r_iterations
     % FIXME: note "x" not "x0"
 
-    [r,G] = calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
+    [r,G, x1] = calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
     % disp('FIXME: hacking r = -G')
     % r = -G;
-    fnrm = norm(r);
+    % fnrm = norm(r);
     fprintf('%s.m: itc %d norm(G) = %g\n',mfilename, itc, norm(G))
-    fprintf('%s.m: itc %d norm(r) = %g\n',mfilename, itc, fnrm)
+    fprintf('%s.m: itc %d norm(r) = %g\n',mfilename, itc, norm(r))
 
     x_hist = [x_hist,x];
     r_hist = [r_hist,r];
     it_histx(itc,1) = norm(r);
 
-    % recursion:    x <- x -r;
-    % w = 1;    % x = 2x -phi if iterating with G
-    w = 0.9;
-    x = x -w*r;     % e.g. x = x +w*f(x) - w*x = (1-w)x + wf(x)
+    x = x1;
+
+%     % recursion:    x <- x -r;
+%     % w = 1;    % x = 2x -phi if iterating with G
+%     w = 0.9;
+%     x = x -w*r;     % e.g. x = x +w*f(x) - w*x = (1-w)x + wf(x)
 
 end
+keyboard
 sol = x;
 
 % % Convert the solution into a standard MARBL format
@@ -434,7 +429,7 @@ for num_r_relax_iterations = 1:10
     [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
 end
 
-disp('r_iterate() finished...')
+disp([mfilename,' finished...'])
 
 elapsedTime_all_loc = toc(timer_loop);
 disp(' ');

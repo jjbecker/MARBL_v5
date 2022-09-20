@@ -265,8 +265,29 @@ c = reshape(c0, sz);
 x0 = c(:,sim.selection);    % initial condition for Nsoli()
 x0 = x0(:);                 % unitless
 
+
+selection = sim.selection;
+
+c0 = bgc2nsoli(sim, bgc.tracer);    % nsoli format; unitless; aka scaled FP
+sz = [ numel(sim.domain.iwet_JJ) , size(bgc.tracer,3) ];
+c = reshape(c0, sz);
+
+% for iTr = 1:32
+%
+%     sim.selection = iTr;
+%
+%     x0 = c(:,sim.selection);    % initial condition for Nsoli()
+%     x0 = x0(:);                 % unitless
+%
+%     J = calc_J_simplified(x0, sim, bgc, time_series, forcing, MTM);
+%     J_all(iTr,:,:,:) = J;
+%
+% end
+%
+
 PQ_inv = 1;
 if(0)
+    fprintf('\n%s.m: Takes about 20 mins to average transport, compute a single tracer J, and mfactor PQ...\n', mfilename)
     % From NK-EXAMPLES: make a sparse operator that restores the surface to zero with a time scale of tau
     % msk  = sim.domain.M3d;     % wet == 1, dry == 0
     % iwet = sim.domain.iwet_FP;
@@ -279,7 +300,7 @@ if(0)
     % T = 12*num_step_per_month*dt;
 
     tic
-    fprintf('%s.m: Averaging transport...', mfilename)
+    fprintf('%s.m: Averaging transport...\n', mfilename)
     Q =  MTM(1).A + MTM(1).H + MTM(1).D;
     for k = 2:12
         Q = Q + MTM(k).A + MTM(k).H + MTM(k).D;
@@ -288,55 +309,53 @@ if(0)
     toc
 
     tStart = tic;
-    J = calc_J_Single_Tracer(sim, bgc, time_series, forcing, MTM);
 
-    J_FP = sparse(numel(sim.domain.iwet_JJ),numel(sim.domain.iwet_JJ));
-    fprintf('%s.m: "FP" format of Jacobian of O2 will be size [%d, %d]\n', mfilename, size(J_FP));
+    %     keyboard
+    J_FP = calc_J_Single_Tracer(sim, bgc, time_series, forcing, MTM);
 
-    [iCol, iLvl] = coordTransform_fp2bgc(1:379913, sim);
-    for myCol = 1:sim.domain.num_wet_loc
-        myLvl = 1:bgc.kmt(myCol);
-
-        tmp = squeeze(J(myCol,myLvl,myLvl));
-
-        rowsOfJ_FP = coordTransform_bgc2fp(myCol, myLvl, sim);
-        J_FP( rowsOfJ_FP, rowsOfJ_FP ) = tmp;
-    end
-    toc
     elapsedTime = toc(tStart);
-    disp([]);
-    fprintf('%s.m: %1.3f (s) for calculating J in MARBL coords, then converting Jacobian to FP\n', mfilename, elapsedTime)
-    disp([myCol, bgc.kmt(myCol), nnz(J_FP)]);
+    tName = tracer_names(0);    % no CISO tracers
+    tStr = string(tName(sim.selection));
+    fprintf('%s.m: %1.3f (s) for partial of MARBL tendency(%s) on all levels, w.r.t. (%s) of all levels of same column, for all columns\n', mfilename, elapsedTime, tStr, tStr);
 
+    logJ=log10(abs(nonzeros(J_FP(:))));
+    figure(400+sim.selection); histogram(logJ); title(sprintf("hist( log10( abs( J( %s ))))",tStr), 'Interpreter', 'none');
+
+    logJT=log10(sim.T *abs(nonzeros(J_FP(:))));
+    figure(500+sim.selection); histogram(logJT); title(sprintf("hist( log10( abs( sim.T *J( %s ))))",tStr), 'Interpreter', 'none');
+
+    
+    
     PQ = Q+J_FP;
 
     figure(456); spy(Q); title ('Q', 'Interpreter', 'none')
     figure(457); spy(J_FP); title('J_FP', 'Interpreter', 'none')
     figure(458); spy(PQ); title('PQ', 'Interpreter', 'none')
 
-    save('QJ', 'Q', 'J', 'J_FP','PQ');
+    save('QJ', 'Q', 'J_FP','PQ');
     clear Q J J_FP
 
     tStart = tic;
-    fprintf('%s.m: Factoring 22GB preconditioner...\n', mfilename)
+    fprintf('%s.m: Factoring 23 GB preconditioner PQ...\n', mfilename)
 
+%     keyboard
     PQ_inv = mfactor(sim.T*PQ);     % 22 GB!  aka 2.4133e+10 bytes
     clear PQ
 
     elapsedTime = toc(tStart);
-    fprintf('%s.m: %1.3f (s) for mfactor of PQ\n', mfilename, toc(tStart));
+    fprintf('%s.m: %1.3f (s) to calculate and mfactor of PQ\n', mfilename, toc(tStart));
 
-    fprintf('%s.m: Saving 22GB preconditioner...\n', mfilename)
+    fprintf('%s.m: Saving 23 GB preconditioner...\n', mfilename)
     save('PQ_inv', 'PQ_inv');       % 22 GB!  aka 2.4133e+10 bytes
     elapsedTime = toc(tStart);
-    fprintf('%s.m: %1.3f (s) to save PQinv \n',mfilename, toc(tStart));
+    fprintf('%s.m: %1.3f (s) to calculate and save PQinv \n',mfilename, toc(tStart));
 else
-    fprintf('%s.m: Loading 22 GB preconditioner...\n', mfilename)
+    fprintf('\n%s.m: Loading 23 GB mfactored preconditioner PQ...\n', mfilename)
     tStart = tic;
     load('PQ_inv',  'PQ_inv');                  % ~120 (s) to load 22GB
     %     load('QJ',      'Q', 'J', 'J_FP','PQ');     % ~  5 (s) to load a 1/4 GB
     elapsedTime = toc(tStart);
-    fprintf('%s.m: %1.3f (s) to load PQinv \n',mfilename, toc(tStart));
+    fprintf('%s.m: %1.3f (s) to init sim and load PQinv \n',mfilename, toc(tStart));
 end
 
 num_r_iterations = 40;
@@ -374,7 +393,6 @@ parms  = [maxit,maxitl,etamax,lmeth,restart_limit];
 % [sol,it_hist,ierr,x_hist] = nsoli (x0, @(x) calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), tol, parms);
 [sol,it_hist,ierr,x_hist] = brsola(x0, @(x) calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), tol, parms);
 
-keyboard
 timer_loop = tic;
 for itc = 1:num_r_iterations
     % FIXME: note "x" not "x0"
@@ -416,7 +434,7 @@ for num_r_relax_iterations = 1:10
     [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
 end
 
-disp('r_iterate() finished...')
+disp([mfilename,' finished...'])
 
 elapsedTime_all_loc = toc(timer_loop);
 disp(' ');
