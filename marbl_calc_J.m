@@ -51,7 +51,7 @@ tName = tracer_names(0);    % no CISO tracers
 % tracer_str = 'Fe';
 % tracer_str = 'DONr';
 tracer_str = 'PO4';     % DIP
-% tracer_str = 'DOP';     % DOP
+tracer_str = 'DOP';     % DOP
 selection = [ find( strcmp(tName,tracer_str) ) ];
 forwardIntegrationOnly = 0;
 ck_years = 1;   % Newton-Kryrlov -requires- 1 year, but might want to run long time_step_hr = 3;
@@ -61,7 +61,7 @@ yearsBetweenRestartFiles = 1;
 captureAllSelectedTracers = 0;
 
 % DEBUG stuff
-logTracers = 0;
+logTracers = 1;
 ck_years = 1;
 time_step_hr = 12; % FAST debug
 % yearsBetweenRestartFiles = 1;
@@ -76,8 +76,9 @@ marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 %%%%%% INput restart file
 
 % start_yr = 0; inputRestartFile = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
-start_yr =  70; inputRestartFile = 'Data_GP/restart_70_integrate_from_0.mat';
-start_yr = 260; inputRestartFile = 'Data_GP/restart_260_integrate_from_0.mat';
+% start_yr =  70; inputRestartFile = 'Data_GP/restart_70_integrate_from_0.mat';
+% start_yr = 260; inputRestartFile = 'Data_GP/restart_260_integrate_from_0.mat';
+start_yr = 260; inputRestartFile = 'Data_GP/DOP_from_restart_260_integrate_from_0.mat';
 % start_yr = 4101; inputRestartFile = 'Data/InputFromAnn/restart4101.mat';
 
 fprintf('%s.m: Reading OFFline input restart file with tracers and transports: %s\n', mfilename, inputRestartFile);
@@ -315,6 +316,9 @@ rtol   = 1e-7;          % stop when norm is less than atol+rtol*norm of init_res
 atol   = 1;
 rtol   = 1e-7;          % stop when norm is less than atol+rtol*norm of init_resid as seen by nsoli
 
+rtol   = 0;             % unfortunatley this is used with the initial drift, which is completely unknown                                
+atol   = norm(x0)*1e-6; % stop if norm(drift) < 1ppm of norm(x0)
+
 tol    = [atol,rtol];   % [absolute error, relative tol]
 
 maxit  = 40;            % maximum number of nonlinear iterations (Newton steps) default = 40
@@ -331,7 +335,7 @@ parms  = [maxit,maxitl,etamax,lmeth,restart_limit];
 [sol,it_hist,ierr,x_hist] = brsola(x0, @(x) calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), tol, parms);
 
 % keyboard
-save (strcat(string(tName(sim.selection)),'_sol'), 'sol')
+save (strcat(string(tName(sim.selection)),'_sol'), 'sol', 'it_hist','ierr')
 
 num_r_iterations = 5;
 % x = load('Data/restart_0_1_output_rIter/G_30.mat', 'x0').x0;
@@ -340,7 +344,7 @@ num_r_iterations = 5;
 % clear x_hist
 
 x = sol;
-x_hist = x;
+x_histx = x;
 r_hist = zeros(size(x));
 it_histx = zeros(num_r_iterations,1);
 Npt = -1;
@@ -362,7 +366,7 @@ for itc = 1:num_r_iterations
     fprintf('%s.m: itc %d norm(G) = %g\n',mfilename, itc, norm(G))
     fprintf('%s.m: itc %d norm(r) = %g\n',mfilename, itc, norm(r))
 
-    x_hist = [x_hist,x];
+    x_histx = [x_histx,x];
     r_hist = [r_hist,r];
     it_histx(itc,1) = norm(r);
 
