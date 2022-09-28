@@ -50,8 +50,10 @@ tName = tracer_names(0);    % no CISO tracers
 %     find( strcmp(tName,'DOCr') ) ];     % #17
 % tracer_str = 'Fe';
 % tracer_str = 'DONr';
-tracer_str = 'PO4';     % DIP
-tracer_str = 'DOP';     % DOP
+% tracer_str = 'PO4';     % DIP
+% tracer_str = 'DOP';
+% tracer_str = 'DOPr';
+tracer_str = 'DONr';
 selection = [ find( strcmp(tName,tracer_str) ) ];
 forwardIntegrationOnly = 0;
 ck_years = 1;   % Newton-Kryrlov -requires- 1 year, but might want to run long time_step_hr = 3;
@@ -78,7 +80,8 @@ marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 % start_yr = 0; inputRestartFile = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
 % start_yr =  70; inputRestartFile = 'Data_GP/restart_70_integrate_from_0.mat';
 % start_yr = 260; inputRestartFile = 'Data_GP/restart_260_integrate_from_0.mat';
-start_yr = 260; inputRestartFile = 'Data_GP/DOP_from_restart_260_integrate_from_0.mat';
+start_yr = 260; inputRestartFile = 'Data/restart_0_1_output/restart_260_DOPr_DOP_DIP_DOP.mat';
+% start_yr = 260; inputRestartFile = 'Data/restart_0_1_output/restart_260_DOP.mat';
 % start_yr = 4101; inputRestartFile = 'Data/InputFromAnn/restart4101.mat';
 
 fprintf('%s.m: Reading OFFline input restart file with tracers and transports: %s\n', mfilename, inputRestartFile);
@@ -217,7 +220,7 @@ toc(timer_total)
 
 % =============== This is the NK solver code ================
 
-fprintf('\n%s.m: Start Richardson solver: %s\n',mfilename,datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
+fprintf('\n%s.m: Start Newton (Broyden Method) solver: %s\n',mfilename,datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 tic;
 
 

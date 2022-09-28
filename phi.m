@@ -50,31 +50,27 @@ while current_month < total_months
     if mod(current_month, 12) == 0    % This runs after last time step of every y
 
         x1_bgc = bgc2nsoli(sim, bgc.tracer);    % unitless end of year values
-        
+
         numWaterParcels = numel(sim.domain.iwet_JJ);
         numTracers = sim.bgc_struct_base.size.tracer(2);
         sz = [numWaterParcels, numTracers];
-        
+
         x0 = reshape(x0_bgc, sz);
         x0 = x0(:,sim.selection);               % just selected cols
-        
+
         tmpG = -reshape(x1_bgc -x0_bgc, sz);    % needed G size is sz; aka 32 col
         tmpG = tmpG(:,sim.selection);           % just selected cols
         tmpG = tmpG(:);                         % nsoli format
-        
-tName = tracer_names(0);    % no CISO tracers
-% selection = [ ...
-%     find( strcmp(tName,'SiO3') ) ];     % #3
-tendStr   = strjoin(tName(sim.selection));
-gStr = sprintf('G( %s tendency )', tendStr);
-%         figure (700); scatter(x0,tmpG); title('scatter(x0,G)'); xlabel('x0');   ylabel('G')
-%         figure (701); plot(tmpG);       title("plot(G)");       xlabel('idx FP');ylabel('G')
-%         figure (702); qqplot(tmpG);     title("qqplot(G)")
-%         figure (601); histogram(tmpG);  title("histogram(G)");  xlabel('G');   ylabel('Count')
-    figure (700); scatter(x0,tmpG); title(strjoin(["scatter(",gStr,",G)"]));    xlabel(strjoin(tName(sim.selection)));   ylabel(gStr)
-    figure (701); plot(tmpG);       title(strjoin(["plot(",gStr,")"]));         xlabel('idx FP');                        ylabel(strjoin(gStr))
-    figure (702); qqplot(tmpG);     title(strjoin(["qqplot(",gStr,")"]))
-    figure (601); histogram(tmpG);  title(strjoin(["histogram(",gStr,")"]));    xlabel(gStr);                            ylabel('Count')
+
+        tName = tracer_names(0);    % no CISO tracers
+        % selection = [ ...
+        %     find( strcmp(tName,'SiO3') ) ];     % #3
+        tendStr   = strjoin(tName(sim.selection));
+        gStr = sprintf('G( %s )', tendStr);
+        figure (700); scatter(x0,tmpG); title(strjoin(["scatter(",gStr,", ",strjoin(tName(sim.selection)),")"]));    xlabel(strjoin(tName(sim.selection)));   ylabel(gStr)
+        figure (701); plot(tmpG);       title(strjoin(["plot(",gStr,")"]));         xlabel('idx FP');                        ylabel(gStr)
+        figure (702); qqplot(tmpG);     title(strjoin(["qqplot(",gStr,")"]))
+        figure (601); histogram(tmpG);  title(strjoin(["histogram(",gStr,")"]));    xlabel(gStr);                            ylabel('Count')
 
 
         x0_bgc = x1_bgc;
@@ -84,16 +80,19 @@ gStr = sprintf('G( %s tendency )', tendStr);
             datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')), ...
             num2str((toc(timer_total)/3600/(current_month/12)),'%.2f'), ...
             gStr, norm(tmpG));
-        
+
     end
 
     if mod(current_month, 12*sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
         %         toc(timer_total);
-        %         save the entire workspace. Surprisingly slow...
+        %         save the entire workspace. Surprisingly slow. Perhaps v7.3 compress of so much data is slow...
         %         allFile = sprintf('%s/all_%d.mat', sim.outputRestartDir, round(1+years_gone_by));
         %         fprintf('%s.m: Saving "%s"...\n', mfilename, allFile);
         %         save(allFile,'-v7.3');
-        myRestartFile = sprintf('%s/restart_%d_%s.mat', sim.outputRestartDir, round(sim.start_yr+years_gone_by),gStr);
+        %
+        % Matlab load() has trouble with filenames that space and so on.
+        % KISS
+        myRestartFile = sprintf('%s/restart_%d_%s.mat', sim.outputRestartDir, round(sim.start_yr+years_gone_by),strjoin(tName(sim.selection)));
         fprintf('%s.m: Saving "%s"...\n', mfilename,myRestartFile);
         % copy original restart file, then replace original "tracer" with
         % the current bgc.tracer. Surprisingly fast!
@@ -110,7 +109,7 @@ gStr = sprintf('G( %s tendency )', tendStr);
 end % time steps
 
 fprintf('%s.m: Finish integration of %s years: %s\n',mfilename,num2str(1+years_gone_by,2),datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
-fprintf('%s.m: Runtime: %s min, rate = %s hr/sim_y\n', mfilename, ...
+fprintf('%s.m: Total Runtime: %s min, rate = %s hr/sim_y\n', mfilename, ...
     num2str(toc(timer_total)/60,'%.2f'), ...
     num2str((toc(timer_total)/3600/(current_month/12)),'%.2f'));
 
