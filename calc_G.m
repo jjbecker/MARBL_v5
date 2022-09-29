@@ -106,6 +106,7 @@ fprintf('%s.m: Npt = %d %s mean(G)  = %1.10g\n', mfilename, Npt, strjoin(tName(s
 fprintf('%s.m: Npt = %d %s std(G)   = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), std(G));
 disp('  ')
 fprintf('%s.m: Npt = %d %s norm(G,2)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), norm(G));
+fprintf('%s.m: Npt = %d %s norm(r,2)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), norm(r));
 disp('  ')
 fprintf('%s.m: Npt = %d %s median(G)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), median(G));
 fprintf('%s.m: Npt = %d %s madMed(G)= %1.7g\n',  mfilename, Npt, strjoin(tName(sim.selection)), max((G)));
