@@ -2,7 +2,6 @@ function [r,G,x1] = calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv)
 %UNTITLED Take an initial value of tracers, return change at end of a year
 %   Detailed explanation goes here
 
-Npt = -123;
 tName = tracer_names(0);    % no CISO tracers
 % selection = [ ...
 %     find( strcmp(tName,'SiO3') ) ];     % #3
@@ -28,6 +27,7 @@ else
     %     figure (502); plot(x0)     ; title('x0')
     figure (503); plot(dx0)    ; title('dx0'); xlabel('idx FP'); ylabel(strjoin(tName(sim.selection)));
 end
+Npt = -gFileCnt;
 
 % Check for negative tracers
 
@@ -57,7 +57,7 @@ sz = [numWaterParcels, numTracers];
 % "_bgc" in tracer name means it has all 32 tracers
 
 x0_bgc = replaceSelectedTracers(sim, c0, x0, sim.selection);
-bgc.tracer = nsoli2bgc(sim, bgc, x0_bgc);   % marbl format
+bgc.tracer = nsoli2bgc(sim, bgc, x0_bgc);   % marbl format x0
 
 initial_moles = global_moles(bgc.tracer, sim);  % DEBUG
 [sim, bgc, ~] = phi(sim, bgc, time_series, forcing, MTM);
@@ -84,11 +84,13 @@ fprintf('||Precon( %s )|| = (max(abs(r))) = %g \n', gStr, max(abs(r)));
 
 
 % DEBUG
-disp([mfilename,'.m: Moles  start of phi() = ',num2str(initial_moles,7)])
-disp([mfilename,'.m: Moles  end of phi()   = ',num2str(final_moles,7)])
-disp([mfilename,'.m: Moles  delta          = ',num2str(final_moles-initial_moles,7)])
+fprintf(        '                                  %s\n',strjoin(pad(tName,14)));
+disp([mfilename,'.m: Moles  start of phi() = ',num2str(initial_moles,'%-#15.7g')])
+disp([mfilename,'.m: Moles  end of phi()   = ',num2str(final_moles,'%-#15.7g')])
+disp([mfilename,'.m: Moles  delta          = ',num2str(final_moles-initial_moles,'%-#15.7g')])
 ppm = ((final_moles-initial_moles)./ final_moles *1e6);
-disp([mfilename,'.m: Moles  delta (ppm)    = ',num2str(ppm,7)])
+disp([mfilename,'.m: Moles  delta (ppm)    = ',num2str(ppm,'%-#15.7g')])
+fprintf(        '                                  %s\n',strjoin(pad(tName,14)));
 tmp = replaceSelectedTracers(sim, c0, G, sim.selection);
 res_moles = global_moles(nsoli2bgc(sim, bgc, tmp), sim);
 res_moles = res_moles(sim.selection);
