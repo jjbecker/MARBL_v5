@@ -27,9 +27,7 @@ Q = Q/12; % annually averaged transport and surface restoring (aka birth)
 fprintf('%s.m: %1.3f (s) to average transport\n', mfilename, toc);
 
 
-tStart = tic;
 J_FP = calc_J_Single_Tracer(sim, bgc, time_series, forcing, MTM);
-fprintf('%s.m: %1.0f (s) to cpmpute calc_J_Single_Tracer \n',mfilename, toc(tStart));
 
 PQ = Q +J_FP;
 
