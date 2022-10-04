@@ -26,6 +26,7 @@ n = 0;
 current_month = 0;
 years_gone_by = -1; % allow for case of total_months==0, etc etc
 
+tracer_0 = bgc.tracer;
 x0_bgc = bgc2nsoli(sim, bgc.tracer);    % unitless start of year values
 
 while current_month < total_months
@@ -35,6 +36,9 @@ while current_month < total_months
     %     fakeMonth = mod(6+current_month-1,12)+1;
 
     [sim, bgc, time_series, n] = time_step_ann (sim, bgc, time_series, n, forcing(myMonth), MTM(myMonth), myMonth);
+
+    % IMPORTANT!
+    % at this point "bgc" is "x1" not "x0"!
 
     if (sim.logTracers)
         %         toc(timer_total);
@@ -58,7 +62,7 @@ while current_month < total_months
         x0 = reshape(x0_bgc, sz);
         x0 = x0(:,sim.selection);               % just selected cols
 
-        tmpG = -reshape(x1_bgc -x0_bgc, sz);    % needed G size is sz; aka 32 col
+        tmpG = reshape(x1_bgc -x0_bgc, sz);     % needed G size is sz; aka 32 col
         tmpG = tmpG(:,sim.selection);           % just selected cols
         tmpG = tmpG(:);                         % nsoli format
 
@@ -73,7 +77,7 @@ while current_month < total_months
         figure (601); histogram(tmpG);  title(strjoin(["histogram(",gStr,")"]));    xlabel(gStr);                            ylabel('Count')
 
 
-        x0_bgc = x1_bgc;
+        x0_bgc = x1_bgc;        % update for next year
 
         fprintf('%s.m: Finished integration of year %s: ',mfilename, int2str(sim.start_yr+years_gone_by))
         fprintf('%s, rate = %s hr/sim_y, norm(%s,2) = %1.10g\n', ...
@@ -92,12 +96,25 @@ while current_month < total_months
         %
         % Matlab load() has trouble with filenames that space and so on.
         % KISS
-        myRestartFile = sprintf('%s/restart_%d_%s.mat', sim.outputRestartDir, round(sim.start_yr+years_gone_by),strjoin(tName(sim.selection)));
+        myRestartFile = sprintf('%s/restart_%d_%s_x1.mat', sim.outputRestartDir, round(sim.start_yr+years_gone_by),strjoin(tName(sim.selection)));
         fprintf('%s.m: Saving "%s"...\n', mfilename,myRestartFile);
         % copy original restart file, then replace original "tracer" with
         % the current bgc.tracer. Surprisingly fast!
         copyfile( sim.inputRestartFile, myRestartFile);
-        tracer = bgc.tracer;
+
+        tracer = bgc.tracer;                            % --- these are x1 everywhere  ---
+        save( myRestartFile, 'tracer',  '-append' );    % overwrites tracer ONLY, keep forcing from init
+
+
+
+        myRestartFile = sprintf('%s/restart_%d_%s_x0.mat', sim.outputRestartDir, round(sim.start_yr+years_gone_by),strjoin(tName(sim.selection)));
+        fprintf('%s.m: Saving "%s"...\n', mfilename,myRestartFile);
+        % copy original restart file, then replace original "tracer" with
+        % the current bgc.tracer. Surprisingly fast!
+        copyfile( sim.inputRestartFile, myRestartFile);
+
+        tracer = tracer_0;                            % --- these are x0 everywhere  ---
+        tracer(:,:,sim.selection) = bgc.tracer(:,:,sim.selection);   % only selected x1
         save( myRestartFile, 'tracer',  '-append' );    % overwrites tracer ONLY, keep forcing from init
     end
 
