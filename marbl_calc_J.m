@@ -43,22 +43,20 @@ timer_total = tic;
 tName = tracer_names(0);    % no CISO tracers
 % selection = [ ...
 %     find( strcmp(tName,'SiO3') ) ];     % #3
-%     find( strcmp(tName,'O2') ) ];       % #7
-%     find( strcmp(tName,'DIC') ) ];      % #8
-%     find( strcmp(tName,'DOPr') ) ];     % #15
-%     find( strcmp(tName,'DONr') ) ];     % #16
 %     find( strcmp(tName,'DOCr') ) ];     % #17
-% tracer_str = 'Fe';
 
 % tracer_str = 'PO4';     % DIP
-
 % tracer_str = 'DOPr';
 % tracer_str = 'DONr';
 % tracer_str = 'DOCr';
-
 % tracer_str = 'DOC';
-tracer_str = 'DON';
+% tracer_str = 'DON';
 % tracer_str = 'DOP';
+
+% tracer_str = 'spCaCO3';
+% tracer_str = 'NH4';
+% tracer_str = 'Fe';
+tracer_str = 'diazFe';
 
 selection = [ find( strcmp(tName,tracer_str) ) ];
 forwardIntegrationOnly = 0;
@@ -86,10 +84,9 @@ marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 % start_yr = 0; inputRestartFile = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
 % start_yr =  70; inputRestartFile = 'Data_GP/restart_70_integrate_from_0.mat';
 % start_yr = 260; inputRestartFile = 'Data_GP/restart_260_integrate_from_0.mat';
-% start_yr = 260; inputRestartFile = 'Data/restart_0_1_output/restart_260_DOPr_DOP_DIP_DOP_DONr_DOCr.mat
-start_yr = 260; inputRestartFile = 'Data/restart_0_1_output/restart_260_DOPr_DOP_DIP_DOP_DONr_DOCr_DOC.mat';
-% start_yr = 260; inputRestartFile = 'Data/restart_0_1_output/restart_260_DOP.mat';
-% start_yr = 4101; inputRestartFile = 'Data/InputFromAnn/restart4101.mat';
+% start_yr = 260; inputRestartFile = 'Data/restart_0_1_output/restart_260_DOPr_DOP_DIP_DOP_DONr_DOCr_DOC_DON_DOP_spCaCO3_DOP_x0.mat';
+  start_yr = 260; inputRestartFile = 'Data/restart_0_1_output/Fe/restart_260_Fe_x0_relaxed.mat';
+% start_yr = 4101;inputRestartFile = 'Data/InputFromAnn/restart4101.mat';
 
 fprintf('%s.m: Reading OFFline input restart file with tracers and transports: %s\n', mfilename, inputRestartFile);
 load(inputRestartFile,'sim','MTM');
@@ -344,8 +341,8 @@ parms  = [maxit,maxitl,etamax,lmeth,restart_limit];
 
 [sol,it_hist,ierr,x_hist] = brsola(x0, @(x) calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), tol, parms);
 
-% keyboard
 save (strcat(string(tName(sim.selection)),'_sol'), 'sol', 'it_hist','ierr')
+% keyboard
 
 num_r_iterations = 5;
 % x = load('Data/restart_0_1_output_rIter/G_30.mat', 'x0').x0;
@@ -382,11 +379,6 @@ for itc = 1:num_r_iterations
 
     x = x1;
 
-%     % recursion:    x <- x -r;
-%     % w = 1;    % x = 2x -phi if iterating with G
-%     w = 0.9;
-%     x = x -w*r;     % e.g. x = x +w*f(x) - w*x = (1-w)x + wf(x)
-
 end
 keyboard
 sol = x;
@@ -399,16 +391,16 @@ sol = x;
 % x0_bgc = replaceSelectedTracers(sim, c0, sol, sim.selection);
 % bgc.tracer = nsoli2bgc(sim, bgc, x0_bgc);   % marbl format
 %
-
-
+% 
+% 
 % Run the solution forward a few years to let the non-optimized tracers
 % "relax" to the new values.
-
+% 
 for num_r_relax_iterations = 1:10
-    fprintf("%s.m: starting relaxation year #%d\n", mfilename, num_r_relax_iterations)
+    fprintf("\n%s.m: starting relaxation year #%d\n", mfilename, num_r_relax_iterations)
     [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
 end
-
+% 
 disp([mfilename,' finished...'])
 
 elapsedTime_all_loc = toc(timer_loop);
