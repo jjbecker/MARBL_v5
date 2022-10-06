@@ -13,16 +13,16 @@ persistent gFileCnt x0_prev
 if isempty(gFileCnt)
     gFileCnt = 1;
     fprintf('\ncall #%d to %s\n', gFileCnt, gStr);
-    fprintf('norm(x0         ) = %f\n', norm(x0         ));
+    fprintf('norm(x0         ) = %-#15.7g\n', norm(x0         ));
     % checkNegAndHisto(sim, x0, 100.0, 'x0', 900);
     %     figure (500); plot(x0); title('x0')
 else
     gFileCnt = gFileCnt +1;
     fprintf('\ncall #%d to %s\n', gFileCnt, gStr);
-    fprintf('norm(x0_prev    ) = %f\n', norm(x0_prev    ));
-    fprintf('norm(x0         ) = %f\n', norm(x0         ));
+    fprintf('norm(x0_prev    ) = %-#15.7g\n', norm(x0_prev    ));
+    fprintf('norm(x0         ) = %-#15.7g\n', norm(x0         ));
     dx0 = x0 -x0_prev;
-    fprintf('norm(x0 -x0_prev) = %.6f\n', norm(dx0) );
+    fprintf('norm(x0 -x0_prev) = %-#15.7g\n', norm(dx0) );
     %     figure (501); plot(x0_prev); title('x0_prev', 'Interpreter', 'none')
     %     figure (502); plot(x0)     ; title('x0')
     figure (503); plot(dx0)    ; title('dx0'); xlabel('idx FP'); ylabel(strjoin(tName(sim.selection)));
