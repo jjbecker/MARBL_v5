@@ -45,18 +45,39 @@ tName = tracer_names(0);    % no CISO tracers
 %     find( strcmp(tName,'SiO3') ) ];     % #3
 %     find( strcmp(tName,'DOCr') ) ];     % #17
 
+% Most of these work very well in the single tracer solution...
 % tracer_str = 'PO4';     % DIP
-% tracer_str = 'DOPr';
-% tracer_str = 'DONr';
-% tracer_str = 'DOCr';
 % tracer_str = 'DOC';
 % tracer_str = 'DON';
 % tracer_str = 'DOP';
+% tracer_str = 'DOPr';
+% tracer_str = 'DONr';
+% tracer_str = 'DOCr';
 
-% tracer_str = 'spCaCO3';
-% tracer_str = 'NH4';
-% tracer_str = 'Fe';
-tracer_str = 'diazFe';
+tracer_str = 'spCaCO3';
+% tracer_str = 'diazFe';
+
+% tracer_str = 'NH4';     % POSSIBLY does NOT work
+% tracer_str = 'Fe';      % does NOT work
+% tracer_str = 'spChl';   % does NOT work
+% tracer_str = 'diatChl';   % POSSIBLY does NOT work
+
+% Status unknown
+% tracer_str = 'NO3';
+% tracer_str = 'SiO3';
+% tracer_str = 'Lig';
+% tracer_str = 'O2';
+% tracer_str = 'DIC';
+% tracer_str = 'ALK';
+
+% tracer_str = 'diatSi';
+% tracer_str = 'diatP';
+% tracer_str = 'zooC';
+
+% tracer_str = 'spFe';
+% tracer_str = 'spP';
+
+% tracer_str = 'diazP';
 
 selection = [ find( strcmp(tName,tracer_str) ) ];
 forwardIntegrationOnly = 0;
@@ -81,14 +102,19 @@ marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 
 %%%%%% INput restart file
 
-% start_yr = 0; inputRestartFile = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
+% start_yr = 4101;inputRestartFile = 'Data/InputFromAnn/restart4101.mat';
+% start_yr =   0; inputRestartFile = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
 % start_yr =  70; inputRestartFile = 'Data_GP/restart_70_integrate_from_0.mat';
 % start_yr = 260; inputRestartFile = 'Data_GP/restart_260_integrate_from_0.mat';
 % start_yr = 260; inputRestartFile = 'Data/restart_0_1_output/restart_260_DOPr_DOP_DIP_DOP_DONr_DOCr_DOC_DON_DOP_spCaCO3_DOP_x0.mat';
-  start_yr = 260; inputRestartFile = 'Data/restart_0_1_output/Fe/restart_260_Fe_x0_relaxed.mat';
-% start_yr = 4101;inputRestartFile = 'Data/InputFromAnn/restart4101.mat';
+% start_yr = 260; inputRestartFile = 'Data/restart_0_1_output/Fe/restart_260_Fe_x0_relaxed.mat';
+start_yr = 260; inputRestartFile = 'Data/restart_0_1_output/restart_260_diatP_x0.mat';
 
 fprintf('%s.m: Reading OFFline input restart file with tracers and transports: %s\n', mfilename, inputRestartFile);
+if ~isfile(inputRestartFile)
+    error("missing or typo in name of inputRestartFile")
+    keyboard
+end
 load(inputRestartFile,'sim','MTM');
 
 % We just over wrote sim struct, but now we can save the file stuff in it.
