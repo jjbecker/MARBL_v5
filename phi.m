@@ -29,6 +29,9 @@ years_gone_by = -1; % allow for case of total_months==0, etc etc
 tracer_0 = bgc.tracer;
 x0_bgc = bgc2nsoli(sim, bgc.tracer);    % unitless start of year values
 
+% DEBUG
+initial_moles = global_moles(bgc.tracer, sim);  
+
 while current_month < total_months
     current_month = current_month+1;
     years_gone_by = floor((current_month-1)/12);
@@ -52,6 +55,20 @@ while current_month < total_months
     %             num2str((toc(timer_total)/3600/(current_month/12)),'%.2f'));
 
     if mod(current_month, 12) == 0    % This runs after last time step of every y
+
+        % DEBUG
+        final_moles = global_moles(bgc.tracer, sim);    
+        fprintf(        '                                  %s\n',strjoin(pad(tName,14)));
+        disp([mfilename,'.m: Moles  start of phi() = ',num2str(initial_moles,'%-#15.7g')])
+        disp([mfilename,'.m: Moles  end of phi()   = ',num2str(final_moles,'%-#15.7g')])
+        disp([mfilename,'.m: Moles  delta          = ',num2str(final_moles-initial_moles,'%-#15.7g')])
+        ppm = ((final_moles-initial_moles)./ final_moles *1e6);
+        disp([mfilename,'.m: Moles  delta (ppm)    = ',num2str(ppm,'%-#15.7g')])
+        fprintf(        '                                  %s\n',strjoin(pad(tName,14)));
+        %         tmp = replaceSelectedTracers(sim, c0, G, sim.selection);
+        %         res_moles = global_moles(nsoli2bgc(sim, bgc, tmp), sim);
+        %         res_moles = res_moles(sim.selection);
+        %         res_moles ./ final_moles(sim.selection) *1e6
 
         x1_bgc = bgc2nsoli(sim, bgc.tracer);    % unitless end of year values
 
