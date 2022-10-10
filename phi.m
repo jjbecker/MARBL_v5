@@ -1,4 +1,4 @@
-function [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM)
+function [sim, bgc, time_series, years_gone_by] = phi(sim, bgc, time_series, forcing, MTM)
 
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
@@ -25,6 +25,7 @@ timer_total = tic;
 n = 0;
 current_month = 0;
 years_gone_by = -1; % allow for case of total_months==0, etc etc
+tName = tracer_names(0);    % no CISO tracers
 
 tracer_0 = bgc.tracer;
 x0_bgc = bgc2nsoli(sim, bgc.tracer);    % unitless start of year values
@@ -56,20 +57,7 @@ while current_month < total_months
 
     if mod(current_month, 12) == 0    % This runs after last time step of every y
 
-        % DEBUG
         final_moles = global_moles(bgc.tracer, sim);    
-        fprintf(        '                                  %s\n',strjoin(pad(tName,14)));
-        disp([mfilename,'.m: Moles  start of phi() = ',num2str(initial_moles,'%-#15.7g')])
-        disp([mfilename,'.m: Moles  end of phi()   = ',num2str(final_moles,'%-#15.7g')])
-        disp([mfilename,'.m: Moles  delta          = ',num2str(final_moles-initial_moles,'%-#15.7g')])
-        ppm = ((final_moles-initial_moles)./ final_moles *1e6);
-        disp([mfilename,'.m: Moles  delta (ppm)    = ',num2str(ppm,'%-#15.7g')])
-        fprintf(        '                                  %s\n',strjoin(pad(tName,14)));
-        %         tmp = replaceSelectedTracers(sim, c0, G, sim.selection);
-        %         res_moles = global_moles(nsoli2bgc(sim, bgc, tmp), sim);
-        %         res_moles = res_moles(sim.selection);
-        %         res_moles ./ final_moles(sim.selection) *1e6
-
         x1_bgc = bgc2nsoli(sim, bgc.tracer);    % unitless end of year values
 
         numWaterParcels = numel(sim.domain.iwet_JJ);
@@ -79,9 +67,19 @@ while current_month < total_months
         x0 = reshape(x0_bgc, sz);
         x0 = x0(:,sim.selection);               % just selected cols
 
-        tmpG = reshape(x1_bgc -x0_bgc, sz);     % needed G size is sz; aka 32 col
-        tmpG = tmpG(:,sim.selection);           % just selected cols
+        tmpG_all = reshape(x1_bgc -x0_bgc, sz); % needed G size is sz; aka 32 col
+        tmpG = tmpG_all(:,sim.selection);       % just selected cols
         tmpG = tmpG(:);                         % nsoli format
+
+        % DEBUG
+        fprintf(        '%s.m: Year %d               %s\n',mfilename,round(sim.start_yr+years_gone_by),strjoin(pad(tName,14)));
+        disp([mfilename,  '.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' Moles start = ',num2str(initial_moles,'%-#15.7g')])
+        disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' Moles end   = ',num2str(final_moles,'%-#15.7g')])
+        disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' Moles delta = ',num2str(final_moles-initial_moles,'%-#15.7g')])
+        ppm = ((final_moles-initial_moles)./ final_moles *1e6);
+        disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' Moles (ppm) = ',num2str(ppm,'%-#15.7g')])
+        disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' norm G      = ', num2str(max(abs(tmpG_all)),'%-#15.7g')])
+        fprintf(        '%s.m: Year %d               %s\n',mfilename,round(sim.start_yr+years_gone_by),strjoin(pad(tName,14)));
 
         tName = tracer_names(0);    % no CISO tracers
         % selection = [ ...
@@ -105,34 +103,28 @@ while current_month < total_months
     end
 
     if mod(current_month, 12*sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
-        %         toc(timer_total);
-        %         save the entire workspace. Surprisingly slow. Perhaps v7.3 compress of so much data is slow...
-        %         allFile = sprintf('%s/all_%d.mat', sim.outputRestartDir, round(1+years_gone_by));
-        %         fprintf('%s.m: Saving "%s"...\n', mfilename, allFile);
-        %         save(allFile,'-v7.3');
-        %
-        % Matlab load() has trouble with filenames that space and so on.
-        % KISS
-        myRestartFile = sprintf('%s/restart_%d_%s_x1.mat', sim.outputRestartDir, round(sim.start_yr+years_gone_by),strjoin(tName(sim.selection)));
-        fprintf('%s.m: Saving "%s"...\n', mfilename,myRestartFile);
-        % copy original restart file, then replace original "tracer" with
-        % the current bgc.tracer. Surprisingly fast!
-        copyfile( sim.inputRestartFile, myRestartFile);
+        [sim, bgc] = saveRestartFiles(sim, bgc, tracer_0, years_gone_by);
 
-        tracer = bgc.tracer;                            % --- these are x1 everywhere  ---
-        save( myRestartFile, 'tracer',  '-append' );    % overwrites tracer ONLY, keep forcing from init
-
-
-
-        myRestartFile = sprintf('%s/restart_%d_%s_x0.mat', sim.outputRestartDir, round(sim.start_yr+years_gone_by),strjoin(tName(sim.selection)));
-        fprintf('%s.m: Saving "%s"...\n', mfilename,myRestartFile);
-        % copy original restart file, then replace original "tracer" with
-        % the current bgc.tracer. Surprisingly fast!
-        copyfile( sim.inputRestartFile, myRestartFile);
-
-        tracer = tracer_0;                            % --- these are x0 everywhere  ---
-        tracer(:,:,sim.selection) = bgc.tracer(:,:,sim.selection);   % only selected x1
-        save( myRestartFile, 'tracer',  '-append' );    % overwrites tracer ONLY, keep forcing from init
+%         myRestartFile = sprintf('%s/restart_%d_%s_x1.mat', sim.outputRestartDir, round(sim.start_yr+years_gone_by),strjoin(tName(sim.selection)));
+%         fprintf('%s.m: Saving "%s"...\n', mfilename,myRestartFile);
+%         % copy original restart file, then replace original "tracer" with
+%         % the current bgc.tracer. Surprisingly fast!
+%         copyfile( sim.inputRestartFile, myRestartFile);
+% 
+%         tracer = bgc.tracer;                            % --- these are x1 everywhere  ---
+%         save( myRestartFile, 'tracer',  '-append' );    % overwrites tracer ONLY, keep forcing from init
+% 
+% 
+% 
+%         myRestartFile = sprintf('%s/restart_%d_%s_x0.mat', sim.outputRestartDir, round(sim.start_yr+years_gone_by),strjoin(tName(sim.selection)));
+%         fprintf('%s.m: Saving "%s"...\n', mfilename,myRestartFile);
+%         % copy original restart file, then replace original "tracer" with
+%         % the current bgc.tracer. Surprisingly fast!
+%         copyfile( sim.inputRestartFile, myRestartFile);
+% 
+%         tracer = tracer_0;                            % --- these are x0 everywhere  ---
+%         tracer(:,:,sim.selection) = bgc.tracer(:,:,sim.selection);   % only selected x1
+%         save( myRestartFile, 'tracer',  '-append' );    % overwrites tracer ONLY, keep forcing from init
     end
 
     % %     %     tic; tend_log.tendency(n,1:prod(size(bgc.tendency))) = bgc.tendency(:)'; toc

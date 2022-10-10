@@ -260,7 +260,7 @@ parms  = [maxit,maxitl,  etamax,lmeth,restart_limit];
 [sol,it_hist,ierr,x_hist] = brsola(x0, @(x) calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), tol, parms);
 
 % sol_fname = strcat(string(tName(sim.selection)),'_sol');
-sol_fname = sprintf('%s_sol_ierr_%d', string(tName(sim.selection)), ierr)
+sol_fname = sprintf('%s_sol_ierr_%d', string(tName(sim.selection)), ierr);
 fprintf('%s.m: Saving sol, it_hist, ierr" in %s"...\n', mfilename,sol_fname);
 save (sol_fname, 'sol', 'it_hist','ierr');
 
