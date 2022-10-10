@@ -23,7 +23,7 @@ addpath('MEX');
 addpath(genpath('utils'));
 addpath(genpath('plotting'));
 
-addpath '/Users/jj/Desktop/UCI/MARBL/MARBL_v5/sol'
+addpath '/Users/jj/Desktop/UCI/MARBL/MARBL_v5/Data/sol'
 
 % % FIXME: diary behavior is such that if renamed it's still active diary!!
 diary off; diary off; diary on; diary off; diary on; diary on;
