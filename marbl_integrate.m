@@ -23,7 +23,9 @@ addpath('MEX');
 addpath(genpath('utils'));
 addpath(genpath('plotting'));
 
-addpath '/Users/jj/Desktop/UCI/MARBL/MARBL_v5/Data/sol'
+ck_years = 1;   % Newton-Kryrlov -requires- 1 year, but might want to run long time_step_hr = 3;
+dname = sprintf('%s/../',myRestartDir(ck_years));
+addpath(dname);
 
 % % FIXME: diary behavior is such that if renamed it's still active diary!!
 diary off; diary off; diary on; diary off; diary on; diary on;
@@ -55,7 +57,6 @@ tName = tracer_names(0);    % no CISO tracers
 tracer_str = 'Fe';
 
 selection = [ find( strcmp(tName,tracer_str) ) ];
-ck_years = 1;   % Newton-Kryrlov -requires- 1 year, but might want to run long time_step_hr = 3;
 time_step_hr = 3;
 logTracers = 0;
 yearsBetweenRestartFiles = 2;
@@ -76,8 +77,7 @@ marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 % start_yr = 4101;inputRestartFile = 'Data/InputFromAnn/restart4101.mat';
 % start_yr =   0; inputRestartFile = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
 % start_yr = 260; inputRestartFile = 'Data_GP/restart_260_integrate_from_0.mat';
-start_yr = 2525; inputRestartFile = 'Data/restart_0_1_output/restart_260_NH4_x0_sol.mat';
-%   start_yr = 260; inputRestartFile = 'Data/restart_0_1_output/restart_260_DiazC_x0.mat';
+start_yr = 2525; inputRestartFile = strcat(myRestartDir(ck_years),'/restart_260_NH4_x0_sol.mat');
 
 fprintf('%s.m: Reading OFFline input restart file with tracers and transports: %s\n', mfilename, inputRestartFile);
 % load() does NOT need file extension, but copy() does. sigh
