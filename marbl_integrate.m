@@ -315,10 +315,17 @@ end
 
 % keyboard
 % sol = x;
+years_gone_by = 0;
 for fwd_itc = 1:num_forward_iterations
     fprintf("\n%s.m: starting forward integrate year #%d of %d\n", mfilename, fwd_itc, num_forward_iterations)
-    [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
+    [sim, bgc, time_series, tracer_0] = phi(sim, bgc, time_series, forcing, MTM);
+
     sim.start_yr = sim.start_yr+1;
+
+    years_gone_by = years_gone_by +1;
+    if mod(years_gone_by, sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
+        [sim, bgc] = saveRestartFiles(sim, bgc, tracer_0, years_gone_by);
+    end
 end
 
 disp([mfilename,' finished...'])
