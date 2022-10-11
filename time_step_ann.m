@@ -23,9 +23,9 @@ tsperDay         = round(sim.const.sec_d/dt);
 days_in_month    = [31 28 31 30 31 30 31 31 30 31 30 31];
 steps_per_period = tsperDay*days_in_month(myMonth);
 
-    steps_between_plots = 1e+10;
-    %    steps_between_plots = 8*7;
-    %    steps_between_plots = 8*1;
+steps_between_plots = 1e+10;
+%    steps_between_plots = 8*7;
+%    steps_between_plots = 8*1;
 %%
 
 % DEBUG: n = n+steps_per_period; return; % quick return to debug G
