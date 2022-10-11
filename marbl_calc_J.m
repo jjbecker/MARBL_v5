@@ -262,7 +262,7 @@ parms  = [maxit,maxitl,  etamax,lmeth,restart_limit];
 % sol_fname = strcat(string(tName(sim.selection)),'_sol');
 sol_fname = sprintf('%s_sol_ierr_%d', string(tName(sim.selection)), ierr);
 fprintf('%s.m: Saving sol, it_hist, ierr" in %s"...\n', mfilename,sol_fname);
-save (sol_fname, 'sol', 'it_hist','ierr');
+save(sol_fname, 'sol', 'it_hist','ierr','-v7.3','-nocompression');
 
 myRestartFile = sprintf('%s/restart_%d_%s_x0.mat',             sim.outputRestartDir, round(sim.start_yr), strjoin(tName(sim.selection))      );
 mySolFile     = sprintf('%s/restart_%d_%s_x0_sol_ierr_%d.mat', sim.outputRestartDir, round(sim.start_yr), strjoin(tName(sim.selection)), ierr);
