@@ -12,6 +12,7 @@ function [sim, bgc] = saveRestartFiles(sim, bgc, tracer_0, years_gone_by)
 % KISS
 
 
+tName = tracer_names(0);    % no CISO tracers
 
 % save "x1" or final state file...
 

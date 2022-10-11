@@ -43,7 +43,7 @@ timer_total = tic;
 % FIXME: Someday, when we know what inputs need to be, put all this a file
 
 forwardIntegrationOnly = 1;
-num_forward_iterations = 4;
+num_forward_iterations = 10;
 
 tName = tracer_names(0);    % no CISO tracers
 % selection = [ ...
@@ -58,8 +58,8 @@ tracer_str = 'Fe';
 
 selection = [ find( strcmp(tName,tracer_str) ) ];
 time_step_hr = 3;
-logTracers = 0;
-yearsBetweenRestartFiles = 2;
+logTracers   = 0;
+yearsBetweenRestartFiles  = 5;
 captureAllSelectedTracers = 0;
 
 % DEBUG stuff
@@ -324,7 +324,8 @@ for fwd_itc = 1:num_forward_iterations
 
     years_gone_by = years_gone_by +1;
     if mod(years_gone_by, sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
-        [sim, bgc] = saveRestartFiles(sim, bgc, tracer_0, years_gone_by);
+        % years gone by is actually the number of years-1 spent in phi.
+        [sim, bgc] = saveRestartFiles(sim, bgc, tracer_0, 0);
     end
 end
 
@@ -337,10 +338,16 @@ disp(['Runtime all location per iteration: ', num2str(elapsedTime_all_loc/sim.nu
 disp(['Runtime all location per sim year : ', num2str(elapsedTime_all_loc/60/1440/tot_t*sim.const.sec_y, '%1.2f'), ' (d/y_sim)'])
 disp(['Simulation speed: ', num2str(tot_t/elapsedTime_all_loc/sim.const.days_y, '%1.1f'), ' (sim y/d) aka (SYPD)'])
 
-keyboard
-[sim, bgc] = saveRestartFiles(sim, bgc, tracer_0, num_forward_iterations);
+% keyboard
+% years gone by is actually the number of years-1 spent in phi.
+[sim, bgc] = saveRestartFiles(sim, bgc, tracer_0, 0);
 % FIXME: need to save workspace?!
-save_timer = tic; disp('Saving (possibly) large workspace file...'); save(strcat(sim.data_dir+'/Logs/last_run.mat')); toc(save_timer);
+save_timer = tic; disp('Saving (possibly) large workspace file...'); 
+logDir = strcat(sim.outputRestartDir,'/Logs/');
+if ~exist(logDir, 'dir')
+       mkdir(logDir)
+end
+save(strcat(logDir,'last_run.mat')); toc(save_timer);
 
 disp(['Log file of one location for all time steps uses ',num2str(getMemSize(time_series)/1024/1024, '%1.1f'),' MB'])
 disp(['Log file of one location uses ',num2str(getMemSize(time_series)/1024/sim.num_time_steps, '%1.1f'),' KB per time step'])
