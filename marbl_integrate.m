@@ -43,7 +43,7 @@ timer_total = tic;
 % FIXME: Someday, when we know what inputs need to be, put all this a file
 
 forwardIntegrationOnly = 1;
-num_forward_iterations = 10;
+num_forward_iterations = 1;
 
 tName = tracer_names(0);    % no CISO tracers
 % selection = [ ...
@@ -63,7 +63,7 @@ yearsBetweenRestartFiles  = 5;
 captureAllSelectedTracers = 0;
 
 % DEBUG stuff
-logTracers = 0;
+logTracers = 1;
 ck_years = 1;
 time_step_hr = 12; % FAST debug
 % captureAllSelectedTracers = 1;
@@ -78,6 +78,8 @@ marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 % start_yr =   0; inputRestartFile = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
 % start_yr = 260; inputRestartFile = 'Data_GP/restart_260_integrate_from_0.mat';
 start_yr = 2525; inputRestartFile = strcat(myRestartDir(ck_years),'/restart_260_NH4_x0_sol.mat');
+
+start_yr = 3535; inputRestartFile = strcat(myRestartDir(ck_years),'/restart_2535_Fe_x1.mat');
 
 fprintf('%s.m: Reading OFFline input restart file with tracers and transports: %s\n', mfilename, inputRestartFile);
 % load() does NOT need file extension, but copy() does. sigh
@@ -290,7 +292,6 @@ else
     fprintf('%s.m: %d time steps, each time step is %1.1f (h), simulating %1.1f years\n', ...
         mfilename, sim.T/sim.dt, sim.dt/sim.const.sec_h, tot_t /sim.const.sec_y)
 
-    timer_loop = tic;
     for itc = 1:num_r_iterations
         % FIXME: note "x" not "x0"
 
@@ -315,6 +316,8 @@ end
 
 % keyboard
 % sol = x;
+
+timer_loop = tic;
 years_gone_by = 0;
 for fwd_itc = 1:num_forward_iterations
     fprintf("\n%s.m: starting forward integrate year #%d of %d\n", mfilename, fwd_itc, num_forward_iterations)
