@@ -130,7 +130,7 @@ if (0)
     variables = who;
     toexclude = {'MTM','PQ_inv'};
     variables = variables(~ismember(variables, toexclude));
-    save(myGfile, variables{:}, '-v7.3');
+    save(myGfile, variables{:}, '-v7.3','-nocompression');
 end
 
 figure (900); scatter(x0,r); title(strjoin(["scatter( r(",gStr,"), ",strjoin(tName(sim.selection)),")"]));    xlabel(strjoin(tName(sim.selection)));  ylabel(strjoin(["r(",gStr,")"]))

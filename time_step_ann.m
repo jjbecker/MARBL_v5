@@ -210,12 +210,12 @@ if (sim.captureAllSelectedTracers == 1 && myMonth == 12)
     % tmp = unpackMarbl(tracerCapture,sim.domain.iwet_JJ,[7881,60,730]);
     % tmp_log = squeeze(tmp(sim.time_series_loc, sim.time_series_lvl,:));
     % tst = [tmp_time_series tmp_log];
-    save( myFileName, 'tracer' ,'-v7.3');
+    save( myFileName, 'tracer' ,'-v7.3','-nocompression');
 
     myFileName = sprintf('%s/all_tendency_all_times.mat', sim.outputRestartDir);
     fprintf('%s.m: Saving "%s"...\n', mfilename, myFileName);
     tendency = tendencyCapture;
-    save( myFileName, 'tendency' ,'-v7.3');
+    save( myFileName, 'tendency' ,'-v7.3','-nocompression');
 
 end
 

@@ -6,7 +6,7 @@ function [sim, bgc] = saveRestartFiles(sim, bgc, tracer_0, years_gone_by)
 %         save the entire workspace. Surprisingly slow. Perhaps v7.3 compress of so much data is slow...
 %         allFile = sprintf('%s/all_%d.mat', sim.outputRestartDir, round(1+years_gone_by));
 %         fprintf('%s.m: Saving "%s"...\n', mfilename, allFile);
-%         save(allFile,'-v7.3');
+%         save(allFile,'-v7.3','-nocompression');
 %
 % Matlab load() has trouble with filenames that space and so on.
 % KISS

@@ -326,7 +326,12 @@ disp(['Simulation speed: ', num2str(tot_t/elapsedTime_all_loc/sim.const.days_y, 
 
 keyboard
 % FIXME: need to save workspace?!
-save_timer = tic; disp('Saving (possibly) large workspace file...'); save(strcat(sim.data_dir+'/Logs/last_run.mat')); toc(save_timer);
+logDir = strcat(sim.outputRestartDir,'/Logs/');
+if ~exist(logDir, 'dir')
+       mkdir(logDir)
+end
+save_timer = tic; disp('Saving (possibly) large workspace file...'); save(strcat(logDir,'last_run.mat'),'-v7.3','-nocompression'); toc(save_timer);
+
 
 disp(['Log file of one location for all time steps uses ',num2str(getMemSize(time_series)/1024/1024, '%1.1f'),' MB'])
 disp(['Log file of one location uses ',num2str(getMemSize(time_series)/1024/sim.num_time_steps, '%1.1f'),' KB per time step'])
