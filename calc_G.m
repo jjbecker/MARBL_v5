@@ -151,14 +151,14 @@ myRng = 1:20;
 [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxAbsR(myRng), sim, 998); title('Largest Abs')
 
 
-%     tracer = bgc.tracer;
-%     copyfile( sim.inputRestartFile, myGfile);
-%     save( myGfile, 'tracer', '-append' ); % overwrites tracer from input
-%     save( myGfile, 'r', '-append' );      % overwrites tracer from input
-%     save( myGfile, 'x0', '-append' );      % overwrites tracer from input
-%     save( myGfile, 'x0_prev', '-append' );      % overwrites tracer from input
-%     save( myGfile, 'x0_prev', '-append' );      % overwrites tracer from input
-% Save everything in G, which is not everything in the whole sim
+% % Save everything in G, which is not everything in the whole sim
+% tracer = bgc.tracer;
+% copyfile( sim.inputRestartFile, myGfile);
+% save( myGfile, 'tracer', '-append' ); % overwrites tracer from input
+% save( myGfile, 'r', '-append' );      % overwrites tracer from input
+% save( myGfile, 'x0', '-append' );      % overwrites tracer from input
+% save( myGfile, 'x0_prev', '-append' );      % overwrites tracer from input
+% save( myGfile, 'x0_prev', '-append' );      % overwrites tracer from input
 
 x0_prev = x0;
 

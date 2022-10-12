@@ -104,7 +104,7 @@ sim.checkNeg = 0;
 % "restart file" -FROM- this OFFline sim, if for restart on Mac, not CESM.
 % Another hack is needed to move results from NK here back to CESM.
 
-sim.outputRestartDir = myRestartDir(ck_years);
+sim.outputRestartDir = myDataDir(ck_years);
 disp(['Results will be saved in directory ', sim.outputRestartDir]); disp (' ');
 [status, msg, msgID] = mkdir(sim.outputRestartDir);
 if status ~=1

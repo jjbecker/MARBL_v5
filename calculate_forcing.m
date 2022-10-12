@@ -45,7 +45,7 @@ function [sim,bgc] = calculate_forcing(sim,bgc, timeStep)
 persistent solar_force
 persistent num_lvl
 if isempty(solar_force)
-    solar_force = load('Data/SOLAR_3hr_forcing.mat', '-mat').solar_force;
+    solar_force = load(strcat(myDataDir(),'/SOLAR_3hr_forcing.mat'), '-mat').solar_force;
     num_lvl = size(bgc.forcing(:,:,2),2);
 end
 

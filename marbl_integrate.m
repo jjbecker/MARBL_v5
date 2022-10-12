@@ -22,51 +22,45 @@ format short g
 addpath('MEX');
 addpath(genpath('utils'));
 addpath(genpath('plotting'));
-
-ck_years = 1;   % Newton-Kryrlov -requires- 1 year, but might want to run long time_step_hr = 3;
-dname = sprintf('%s/../',myRestartDir(ck_years));
-addpath(dname);
+% dname = sprintf('%s/../',myDataDir());
+% addpath(dname);
 
 % % FIXME: diary behavior is such that if renamed it's still active diary!!
 diary off; diary off; diary on; diary off; diary on; diary on;
-
 % Clean up for threads, more complex and much slower than expected.
-
+% killAndCleanThreads();  % Leftover threads and dumps cause BIG trouble
+%%%%%%
+% Setup the big picture parts of a simulation and/or NK solution.
 timer_total = tic;
 
-% killAndCleanThreads();  % Leftover threads and dumps cause BIG trouble
-% toc(timer_total)
-
-%%%%%%
-
-% Setup the big picture parts of a simulation and/or NK solution.
 % FIXME: Someday, when we know what inputs need to be, put all this a file
+time_step_hr = 3;
+phi_years    = 1;      % NK always using 1 year integration
 
-forwardIntegrationOnly = 1;
-num_forward_iterations = 1;
+forwardIntegrationOnly = 0;
+recalculate_PQ_inv     = 0;
+num_r_iterations       = 1;
+num_forward_years      = 3;
 
+logTracers                = 1;
+captureAllSelectedTracers = 0;
+
+yearsBetweenRestartFiles  = 2;
+
+% FIXME: always need a selected tracer! For plot time series, or solve
+% Most of these work very well in the single tracer solution...
 tName = tracer_names(0);    % no CISO tracers
+tracer_str = 'Lig';
+selection = [ find( strcmp(tName,tracer_str) ) ];
 % selection = [ ...
 %     find( strcmp(tName,'SiO3') ) ];     % #3
 %     find( strcmp(tName,'DOCr') ) ];     % #17
-%
-% Most of these work very well in the single tracer solution...
 
-% FIXME: always need a selected tracer!
-%   either to plot time series, or solve for
-tracer_str = 'Fe';
 
-selection = [ find( strcmp(tName,tracer_str) ) ];
-time_step_hr = 3;
-logTracers   = 0;
-yearsBetweenRestartFiles  = 5;
-captureAllSelectedTracers = 0;
 
 % DEBUG stuff
 logTracers = 1;
-ck_years = 1;
 time_step_hr = 12; % FAST debug
-% captureAllSelectedTracers = 1;
 
 %%%%%%
 
@@ -74,13 +68,14 @@ marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 
 %%%%%% INput restart file
 
-% start_yr = 4101;inputRestartFile = 'Data/InputFromAnn/restart4101.mat';
-% start_yr =   0; inputRestartFile = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
+% start_yr = 4101;inputRestartFileStem = 'Data/InputFromAnn/restart4101.mat';
+% start_yr =   0; inputRestartFileStem = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
 % start_yr = 260; inputRestartFile = 'Data_GP/restart_260_integrate_from_0.mat';
-start_yr = 2525; inputRestartFile = strcat(myRestartDir(ck_years),'/restart_260_NH4_x0_sol.mat');
+% start_yr = 2525; inputRestartFileStem = 'restart_0_1_output/restart_260_NH4_x0_sol.mat';
+% start_yr = 3525; inputRestartFileStem = 'restart_0_1_output/restart_260_NH4_x0_sol.mat';
+start_yr = 3535; inputRestartFileStem = 'restart_0_1_output/restart_2535_Fe_x1.mat';
 
-start_yr = 3535; inputRestartFile = strcat(myRestartDir(ck_years),'/restart_2535_Fe_x1.mat');
-
+inputRestartFile = strcat(myDataDir(), inputRestartFileStem);
 fprintf('%s.m: Reading OFFline input restart file with tracers and transports: %s\n', mfilename, inputRestartFile);
 % load() does NOT need file extension, but copy() does. sigh
 if ~isfile(inputRestartFile)
@@ -108,10 +103,12 @@ sim.checkNeg = 0;
 
 %%%%%% OUTput restart file
 
-% "restart file" -FROM- this OFFline sim, if for restart on Mac, not CESM.
+% "restart file" -FROM- this OFFline sim for restart on Mac, not CESM.
 % Another hack is needed to move results from NK here back to CESM.
 
-sim.outputRestartDir = myRestartDir(ck_years);
+sim.yearsBetweenRestartFiles = yearsBetweenRestartFiles;       % YEARS between drops of restart
+
+sim.outputRestartDir = strcat(myDataDir(),'restart_0_1_output/');
 disp(['Results will be saved in directory ', sim.outputRestartDir]); disp (' ');
 [status, msg, msgID] = mkdir(sim.outputRestartDir);
 if status ~=1
@@ -120,9 +117,6 @@ if status ~=1
 else
     clear status msg msgID
 end
-
-
-sim.yearsBetweenRestartFiles = yearsBetweenRestartFiles;       % YEARS between drops of restart
 
 %%%%%%
 
@@ -154,7 +148,7 @@ toc(timer_total)
 % forward integration, or NK(), or...
 %
 
-[sim, bgc, ~, time_series, forcing] = init_sim(marbl_file, sim.inputRestartFile, sim, ck_years, time_step_hr);
+[sim, bgc, ~, time_series, forcing] = init_sim(marbl_file, sim.inputRestartFile, sim, phi_years, time_step_hr);
 
 tot_t = sim.dt*sim.num_time_steps;  % used only for debug output
 if (or (sim.logDiags, sim.logTracers))
@@ -182,8 +176,8 @@ tic;
 
 % NK always using 1 year integration
 
-if ck_years ~= 1
-    disp('ERROR: NK requires ck_years = 1')
+if phi_years ~= 1
+    disp('ERROR: NK requires phi_years = 1')
     keyboard
 end
 
@@ -231,13 +225,13 @@ if( sim.forwardIntegrationOnly )
     fprintf('%s.m: forward integration ONLY\n',mfilename);
 else
     % Solve for selected tracer
-    if(0)
+    if(recalculate_PQ_inv)
         [PQ_inv, J_FP] = calc_PQ_inv(sim, bgc, time_series, forcing, MTM);
     else
         fprintf('\n%s.m: Loading ~30 GB(!) mfactored preconditioner PQ_inv from %s...\n', mfilename, strcat('sol/',string(tName(sim.selection)),'_QJ'))
         tStart = tic;
         %     keyboard
-        load (strcat(string(tName(sim.selection)),'_QJ'), 'PQ_inv')
+        load (strcat(myDataDir(),'sol/',strjoin(tName(sim.selection)),'_QJ'), 'PQ_inv')
 
         elapsedTime = toc(tStart);
         fprintf('%s.m: %1.0f (s) to init sim and load PQinv \n',mfilename, toc(tStart));
@@ -282,7 +276,6 @@ else
     x = sol;
     x_histx = x;
     r_hist = zeros(size(x));
-    num_r_iterations = 0;
     it_histx = zeros(num_r_iterations,1);
     Npt = -1;
 
@@ -319,8 +312,8 @@ end
 
 timer_loop = tic;
 years_gone_by = 0;
-for fwd_itc = 1:num_forward_iterations
-    fprintf("\n%s.m: starting forward integrate year #%d of %d\n", mfilename, fwd_itc, num_forward_iterations)
+for fwd_itc = 1:num_forward_years
+    fprintf("\n%s.m: starting forward integrate year #%d of %d\n", mfilename, fwd_itc, num_forward_years)
     [sim, bgc, time_series, tracer_0] = phi(sim, bgc, time_series, forcing, MTM);
 
     sim.start_yr = sim.start_yr+1;
@@ -347,7 +340,7 @@ disp(['Simulation speed: ', num2str(tot_t/elapsedTime_all_loc/sim.const.days_y, 
 % FIXME: need to save workspace?!
 logDir = strcat(sim.outputRestartDir,'/Logs/');
 if ~exist(logDir, 'dir')
-       mkdir(logDir)
+    mkdir(logDir)
 end
 save_timer = tic; disp('Saving (possibly) large workspace file...'); save(strcat(logDir,'last_run.mat'),'-v7.3','-nocompression'); toc(save_timer);
 

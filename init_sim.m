@@ -1,4 +1,4 @@
-function [sim, bgc, bgc_struct, time_series, forcing] = init_sim(marbl_file, restart_file, sim, sim_years, dt)
+function [sim, bgc, bgc_struct, time_series, forcing] = init_sim(marbl_file, restart_file, sim, phi_years, dt)
 %UNTITLED7 Summary of this function goes here
 
 fprintf('Starting %s.m...\n',mfilename)
@@ -28,7 +28,7 @@ sim.const.days_y = 365;
 sim.const.sec_y = sim.const.days_y *sim.const.sec_d;
 
 sim.dt = sim.const.sec_h *dt;
-sim.num_time_steps = round ( sim_years *sim.const.sec_y /sim.dt );
+sim.num_time_steps = round ( phi_years *sim.const.sec_y /sim.dt );
 sim.T  = sim.num_time_steps * sim.dt;
 
 % Define the gird dimensions in meters
@@ -82,10 +82,10 @@ sim.domain.dVt_FP = sim.domain.dVt(sim.domain.iwet_FP);
 % they match when MARBL is initialized.
 
 load(restart_file,'tracer','state','forcing');
-% load(restart_file,'tracer','state','forcing','old_tracer');
-toc
 bgc.tracer       = tracer;      clear tracer;
+% load(restart_file,'tracer','state','forcing','old_tracer');
 % bgc.old_tracer   = old_tracer;  clear old_tracer;
+toc
 
 disp('Initializing global grids for tracer, tendency, etc...')
 [sim, bgc_struct] = init_marbl(marbl_file,sim, bgc_struct, forcing(1).surf_forcing);
