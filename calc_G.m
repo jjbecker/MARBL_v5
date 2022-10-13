@@ -83,14 +83,14 @@ fprintf('||Precon( %s )|| = (max(abs(r))) = %g \n', gStr, max(abs(r)));
 
 
 
-% DEBUG
-fprintf(        '                                  %s\n',strjoin(pad(tName,14)));
-disp([mfilename,'.m: Moles  start of phi() = ',num2str(initial_moles,'%-#15.7g')])
-disp([mfilename,'.m: Moles  end of phi()   = ',num2str(final_moles,'%-#15.7g')])
-disp([mfilename,'.m: Moles  delta          = ',num2str(final_moles-initial_moles,'%-#15.7g')])
-ppm = ((final_moles-initial_moles)./ final_moles *1e6);
-disp([mfilename,'.m: Moles  delta (ppm)    = ',num2str(ppm,'%-#15.7g')])
-fprintf(        '                                  %s\n',strjoin(pad(tName,14)));
+% % DEBUG
+% fprintf(        '                                  %s\n',strjoin(pad(tName,14)));
+% disp([mfilename,'.m: Moles  start of phi() = ',num2str(initial_moles,'%-#15.7g')])
+% disp([mfilename,'.m: Moles  end of phi()   = ',num2str(final_moles,'%-#15.7g')])
+% disp([mfilename,'.m: Moles  delta          = ',num2str(final_moles-initial_moles,'%-#15.7g')])
+% ppm = ((final_moles-initial_moles)./ final_moles *1e6);
+% disp([mfilename,'.m: Moles  delta (ppm)    = ',num2str(ppm,'%-#15.7g')])
+% fprintf(        '                                  %s\n',strjoin(pad(tName,14)));
 tmp = replaceSelectedTracers(sim, c0, G, sim.selection);
 res_moles = global_moles(nsoli2bgc(sim, bgc, tmp), sim);
 res_moles = res_moles(sim.selection);
