@@ -39,13 +39,13 @@ phi_years    = 1;      % NK always using 1 year integration
 
 forwardIntegrationOnly = 0;
 recalculate_PQ_inv     = 0;
-num_r_iterations       = 1;
-num_forward_years      = 3;
+num_r_iterations       = 3;
+num_forward_years      = 5;
 
 logTracers                = 1;
 captureAllSelectedTracers = 0;
 
-yearsBetweenRestartFiles  = 2;
+yearsBetweenRestartFiles  = 1;
 
 % FIXME: always need a selected tracer! For plot time series, or solve
 % Most of these work very well in the single tracer solution...
