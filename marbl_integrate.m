@@ -38,7 +38,7 @@ time_step_hr = 3;
 phi_years    = 1;      % NK always using 1 year integration
 
 forwardIntegrationOnly = 0;
-recalculate_PQ_inv     = 0;
+recalculate_PQ_inv     = 1;
 num_r_iterations       = 3;
 num_forward_years      = 5;
 
@@ -50,7 +50,7 @@ yearsBetweenRestartFiles  = 1;
 % FIXME: always need a selected tracer! For plot time series, or solve
 % Most of these work very well in the single tracer solution...
 tName = tracer_names(0);    % no CISO tracers
-tracer_str = 'Lig';
+tracer_str = 'SiO3';
 selection = [ find( strcmp(tName,tracer_str) ) ];
 % selection = [ ...
 %     find( strcmp(tName,'SiO3') ) ];     % #3
@@ -226,7 +226,7 @@ if( sim.forwardIntegrationOnly )
 else
     % Solve for selected tracer
     if(recalculate_PQ_inv)
-        [PQ_inv, J_FP] = calc_PQ_inv(sim, bgc, time_series, forcing, MTM);
+        PQ_inv = calc_PQ_inv(sim, bgc, time_series, forcing, MTM);
     else
         fprintf('\n%s.m: Loading ~30 GB(!) mfactored preconditioner PQ_inv from %s...\n', mfilename, strcat('sol/',string(tName(sim.selection)),'_QJ'))
         tStart = tic;
