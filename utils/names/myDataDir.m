@@ -5,7 +5,7 @@ function [dataDir] = myDataDir()
 
 if isunix && ~ismac
     % Code to run on Linux platform
-    dataDir = sprintf('/DFS-L/DATA/primeau/jjbecker/restart_0_%s',int2str(ck_years));
+    dataDir = sprintf('/DFS-L/DATA/primeau/jjbecker/Data/restart_0_%s',int2str(ck_years));
     % dataDir = '/DFS-L/SCRATCH/primeau/jjbecker/';
 elseif ismac
     % Code to run on Mac platform
