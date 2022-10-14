@@ -150,7 +150,7 @@ if (sim.runInParallel)
     toc
     %     interior_base_client = interior_base;
     if (sim.runInParallel)
-        sim.number_of_threads = 4;
+        % sim.number_of_threads = 4;
         % FIXME: this is not the place for this; not needed; etc
         % synchronize all the labs
         %    labBarrier;
