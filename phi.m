@@ -104,27 +104,6 @@ while current_month < total_months
 
     if mod(current_month, 12*sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
         [sim, bgc] = saveRestartFiles(sim, bgc, tracer_0, years_gone_by);
-
-        %         myRestartFile = sprintf('%s/restart_%d_%s_x1.mat', sim.outputRestartDir, round(sim.start_yr+years_gone_by),strjoin(tName(sim.selection)));
-        %         fprintf('%s.m: Saving "%s"...\n', mfilename,myRestartFile);
-        %         % copy original restart file, then replace original "tracer" with
-        %         % the current bgc.tracer. Surprisingly fast!
-        %         copyfile( sim.inputRestartFile, myRestartFile);
-        %
-        %         tracer = bgc.tracer;                            % --- these are x1 everywhere  ---
-        %         save( myRestartFile, 'tracer',  '-append' );    % overwrites tracer ONLY, keep forcing from init
-        %
-        %
-        %
-        %         myRestartFile = sprintf('%s/restart_%d_%s_x0.mat', sim.outputRestartDir, round(sim.start_yr+years_gone_by),strjoin(tName(sim.selection)));
-        %         fprintf('%s.m: Saving "%s"...\n', mfilename,myRestartFile);
-        %         % copy original restart file, then replace original "tracer" with
-        %         % the current bgc.tracer. Surprisingly fast!
-        %         copyfile( sim.inputRestartFile, myRestartFile);
-        %
-        %         tracer = tracer_0;                            % --- these are x0 everywhere  ---
-        %         tracer(:,:,sim.selection) = bgc.tracer(:,:,sim.selection);   % only selected x1
-        %         save( myRestartFile, 'tracer',  '-append' );    % overwrites tracer ONLY, keep forcing from init
     end
 
     % %     %     tic; tend_log.tendency(n,1:prod(size(bgc.tendency))) = bgc.tendency(:)'; toc
