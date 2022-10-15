@@ -25,6 +25,8 @@ addpath(genpath('plotting'));
 diary off; diary off; diary on; diary off; diary on; diary on;
 % Clean up for threads, more complex and much slower than expected.
 % killAndCleanThreads();  % Leftover threads and dumps cause BIG trouble
+timer_total = tic;
+
 %%%%%%
 
 % Setup big picture parts of a simulation and/or NK solution.
@@ -45,7 +47,7 @@ recalculate_PQ_inv     = 0; % recalculate J, PQ,PQ_inv or load file
 num_relax_iterations   = 1; % 0 means no relax steps, just use NK sol
 num_forward_years      = 2; % if fwd only, this is num fwd; 
                             % else this is num fwd after relax , after sol
-logTracers                = 1;
+logTracers                = 0;
 captureAllSelectedTracers = 0;
 yearsBetweenRestartFiles  = 1;
 
@@ -56,8 +58,6 @@ phi_years    = 1;      % NK always using 1 year integration
 % DEBUG stuff
 logTracers = 1;
 time_step_hr = 12; % FAST debug
-
-timer_total = tic;
 
 %%%%%%
 marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
@@ -121,7 +121,7 @@ end
 
 sim.runInParallel = 1;
 if (sim.runInParallel)
-    sim.number_of_threads = 12; % only 4 on laptop or 12 on GP supported
+    sim.number_of_threads = 4; % only 4 on laptop or 12 on GP supported
 end
 
 %%%%%%
@@ -140,7 +140,6 @@ sim.epsilon = -sqrt(eps);
 sim = setPeek(sim);
 
 %%%%%% End of "inputs"
-toc(timer_total)
 
 % Stuff below is not a simulation input. It is code to setup grids, etc a
 % forward integration, or NK(), or...
@@ -162,14 +161,15 @@ end
 sim = calc_global_moles_and_means(bgc, sim);
 
 clear forwardIntegrationOnly marbl_file
-%%%%%%
 
-toc(timer_total)
+%%%%%%
 
 % =============== This is the NK solver code ================
 
+toc(timer_total)
+
 fprintf('\n%s.m: Start Newton (Broyden Method) solver: %s\n',mfilename,datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
-tic;
+timer_PQ_init_solve_relax_fwd = tic;
 
 
 % NK always using 1 year integration
@@ -224,7 +224,6 @@ else
         %     keyboard
         load (strcat(myDataDir(),'sol/',strjoin(tName(sim.selection)),'_QJ'), 'PQ_inv')
         
-        elapsedTime = toc(tStart);
         fprintf('%s.m: %1.0f (s) to init sim and load PQinv \n',mfilename, toc(tStart));
     end % calculate or load PQ_inv
     
@@ -309,7 +308,6 @@ else
     %    do pure forward integration for a while...
     bgc_fwd = bgc_relax;
     
-    timer_loop = tic;
     years_gone_by = 0;
     for fwd_itc = 1:num_forward_years
         fprintf("\n%s.m: starting forward integrate year #%d of %d\n", mfilename, fwd_itc, num_forward_years)
@@ -328,8 +326,8 @@ else
     
 end % fwd only or solve, relax, fwd if statement
 
+elapsedTime_all_loc = toc(timer_PQ_init_solve_relax_fwd);
 disp([mfilename,' finished...'])
-elapsedTime_all_loc = toc(timer_loop);
 disp(' ');
 disp(['Runtime: ', num2str(elapsedTime_all_loc, '%1.0f'),' (s) or ', num2str(elapsedTime_all_loc/60, '%1.1f'), ' (m)'])
 disp(['Runtime per location per iteration: ', num2str(elapsedTime_all_loc/sim.num_time_steps/sim.domain.num_wet_loc*1000, '%1.2f'), ' (ms) MARBL, advection, diffusion, mfactor()'])
