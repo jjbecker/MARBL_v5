@@ -234,7 +234,7 @@ else
     % rtol   = 1e-3;          % stop when norm is less than atol+rtol*norm of init_resid as seen by nsoli
     %
     atol   = sqrt(eps);     % sum of the squares in (1/s), IOW average error = 1/sec_y/379,913 ~1e-11 years
-    atol   = norm(x0)*1e-6; % stop if norm(drift) < 1ppm of norm(x0)
+    rtol   = norm(x0)*1e-6; % stop if norm(drift) < 1ppm of norm(x0)
 
     tol    = [atol,rtol];   % [absolute error, relative tol]
     maxit  = 40;            % maximum number of nonlinear iterations (Newton steps) default = 40
