@@ -27,7 +27,7 @@ current_month = 0;
 years_gone_by = -1; % allow for case of total_months==0, etc etc
 tName = tracer_names(0);    % no CISO tracers
 
-tracer_0 = bgc.tracer;
+tracer_0 = bgc.tracer;  % [7881, 60, 32]
 x0_bgc = bgc2nsoli(sim, bgc.tracer);    % unitless start of year values
 
 % DEBUG
@@ -78,7 +78,11 @@ while current_month < total_months
         disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' Moles delta = ',num2str(final_moles-initial_moles,'%-#15.7g')])
         ppm = ((final_moles-initial_moles)./ final_moles *1e6);
         disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' Moles (ppm) = ',num2str(ppm,'%-#15.7g')])
-        disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' norm G      = ', num2str(max(abs(tmpG_all)),'%-#15.7g')])
+        normG = vecnorm (tmpG_all);
+%         disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' norm G      = ', num2str(max(abs(tmpG_all)),'%-#15.7g')])
+        disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' norm(G,2)   = ', num2str(normG,'%-#15.7g')])
+        normG = vecnorm (tmpG_all,inf);
+        disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' norm(G,inf) = ', num2str(normG,'%-#15.7g')])
         fprintf(        '%s.m: Year %d               %s\n',mfilename,round(sim.start_yr+years_gone_by),strjoin(pad(tName,14)));
 
         tName = tracer_names(0);    % no CISO tracers
@@ -103,7 +107,20 @@ while current_month < total_months
     end
 
     if mod(current_month, 12*sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
-        [sim, bgc] = saveRestartFiles(sim, bgc, tracer_0, years_gone_by);
+
+        % save "x0" or initial state file...
+
+        myRestartFile = sprintf('%s/restart_%d_%s_x0.mat', sim.outputRestartDir, round(sim.start_yr+years_gone_by),strjoin(tName(sim.selection)));
+        
+        % --- all tracers in particular, including x0 of selection ---
+        tracer = tracer_0;              
+        
+        [sim, bgc] = saveRestartFiles(sim, bgc, tracer, myRestartFile);
+
+        % save "x1" or final state file...
+
+        myRestartFile = sprintf('%s/restart_%d_%s_x1.mat', sim.outputRestartDir, round(sim.start_yr+years_gone_by),strjoin(tName(sim.selection)));
+        [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile);
     end
 
     % %     %     tic; tend_log.tendency(n,1:prod(size(bgc.tendency))) = bgc.tendency(:)'; toc
