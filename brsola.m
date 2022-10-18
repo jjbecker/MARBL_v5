@@ -173,7 +173,7 @@ while(itc < maxit)
         sol=x;
         rat=fnrm/fnrmo;
         outstat(itc+1, :) = [itc fnrm iarm rat];
-        it_hist=it_histx(1:itc+1,:);
+        it_hist=it_histx(1:itc+1,:)
 %        it_hist(itc+1)=fnrm;
         if debug==1
             disp(outstat(itc+1,:))
