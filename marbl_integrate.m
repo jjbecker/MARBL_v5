@@ -230,6 +230,17 @@ else
     end % calculate or load PQ_inv
 
     fprintf('%s: Parameters nsoli()... \n', mfilename)
+    maxit  = 7;            % maximum number of nonlinear iterations (Newton steps) default = 40
+    maxitl = 2;            % maximum number of Broyden iterations before restart, so maxdim-1 vectors are stored default = 40
+
+    % used only by nsoli()
+    etamax = 0.9;           % maximum error tol for residual in inner iteration, default = 0.9
+    lmeth  = 2;             % Nsoli() method 2 = GMRES(m), not used by brsola().
+    restart_limit = 10;     % max number of restarts for GMRES if lmeth = 2, default = 20;
+
+    % first 2 of these parms are used by brsola, reat are specific to nsoli
+    parms  = [maxit,maxitl,  etamax,lmeth,restart_limit];
+
     % stop when norm is less than atol+rtol*norm of init_resid as seen by nsoli or brsola
     %
     % atol   = sqrt(eps);     % sum of the squares in (1/s), IOW average error = 1/sec_y/379,913 ~1e-11 years
@@ -243,17 +254,6 @@ else
     rtol   = G *1e-2; % stop if norm(drift) < 1ppm of G(x0)
 
     tol    = [atol,rtol];   % [absolute error, relative tol]
-    maxit  = 7;            % maximum number of nonlinear iterations (Newton steps) default = 40
-    maxitl = 2;            % maximum number of Broyden iterations before restart, so maxdim-1 vectors are stored default = 40
-
-    % used only by nsoli()
-    etamax = 0.9;           % maximum error tol for residual in inner iteration, default = 0.9
-    lmeth  = 2;             % Nsoli() method 2 = GMRES(m), not used by brsola().
-    restart_limit = 10;     % max number of restarts for GMRES if lmeth = 2, default = 20;
-
-    % first 2 of these parms are used by brsola, reat are specific to nsoli
-    parms  = [maxit,maxitl,  etamax,lmeth,restart_limit];
-
     [sol,it_hist,ierr,x_hist] = brsola(x0, @(x) calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), tol, parms);
 
     % remember that "sol" is an x0 value...
