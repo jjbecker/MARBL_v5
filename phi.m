@@ -51,10 +51,7 @@ while current_month < total_months
         %         toc(timer_total);
     end
 
-    %         fprintf('%s.m: Runtime to end of myMonth %d: %s min, rate = %s hr/sim_y\n', mfilename, current_month, ...
-    %             num2str(toc(timer_total)/60,'%.2f'), ...
-    %             num2str((toc(timer_total)/3600/(current_month/12)),'%.2f'));
-
+    % Print annual stats for debug and learning!
     if mod(current_month, 12) == 0    % This runs after last time step of every y
 
         final_moles = global_moles(bgc.tracer, sim);
@@ -106,6 +103,7 @@ while current_month < total_months
 
     end
 
+    % save restart file(s) every few years for debug and recovery from crashes and so on
     if mod(current_month, 12*sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
 
         % save "x0" or initial state file...
