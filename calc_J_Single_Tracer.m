@@ -198,8 +198,18 @@ for row = 1:numRows
 end
 toc
 J_FP = sparse(i_row, j_col, k_val, numel(sim.domain.iwet_JJ), numel(sim.domain.iwet_JJ));
+
+
 % FIXME: we seem to have calculated J' above...
 J = J_FP';
+
+
+% FIXME: add a "geologic term" aka 1e-14 to the main diagional of J so that
+% PQ will never be singular.
+
+geologic_term = 1e-14;
+J = J + d0( geologic_term *ones(size(J,1),1));
+
 
 elapsedTime = toc(tStart);
 fprintf('%s.m: nzmax(J_FP) = %.0f\n\n', mfilename, nzmax(J_FP));
