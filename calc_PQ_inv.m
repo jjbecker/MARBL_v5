@@ -29,6 +29,11 @@ fprintf('%s.m: %1.3f (s) to average transport\n', mfilename, toc);
 
 J_FP = calc_J_Single_Tracer(sim, bgc, time_series, forcing, MTM);
 
+% FIXME: add a "geologic term" aka 1e-14 to the main diagional of J so that
+% PQ will never be singular.
+geologic_term = 1e-14;
+J_FP = J_FP + d0( geologic_term *ones(size(PQ_inv.L,1),1));
+
 PQ = Q +J_FP;
 
 tStart = tic;
