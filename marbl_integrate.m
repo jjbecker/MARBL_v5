@@ -251,7 +251,7 @@ else
 % to 1% of starting value, while looping over all the tracers, and then
 % repeat until to get final very accurate result where G is sqrt(eps)
     [r,G, x1] = calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
-    rtol   = G *1e-2; % stop if norm(drift) < 1ppm of G(x0)
+    rtol   = 1e-2; % stop if norm(drift) < 1ppm of G(x0)
 
     tol    = [atol,rtol];   % [absolute error, relative tol]
     [sol,it_hist,ierr,x_hist] = brsola(x0, @(x) calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), tol, parms);
