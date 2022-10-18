@@ -34,14 +34,16 @@ timer_total = tic;
 % always need a selected tracer! For plot time series, or solve
 % Most of these work very well in the single tracer solution...
 tName = tracer_names(0);    % no CISO tracers
-tracer_str = 'DOCr';
+% tracer_str = 'DOCr';
+tracer_str = 'DOP';
+% tracer_str = 'ALK';
 selection = [ find( strcmp(tName,tracer_str) ) ];
 % selection = [ ...
 %     find( strcmp(tName,'SiO3') ) ];     % #3
 %     find( strcmp(tName,'DOCr') ) ];     % #17
 
 forwardIntegrationOnly = 0; % 1 -> no NK just fwd integration
-recalculate_PQ_inv     = 0; % recalculate J, PQ,PQ_inv or load file
+recalculate_PQ_inv     = 1; % recalculate J, PQ,PQ_inv or load file
 % remember that "sol" is an x0 value. First relax iteration gives same x1
 % as sol run. to be useful num_relax_iterations >= 2
 num_relax_iterations   = 2; % 0 means no relax steps, just use NK sol
@@ -234,11 +236,15 @@ else
     % rtol   = 1e-3;          % stop when norm is less than atol+rtol*norm of init_resid as seen by nsoli
     %
     atol   = sqrt(eps);     % sum of the squares in (1/s), IOW average error = 1/sec_y/379,913 ~1e-11 years
-    rtol   = norm(x0)*1e-6; % stop if norm(drift) < 1ppm of norm(x0)
+% rather than get accurate solution, loop over tracers and try to reduce G
+% to 1% of starting value, while looping over all the tracers, and then
+% repeat until to get final very accurate result where G is sqrt(eps)
+    [r,G, x1] = calc_G(x,c0,sim,bgc_sol,time_series,forcing,MTM,PQ_inv);
+    rtol   = G *1e-2; % stop if norm(drift) < 1ppm of G(x0)
 
     tol    = [atol,rtol];   % [absolute error, relative tol]
-    maxit  = 40;            % maximum number of nonlinear iterations (Newton steps) default = 40
-    maxitl = 15;            % maximum number of Broyden iterations before restart, so maxdim-1 vectors are stored default = 40
+    maxit  = 7;            % maximum number of nonlinear iterations (Newton steps) default = 40
+    maxitl = 2;            % maximum number of Broyden iterations before restart, so maxdim-1 vectors are stored default = 40
 
     % used only by nsoli()
     etamax = 0.9;           % maximum error tol for residual in inner iteration, default = 0.9
