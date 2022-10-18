@@ -194,7 +194,7 @@ while(itc < maxit)
 %
 %    it_hist(itc+1)=fnrm; 
     rat=fnrm/fnrmo;
-    outstat(itc+1, :) = [itc fnrm iarm rat];
+    outstat(itc+1, :) = [itc fnrm iarm rat]
         if debug==1
             disp(outstat(itc+1,:))
         end
