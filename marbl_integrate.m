@@ -250,7 +250,7 @@ else
 % rather than get accurate solution, loop over tracers and try to reduce G
 % to 1% of starting value, while looping over all the tracers, and then
 % repeat until to get final very accurate result where G is sqrt(eps)
-    [r,G, x1] = calc_G(x,c0,sim,bgc_sol,time_series,forcing,MTM,PQ_inv);
+    [r,G, x1] = calc_G(x0,c0,sim,bgc_sol,time_series,forcing,MTM,PQ_inv);
     rtol   = G *1e-2; % stop if norm(drift) < 1ppm of G(x0)
 
     tol    = [atol,rtol];   % [absolute error, relative tol]
