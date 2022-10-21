@@ -78,23 +78,17 @@ x1 = x0 +G;
 % Precondition the residual
 
 r = mfactor(PQ_inv, G) - G;
+% fprintf('\n\n ********Disabling mfactor in calc_G*******\n\n');
+% r = G;
 
 fprintf('||Precon( %s )|| = (max(abs(r))) = %g \n', gStr, max(abs(r)));
 
 
 
 % % DEBUG
-% fprintf(        '                                  %s\n',strjoin(pad(tName,14)));
-% disp([mfilename,'.m: Moles  start of phi() = ',num2str(initial_moles,'%-#15.7g')])
-% disp([mfilename,'.m: Moles  end of phi()   = ',num2str(final_moles,'%-#15.7g')])
-% disp([mfilename,'.m: Moles  delta          = ',num2str(final_moles-initial_moles,'%-#15.7g')])
-% ppm = ((final_moles-initial_moles)./ final_moles *1e6);
-% disp([mfilename,'.m: Moles  delta (ppm)    = ',num2str(ppm,'%-#15.7g')])
-% fprintf(        '                                  %s\n',strjoin(pad(tName,14)));
 tmp = replaceSelectedTracers(sim, c0, G, sim.selection);
 res_moles = global_moles(nsoli2bgc(sim, bgc, tmp), sim);
 res_moles = res_moles(sim.selection);
-% res_moles ./ final_moles(sim.selection) *1e6
 
 disp('  ')
 fprintf('%s.m: Npt = %d %s max(x0)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), max(x0));
@@ -114,13 +108,6 @@ fprintf('%s.m: Npt = %d %s median(G)= %1.10g\n', mfilename, Npt, strjoin(tName(s
 fprintf('%s.m: Npt = %d %s madMed(G)= %1.7g\n',  mfilename, Npt, strjoin(tName(sim.selection)), max((G)));
 fprintf('%s.m: Npt = %d %s madAvg(G)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), mad(G,1));
 fprintf('%s.m: Npt = %d %s moles/y = %1.7g\n',   mfilename, Npt, gStr, res_moles);
-
-% fprintf('%s.m: Npt = %d %s min     = %1.7g\n',  mfilename, Npt, gStr, min((G)));
-% fprintf('%s.m: Npt = %d %s median  = %1.7g\n',  mfilename, Npt, gStr, median(G));
-% fprintf('%s.m: Npt = %d %s mean    = %1.7g\n',  mfilename, Npt, gStr, mean(G));
-% fprintf('%s.m: Npt = %d %s std     = %1.7g\n',  mfilename, Npt, gStr, std(G));
-% fprintf('%s.m: Npt = %d %s mad(avg)= %1.7g\n',  mfilename, Npt, gStr, mad(G,0));
-% fprintf('%s.m: Npt = %d %s mad(med)= %1.7g\n',  mfilename, Npt, gStr, mad(G,1));
 
 if (0)
     % Matlab load() has trouble with filenames that space and so on.
