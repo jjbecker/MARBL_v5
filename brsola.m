@@ -79,7 +79,7 @@ it_histx(itc+1,1)=fnrm; it_histx(itc+1,2)=0; it_histx(itc+1,3)=0;
 fnrmo=1;
 stop_tol=atol + rtol*fnrm;
 fprintf('%s.m: stop_tol = %g\n',mfilename,stop_tol);
-outstat(itc+1, :) = [itc fnrm 0 0];
+outstat(itc+1, :) = [itc fnrm 0 0]
 %
 % terminate on entry?
 %
@@ -194,7 +194,7 @@ while(itc < maxit)
 %
 %    it_hist(itc+1)=fnrm; 
     rat=fnrm/fnrmo;
-    outstat(itc+1, :) = [itc fnrm iarm rat]
+    outstat(itc+1, :) = [itc fnrm iarm rat];
         if debug==1
             disp(outstat(itc+1,:))
         end
