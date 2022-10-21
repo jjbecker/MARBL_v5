@@ -34,9 +34,15 @@ timer_total = tic;
 % always need a selected tracer! For plot time series, or solve
 % Most of these work very well in the single tracer solution...
 tName = tracer_names(0);    % no CISO tracers
+% FIXME: rather than get accurate solution, loop over tracers and try to reduce G
+% to 1% of starting value, while looping over all the tracers, and then
+% repeat until to get final very accurate result where G is sqrt(eps)
+
 % tracer_str = 'DOCr';
-tracer_str = 'DOP';
+% tracer_str = 'DOP';
+tracer_str = 'O2';
 % tracer_str = 'ALK';
+% tracer_str = 'Fe';
 selection = [ find( strcmp(tName,tracer_str) ) ];
 % selection = [ ...
 %     find( strcmp(tName,'SiO3') ) ];     % #3
@@ -71,7 +77,7 @@ marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 % start_yr =   0; inputRestartFileStem = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
 % start_yr = 260; inputRestartFile = 'Data_GP/restart_260_integrate_from_0.mat';
 % start_yr = 2525; inputRestartFileStem = 'restart_0_1_output/restart_260_NH4_x0_sol.mat';
-start_yr = 12345; inputRestartFileStem = 'restart_0_1_output/restart_3536_Fe_x1.mat';
+start_yr = 12345; inputRestartFileStem = 'restart_0_1_output/restart_12345_DOP_x0.mat';
 
 inputRestartFile = strcat(myDataDir(), inputRestartFileStem);
 fprintf('%s.m: Reading OFFline input restart file with tracers and transports: %s\n', mfilename, inputRestartFile);
@@ -220,6 +226,8 @@ else
     % Solve for selected tracer
     if(recalculate_PQ_inv)
         PQ_inv = calc_PQ_inv(sim, bgc, time_series, forcing, MTM);
+% fprintf('\n\n ********Disabling mfactor in calc_G*******\n\n');
+% PQ_inv = 1;
     else
         fprintf('\n%s.m: Loading ~30 GB(!) mfactored preconditioner PQ_inv from %s...\n', mfilename, strcat('sol/',string(tName(sim.selection)),'_QJ'))
         tStart = tic;
@@ -231,7 +239,7 @@ else
 
     fprintf('%s: Parameters nsoli()... \n', mfilename)
     maxit  = 7;            % maximum number of nonlinear iterations (Newton steps) default = 40
-    maxitl = 2;            % maximum number of Broyden iterations before restart, so maxdim-1 vectors are stored default = 40
+    maxitl = 7;            % maximum number of Broyden iterations before restart, so maxdim-1 vectors are stored default = 40
 
     % used only by nsoli()
     etamax = 0.9;           % maximum error tol for residual in inner iteration, default = 0.9
@@ -241,20 +249,13 @@ else
     % first 2 of these parms are used by brsola, reat are specific to nsoli
     parms  = [maxit,maxitl,  etamax,lmeth,restart_limit];
 
-    % stop when norm is less than atol+rtol*norm of init_resid as seen by nsoli or brsola
-    %
-    % atol   = sqrt(eps);     % sum of the squares in (1/s), IOW average error = 1/sec_y/379,913 ~1e-11 years
-    % rtol   = 1e-3;          % stop when norm is less than atol+rtol*norm of init_resid as seen by nsoli
-    %
-    atol   = sqrt(eps);     % sum of the squares in (1/s), IOW average error = 1/sec_y/379,913 ~1e-11 years
-% rather than get accurate solution, loop over tracers and try to reduce G
-% to 1% of starting value, while looping over all the tracers, and then
-% repeat until to get final very accurate result where G is sqrt(eps)
-    [r,G, x1] = calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
-    rtol   = 1e-2; % stop if norm(drift) < 1ppm of G(x0)
+% Get the current drift of all the tracers to pick a sensible rtol for the selected tracer
+%     [r0,G0, x1] = calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
 
-    tol    = [atol,rtol];   % [absolute error, relative tol]
-    [sol,it_hist,ierr,x_hist] = brsola(x0, @(x) calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), tol, parms);
+    atol   = sqrt(eps);     % stop when norm(drift,2) < sqrt(eps) (numerical noise)
+    rtol   = 1e-2;          % stop when norm(drift,2) < 1% of of G(x0)
+    x_hist = 1;
+    [sol,it_hist,ierr,~] = brsola(x0, @(x) calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), [atol,rtol], parms);
 
     % remember that "sol" is an x0 value...
     %
