@@ -33,7 +33,7 @@ if (or (sim.logDiags, sim.logTracers))
     % first get iFp on level 1, Simpy put: on level 1, iFp = iCol...
 
     iFp = coordTransform_xyz2fp(iLat, iLon, 1, sim);
-    [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(iFp, sim, 999); title('Time Series Localtion')
+    [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(iFp, sim, 999); title('Time Series "Peek" Localtion')
     %     [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(iFp, sim);
     sim.time_series_loc = iFp ;
     % % % ... now set the level
