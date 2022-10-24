@@ -6,6 +6,14 @@ function [sim, bgc, time_series, tracer_0] = phi(sim, bgc, time_series, forcing,
 % The Adams-Bashforth code from Ann requires "monthly" units of time.
 % Go ahead and make that multuples of 12; aka years.
 
+% DEBUG
+debug = 1;
+if debug
+    fprintf('\n\n\n%s.m: ********* phi() is short circuited to return x0 as x1 for debugging  *********\n\n\n',mfilename)
+    %     bgc_0 = bgc;
+    return
+end
+
 total_months = 12* round(sim.num_time_steps *sim.dt /sim.const.sec_y);
 
 fprintf('\n%s.m: Start integration of %s years: ',mfilename, int2str(total_months/12))
@@ -30,9 +38,7 @@ tName = tracer_names(0);    % no CISO tracers
 tracer_0 = bgc.tracer;  % [7881, 60, 32]
 x0_bgc = bgc2nsoli(sim, bgc.tracer);    % unitless start of year values
 
-% DEBUG
 initial_moles = global_moles(bgc.tracer, sim);
-
 while current_month < total_months
     current_month = current_month+1;
     years_gone_by = floor((current_month-1)/12);
@@ -76,7 +82,7 @@ while current_month < total_months
         ppm = ((final_moles-initial_moles)./ final_moles *1e6);
         disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' Moles (ppm) = ',num2str(ppm,'%-#15.7g')])
         normG = vecnorm (tmpG_all);
-%         disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' norm G      = ', num2str(max(abs(tmpG_all)),'%-#15.7g')])
+        %         disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' norm G      = ', num2str(max(abs(tmpG_all)),'%-#15.7g')])
         disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' norm(G,2)   = ', num2str(normG,'%-#15.7g')])
         normG = vecnorm (tmpG_all,inf);
         disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' norm(G,inf) = ', num2str(normG,'%-#15.7g')])
@@ -109,10 +115,10 @@ while current_month < total_months
         % save "x0" or initial state file...
 
         myRestartFile = sprintf('%s/restart_%d_%s_x0.mat', sim.outputRestartDir, round(sim.start_yr+years_gone_by),strjoin(tName(sim.selection)));
-        
+
         % --- all tracers in particular, including x0 of selection ---
-        tracer = tracer_0;              
-        
+        tracer = tracer_0;
+
         [sim, bgc] = saveRestartFiles(sim, bgc, tracer, myRestartFile);
 
         % save "x1" or final state file...
