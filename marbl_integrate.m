@@ -87,11 +87,11 @@ for tracer_str = tracer_loop
 
     %%%%
     % DEBUG stuff
-logTracers          = 0;
-% time_step_hr        = 12; % FAST debug
-debug_PQ_inv        = 1
-debug_disable_phi   = 1
-recalculate_PQ_inv  = 0
+% % logTracers          = 0;
+% % % time_step_hr        = 12; % FAST debug
+% % debug_PQ_inv        = 1
+% % debug_disable_phi   = 1
+% % recalculate_PQ_inv  = 0
 
     %%%%%%
     marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
@@ -278,6 +278,7 @@ recalculate_PQ_inv  = 0
 
         atol   = sqrt(eps);     % stop when norm(drift,2) < sqrt(eps) (numerical noise)
         rtol   = 1e-2;          % stop when norm(drift,2) < 1% of of G(x0)
+        rtol   = 1e-1;          % stop when norm(drift,2) <10% of of G(x0)
 
         % remember that "sol" of nsoli() is an x0 value !!!
 
