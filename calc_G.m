@@ -77,7 +77,7 @@ x1 = x0 +G;
 
 % Precondition the residual
 
-if isstruct(PQ_inv)
+if ~sim.debug_PQ_inv
     r = mfactor(PQ_inv, G) - G;
 else
     fprintf('\n\n ********Disabling mfactor in calc_G*******\n\n');
