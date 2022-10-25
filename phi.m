@@ -32,8 +32,7 @@ x0_bgc = bgc2nsoli(sim, bgc.tracer);    % unitless start of year values
 
 
 % DEBUG
-debug = 1;
-if debug
+if sim.debug_disable_phi
     fprintf('\n\n\n%s.m: ********* phi() is short circuited to return x0 as x1 for debugging  *********\n\n\n',mfilename)
     %     return
 end
@@ -46,7 +45,8 @@ while current_month < total_months
     myMonth = mod(current_month-1,12)+1;
     current_yr = round(sim.start_yr+years_gone_by);
 
-    if debug
+    if sim.debug_disable_phi
+        % avoid millions of lines of text
         %         fprintf('\n\n\n%s.m: ********* phi() is short circuited to return x0 as x1 for debugging  *********\n\n\n',mfilename)
         %         return
     else
@@ -63,7 +63,7 @@ while current_month < total_months
         %         toc(timer_total);
     end
 
-    % Print annual stats for debug and learning!
+    % Print annual stats for DEBUG and learning!
     if mod(current_month, 12) == 0    % This runs after last time step of every y
 
         final_moles = global_moles(bgc.tracer, sim);
@@ -113,7 +113,7 @@ while current_month < total_months
             num2str((toc(timer_total)/3600/(current_month/12)),'%.2f'), ...
             gStr, norm(tmpG));
 
-        % save restart file(s) every few years for debug and recovery from crashes and so on
+        % save restart file(s) every few years for DEBUG and recovery from crashes and so on
         %         if mod(current_yr, sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
 
         % save "x0" or initial state file...
