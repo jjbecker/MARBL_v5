@@ -62,7 +62,7 @@ it_histx=zeros(maxit,3);
 maxarm=10;
 %
 if nargin == 4
-    maxit=parms(1); maxdim=parms(2)-1; 
+    maxit=parms(1); maxdim=parms(2)-1; maxarm=parms(3);
 end
 if nargout==4
     x_hist=x;
