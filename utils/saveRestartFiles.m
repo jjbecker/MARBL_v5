@@ -9,9 +9,15 @@ function [sim, bgc] = saveRestartFiles(sim, bgc, tracer, newRestartFileName)
 
 fprintf('%s.m: Saving "%s"...\n', mfilename, newRestartFileName);
 
+if ~exist(sim.inputRestartFile, 'file')
+    keyboard
+end
 copyfile( sim.inputRestartFile, newRestartFileName);
 
 save( newRestartFileName, 'tracer',  '-append' );    % overwrites tracer ONLY, keep forcing from init
+if ~exist(newRestartFileName, 'file')
+    keyboard
+end
 
 % save "x1" or final state file...
 % tName = tracer_names(0);    % no CISO tracers
