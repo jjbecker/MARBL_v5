@@ -6,14 +6,6 @@ function [sim, bgc, time_series, tracer_0] = phi(sim, bgc, time_series, forcing,
 % The Adams-Bashforth code from Ann requires "monthly" units of time.
 % Go ahead and make that multuples of 12; aka years.
 
-% DEBUG
-debug = 1;
-if debug
-    fprintf('\n\n\n%s.m: ********* phi() is short circuited to return x0 as x1 for debugging  *********\n\n\n',mfilename)
-    %     bgc_0 = bgc;
-    return
-end
-
 total_months = 12* round(sim.num_time_steps *sim.dt /sim.const.sec_y);
 
 fprintf('\n%s.m: Start integration of %s years: ',mfilename, int2str(total_months/12))
@@ -38,14 +30,28 @@ tName = tracer_names(0);    % no CISO tracers
 tracer_0 = bgc.tracer;  % [7881, 60, 32]
 x0_bgc = bgc2nsoli(sim, bgc.tracer);    % unitless start of year values
 
+
+% DEBUG
+debug = 1;
+if debug
+    fprintf('\n\n\n%s.m: ********* phi() is short circuited to return x0 as x1 for debugging  *********\n\n\n',mfilename)
+    %     return
+end
+
+
 initial_moles = global_moles(bgc.tracer, sim);
 while current_month < total_months
     current_month = current_month+1;
     years_gone_by = floor((current_month-1)/12);
     myMonth = mod(current_month-1,12)+1;
-    %     fakeMonth = mod(6+current_month-1,12)+1;
+    current_yr = round(sim.start_yr+years_gone_by);
 
-    [sim, bgc, time_series, n] = time_step_ann (sim, bgc, time_series, n, forcing(myMonth), MTM(myMonth), myMonth);
+    if debug
+        %         fprintf('\n\n\n%s.m: ********* phi() is short circuited to return x0 as x1 for debugging  *********\n\n\n',mfilename)
+        %         return
+    else
+        [sim, bgc, time_series, n] = time_step_ann (sim, bgc, time_series, n, forcing(myMonth), MTM(myMonth), myMonth);
+    end
 
     % IMPORTANT!
     % at this point "bgc" is "x1" not "x0"!
@@ -75,18 +81,18 @@ while current_month < total_months
         tmpG = tmpG(:);                         % nsoli format
 
         % DEBUG
-        fprintf(        '%s.m: Year %d               %s\n',mfilename,round(sim.start_yr+years_gone_by),strjoin(pad(tName,14)));
-        disp([mfilename,  '.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' Moles start = ',num2str(initial_moles,'%-#15.7g')])
-        disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' Moles end   = ',num2str(final_moles,'%-#15.7g')])
-        disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' Moles delta = ',num2str(final_moles-initial_moles,'%-#15.7g')])
+        fprintf(        '%s.m: Year %d               %s\n',mfilename,current_yr,strjoin(pad(tName,14)));
+        disp([mfilename,  '.m: Year ',num2str(current_yr),' Moles start = ',num2str(initial_moles,'%-#15.7g')])
+        disp([mfilename  ,'.m: Year ',num2str(current_yr),' Moles end   = ',num2str(final_moles,'%-#15.7g')])
+        disp([mfilename  ,'.m: Year ',num2str(current_yr),' Moles delta = ',num2str(final_moles-initial_moles,'%-#15.7g')])
         ppm = ((final_moles-initial_moles)./ final_moles *1e6);
-        disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' Moles (ppm) = ',num2str(ppm,'%-#15.7g')])
+        disp([mfilename  ,'.m: Year ',num2str(current_yr),' Moles (ppm) = ',num2str(ppm,'%-#15.7g')])
         normG = vecnorm (tmpG_all);
-        %         disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' norm G      = ', num2str(max(abs(tmpG_all)),'%-#15.7g')])
-        disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' norm(G,2)   = ', num2str(normG,'%-#15.7g')])
+        %         disp([mfilename  ,'.m: Year ',num2str(current_yr),' norm G      = ', num2str(max(abs(tmpG_all)),'%-#15.7g')])
+        disp([mfilename  ,'.m: Year ',num2str(current_yr),' norm(G,2)   = ', num2str(normG,'%-#15.7g')])
         normG = vecnorm (tmpG_all,inf);
-        disp([mfilename  ,'.m: Year ',num2str(round(sim.start_yr+years_gone_by)),' norm(G,inf) = ', num2str(normG,'%-#15.7g')])
-        fprintf(        '%s.m: Year %d               %s\n',mfilename,round(sim.start_yr+years_gone_by),strjoin(pad(tName,14)));
+        disp([mfilename  ,'.m: Year ',num2str(current_yr),' norm(G,inf) = ', num2str(normG,'%-#15.7g')])
+        fprintf(        '%s.m: Year %d               %s\n',mfilename,current_yr,strjoin(pad(tName,14)));
 
         tName = tracer_names(0);    % no CISO tracers
         % selection = [ ...
@@ -107,14 +113,13 @@ while current_month < total_months
             num2str((toc(timer_total)/3600/(current_month/12)),'%.2f'), ...
             gStr, norm(tmpG));
 
-    end
-
-    % save restart file(s) every few years for debug and recovery from crashes and so on
-    if mod(current_month, 12*sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
+        % save restart file(s) every few years for debug and recovery from crashes and so on
+        %         if mod(current_yr, sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
 
         % save "x0" or initial state file...
 
-        myRestartFile = sprintf('%s/restart_%d_%s_x0.mat', sim.outputRestartDir, round(sim.start_yr+years_gone_by),strjoin(tName(sim.selection)));
+        %             myRestartFile = sprintf('%s/restart_%d_%s_x0.mat', sim.outputRestartDir, current_yr,strjoin(tName(sim.selection)));
+        myRestartFile = sprintf('%s/restart_x0.mat', sim.outputRestartDir);
 
         % --- all tracers in particular, including x0 of selection ---
         tracer = tracer_0;
@@ -123,20 +128,23 @@ while current_month < total_months
 
         % save "x1" or final state file...
 
-        myRestartFile = sprintf('%s/restart_%d_%s_x1.mat', sim.outputRestartDir, round(sim.start_yr+years_gone_by),strjoin(tName(sim.selection)));
+        %             myRestartFile = sprintf('%s/restart_%d_%s_x1.mat', sim.outputRestartDir, current_yr,strjoin(tName(sim.selection)));
+        myRestartFile = sprintf('%s/restart_x1.mat', sim.outputRestartDir);
         [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile);
+        %         end
     end
+
 
     % %     %     tic; tend_log.tendency(n,1:prod(size(bgc.tendency))) = bgc.tendency(:)'; toc
     % %     %     tic; A_log.A          (n,1:prod(size(bgc.A)))        = bgc.A(:)'       ; toc
     % %     sim.average_tracer   = sim.average_tracer   + bgc.tracer   /nsteps;
     % %     sim.average_tendency = sim.average_tendency + bgc.tendency /nsteps;
 
-end % time steps
+end % loop over time steps
 
 fprintf('%s.m: Finish integration of %s years: %s\n',mfilename,num2str(1+years_gone_by,2),datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 fprintf('%s.m: Total Runtime: %s min, rate = %s hr/sim_y\n', mfilename, ...
     num2str(toc(timer_total)/60,'%.2f'), ...
     num2str((toc(timer_total)/3600/(current_month/12)),'%.2f'));
 
-end
+end % of function
