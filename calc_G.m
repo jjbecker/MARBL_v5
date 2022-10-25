@@ -59,9 +59,9 @@ sz = [numWaterParcels, numTracers];
 x0_bgc = replaceSelectedTracers(sim, c0, x0, sim.selection);
 bgc.tracer = nsoli2bgc(sim, bgc, x0_bgc);   % marbl format x0
 
-initial_moles = global_moles(bgc.tracer, sim);  % DEBUG
+% initial_moles = global_moles(bgc.tracer, sim);  % DEBUG
 [sim, bgc, ~] = phi(sim, bgc, time_series, forcing, MTM);
-final_moles = global_moles(bgc.tracer, sim);    % DEBUG
+% final_moles = global_moles(bgc.tracer, sim);    % DEBUG
 
 x1_bgc = bgc2nsoli(sim, bgc.tracer); % unitless end of year values
 % checkNegAndHisto(sim, selectedTracers(sim, x1_bgc, sim.selection), 100.0, 'x', 900+gFileCnt);

@@ -36,7 +36,7 @@ fprintf('%s.m: Factoring 23 GB preconditioner PQ = Q +J = mean( MTM(k).A + MTM(k
 
 %     keyboard
 PQ_inv = mfactor(sim.T*PQ);     % 22 GB!  aka 2.4133e+10 bytes
-elapsedTime = toc(tStart);
+% elapsedTime = toc(tStart);
 fprintf('%s.m: %1.3f (s) to mfactor PQ\n', mfilename, toc(tStart));
 
 fprintf('%s.m: Saving 23 GB preconditioner...\n', mfilename)
@@ -45,6 +45,6 @@ save(strcat(myDataDir(),'sol/',strjoin(tName(sim.selection)),'_QJ'), 'PQ_inv','-
 % save(strcat(myDataDir(),'sol/',strjoin(tName(sim.selection)),'_QJ'), 'PQ_inv','-v7.3')
 clear Q J PQ
 
-elapsedTime = toc(tStart);
+% elapsedTime = toc(tStart);
 fprintf('%s.m: %1.0f (s) to factor and save PQinv \n',mfilename, toc(tStart));
 end

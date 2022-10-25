@@ -48,7 +48,7 @@ dx = eps + sqrt(eps) *x0;                       % x0 = NaN below bottom
 % need f0; size(f0)= [7881,60,32]
 
 month = 1;
-[sim, bgc, time_series, n] = time_step_ann (sim, bgc, time_series, -1, forcing(month), MTM(month), month);
+[sim, bgc, time_series, ~] = time_step_ann (sim, bgc, time_series, -1, forcing(month), MTM(month), month);
 
 f0 = bgc.tendency;
 f0 = squeeze(f0(:,:,sim.selection));            % size(f0) = [7881,60]
@@ -93,7 +93,7 @@ for h_lvl = 1:sz(2)       % loop over all levels
     bgc.tracer = bgc_0.tracer;  % use saved initial value for tracer
     bgc.tracer(:,h_lvl,sim.selection) = x1(:,h_lvl);
 
-    [sim, bgc, time_series, n] = time_step_ann (sim, bgc, time_series, -1, forcing(month), MTM(month), month);
+    [sim, bgc, time_series, ~] = time_step_ann (sim, bgc, time_series, -1, forcing(month), MTM(month), month);
 
     f1 = bgc.tendency;                      % f1(x1) = tendency all tracers
     f1 = squeeze(f1(:,:,sim.selection));    % tendency of selected tracer
