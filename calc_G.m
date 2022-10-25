@@ -77,9 +77,12 @@ x1 = x0 +G;
 
 % Precondition the residual
 
-r = mfactor(PQ_inv, G) - G;
-% fprintf('\n\n ********Disabling mfactor in calc_G*******\n\n');
-% r = G;
+if isstruct(PQ_inv)
+    r = mfactor(PQ_inv, G) - G;
+else
+    fprintf('\n\n ********Disabling mfactor in calc_G*******\n\n');
+    r = G;
+end
 
 fprintf('||Precon( %s )|| = (max(abs(r))) = %g \n', gStr, max(abs(r)));
 
