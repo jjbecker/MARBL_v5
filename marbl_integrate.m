@@ -64,16 +64,17 @@ for tracer_str = tracer_loop
 
     forwardIntegrationOnly = 0; % 1 -> no NK just fwd integration
     recalculate_PQ_inv     = 1; % recalculate J, PQ,PQ_inv or load file
-    
-    % remember brsola() "sol" is x0 value. x1 value is last col of x_hist.
+
+    % remember brsola() "sol" is x0 value. x1 value is NOT last col of
+    % x_hist; it is sol !!!
     % First relax iteration of x0 gives same x1 as sol run.
-    % To be useful num_relax_iterations >= 2 if using sol_x0, but OK for sol_x1
-    num_relax_iterations   = 1; % 0 means no relax steps, just use NK sol_x1
-    
+    % To be useful num_relax_iterations >= 2 if using sol_x0, but OK for x1_sol
+    num_relax_iterations   = 1; % 0 means no relax steps, just use NK x1_sol
+
     % if fwd only, this is num fwd;
     num_forward_years      = 2;
-    % else this is num fwd after relax step of sol_x1
-    
+    % else this is num fwd after relax step of x1_sol
+
     logTracers                = 1;
     yearsBetweenRestartFiles  = 10;
     captureAllSelectedTracers = 0;
@@ -84,11 +85,13 @@ for tracer_str = tracer_loop
     debug_PQ_inv      = 0;
     debug_disable_phi = 0;
 
+    %%%%
     % DEBUG stuff
-%     logTracers          = 1;
-%     time_step_hr        = 12; % FAST debug
-%     debug_PQ_inv        = 1    
-%     debug_disable_phi   = 1
+logTracers          = 0;
+% time_step_hr        = 12; % FAST debug
+debug_PQ_inv        = 1
+debug_disable_phi   = 1
+recalculate_PQ_inv  = 0
 
     %%%%%%
     marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
@@ -115,8 +118,8 @@ for tracer_str = tracer_loop
     sim.debug_disable_phi       = debug_disable_phi;
 
     % FIXME: lots of old code floating around...
-%     clear inputRestartFile 
-%     clear start_yr 
+    %     clear inputRestartFile
+    %     clear start_yr
     clear selection captureAllSelectedTracers logTracers
 
     sim.checkNeg = 0;
@@ -204,11 +207,8 @@ for tracer_str = tracer_loop
         keyboard
     end
 
-    % bgc of default
-
-    % c0 = bgc2nsoli(sim, bgc.tracer);
-
-    % ALWAYS punt "alt" methods that do NOT depend on any other tracers...
+    %%%%
+    % ALWAYS punt "ALT" methods that do NOT depend on any other tracers...
 
     idx = ismember(sim.selection, [9,11]);
     sim.selection(idx)=[];
@@ -228,6 +228,12 @@ for tracer_str = tracer_loop
     % bgc.tracer(sim.time_series_loc,sim.time_series_lvl,sim.selection) = spike_size +bgc.tracer(sim.time_series_loc,sim.time_series_lvl,sim.selection);
     %%%%
 
+    % confusing? YES
+    % tracer = [7881, 60, 32]
+    % x, sol = [379913]
+    % c      = [379913, 32]
+    % c1     = 12157216]
+
     c0 = bgc2nsoli(sim, bgc.tracer);    % nsoli format; unitless; aka scaled FP
     sz = [ numel(sim.domain.iwet_JJ) , size(bgc.tracer,3) ];
     c = reshape(c0, sz);
@@ -236,6 +242,7 @@ for tracer_str = tracer_loop
 
     x0 = c(:,sim.selection);    % initial condition for Nsoli()
     x0 = x0(:);                 % unitless
+
 
     if( sim.forwardIntegrationOnly )
         fprintf('%s.m: forward integration ONLY\n',mfilename);
@@ -256,43 +263,50 @@ for tracer_str = tracer_loop
 
         fprintf('%s: Parameters nsoli()... \n', mfilename)
         maxit  = 7;            % maximum number of nonlinear iterations (Newton steps) default = 40
-        maxitl = 7;            % maximum number of Broyden iterations before restart, so maxdim-1 vectors are stored default = 40
-
+        maxitl = 3;            % maximum number of Broyden iterations before restart, so maxdim-1 vectors are stored default = 40
+        maxarm = 1;
         % used only by nsoli()
         etamax = 0.9;           % maximum error tol for residual in inner iteration, default = 0.9
         lmeth  = 2;             % Nsoli() method 2 = GMRES(m), not used by brsola().
         restart_limit = 10;     % max number of restarts for GMRES if lmeth = 2, default = 20;
 
         % first 2 of these parms are used by brsola, reat are specific to nsoli
-        parms  = [maxit,maxitl,  etamax,lmeth,restart_limit];
+        parms  = [maxit,maxitl, maxarm];
 
         % Get the current drift of all the tracers to pick a sensible rtol for the selected tracer
         %     [r0,G0, x1] = calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
 
         atol   = sqrt(eps);     % stop when norm(drift,2) < sqrt(eps) (numerical noise)
         rtol   = 1e-2;          % stop when norm(drift,2) < 1% of of G(x0)
-        %     x_hist = 1;
-        % remember that "sol" of nsoli() is an x0 value...
+
+        % remember that "sol" of nsoli() is an x0 value !!!
 
         [sol_x0,it_hist,ierr,x_hist] = brsola(x0, @(x) calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), [atol,rtol], parms);
 
-        sol_x1 = x_hist(:,size(x_hist,2));
+        % save a comple bgc with the -sol- tracers
 
-        % sol = [379913]
-        % c0  = [379913, 32]
-        % tracer = [7881, 60, 32]
-
+        bgc_sol = bgc;      % this has c0 for tracers
         % FIXME: use the x0 or the x1 of the solution?
+        % to get x1 need to read x1 restart file phi() dropped last call...
+        % bgc_sol.tracer = load(sprintf('%s/restart_x0.mat', sim.outputRestartDir), 'tracer').tracer;
+        bgc_sol.tracer = load(sprintf('%s/restart_x1.mat', sim.outputRestartDir), 'tracer').tracer;     % [78881, 60, 32]
 
-        nsoli_sol = replaceSelectedTracers(sim, c0, sol_x1, sim.selection);    % [12157216] = [379913*32]
-        bgc_sol = bgc;
-        bgc_sol.tracer = nsoli2bgc(sim, bgc_sol, nsoli_sol);
+        % confusing? YES
+        % tracer = [7881, 60, 32]
+        % x, sol = [379913]
+        % c      = [379913, 32]
+        % c1     = 12157216]
+
+        c1 = bgc2nsoli(sim, bgc_sol.tracer);    % nsoli format; unitless; aka scaled FP
+        c1  = reshape(c1, sz);                  % [393913,32]
+        x1_sol = c1(:,sim.selection);           % [393913] initial condition for Nsoli()
+        x1_sol = x1_sol(:);                     % unitless
+
 
         sol_fname = sprintf('%s/sol_%s_ierr_%d_x1', sim.outputRestartDir, string(tName(sim.selection)), ierr);
-        fprintf('%s.m: Saving just sol_x1, ierr, it_hist, x_hist in %s"...\n', mfilename, sol_fname);
-        save(sol_fname, 'sol_x1', 'ierr', 'it_hist', 'x_hist', '-v7.3','-nocompression');
+        fprintf('%s.m: Saving just x1_sol, ierr, it_hist, x_hist in %s"...\n', mfilename, sol_fname);
+        save(sol_fname, 'x1_sol', 'ierr', 'it_hist', 'x_hist', '-v7.3','-nocompression');
 
-%         myRestartFile = sprintf('%s/restart_%s_sol_x1.mat', sim.outputRestartDir, strjoin(tName(sim.selection)));
         myRestartFile = sprintf('%s/restart_%d_%s_sol_x1.mat', sim.outputRestartDir, round(sim.start_yr), strjoin(tName(sim.selection)));
         [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile);
 
@@ -301,21 +315,22 @@ for tracer_str = tracer_loop
         fprintf('%s.m: %d time steps, each time step is %1.1f (h), simulating %1.1f years\n', ...
             mfilename, sim.T/sim.dt, sim.dt/sim.const.sec_h, tot_t /sim.const.sec_y)
 
-        % % remember! First relax iteration of sol_x0" is same as x1 of sol, so in
-        % % that case, to be useful, num_relax_iterations >= 2. But if using sol_x1
-        % % num_relax_iterations >= 1 is ok.
-        x = sol_x1;
-
         % FIXME: keep history of relax steps???
         %     x_histx = x;
         %     r_hist = zeros(size(x));
         %     it_histx = zeros(num_relax_iterations,1);
 
+        % % remember! First relax iteration of sol_x0" is same as x1 of sol, so in
+        % % that case, to be useful, num_relax_iterations >= 2. 
+        % But if using x1_sol num_relax_iterations >= 1 is ok.
+        
+        x = x1_sol;
         for itc = 1:num_relax_iterations
 
             fprintf("\n%s.m: starting relaxation year #%d of %d\n", mfilename, itc, num_relax_iterations)
 
             % Note x = x1, not "x0" which is normal thing for sol iterations
+
             [r,G, x1] = calc_G(x,c0,sim,bgc_sol,time_series,forcing,MTM,PQ_inv);
 
             % DEBUG
@@ -329,8 +344,9 @@ for tracer_str = tracer_loop
 
         end % relax loop
 
-        % If we relaxed x1, x = x2, etc
-        %   if we did NOT relax, then x = sol
+        % if we did NOT relax, then x = x1_sol
+        %   If we relaxed x1, x = x2_sol, etc, etc
+       
 
         nsoli_relax = replaceSelectedTracers(sim, c0, x, sim.selection);
         bgc_relax = bgc;
@@ -345,6 +361,7 @@ for tracer_str = tracer_loop
 
     % Next! allow ALL tracers, not just selection, to "relax' to solution.
     %    do pure forward integration for a while...
+
     years_gone_by = 0;
     bgc_fwd = bgc;
     for fwd_itc = 1:num_forward_years
@@ -353,7 +370,6 @@ for tracer_str = tracer_loop
 
         current_yr    = round(sim.start_yr);
         % current_yr    = round(sim.start_yr+years_gone_by);
-        %             myRestartFile = sprintf('%s/restart_%s_fwd_x1.mat', sim.outputRestartDir, strjoin(tName(sim.selection)));
         myRestartFile = sprintf('%s/restart_%d_%s_fwd_x1.mat', sim.outputRestartDir, current_yr,strjoin(tName(sim.selection)));
         sim.start_yr  = sim.start_yr+1;
         % years_gone_by = years_gone_by +1;
