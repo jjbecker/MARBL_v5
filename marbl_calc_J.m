@@ -292,7 +292,7 @@ timer_loop = tic;
 for itc = 1:num_r_iterations
     % FIXME: note "x" not "x0"
 
-    [r,G, x1] = calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
+    [r, G, x1] = calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
     % disp('FIXME: hacking r = -G')
     % r = -G;
     % fnrm = norm(r);
@@ -312,7 +312,7 @@ keyboard
 sol = x;
 for num_r_relax_iterations = 1:10
     fprintf("\n%s.m: starting relaxation year #%d\n", mfilename, num_r_relax_iterations)
-    [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
+    [sim, bgc, time_series, ~] = phi(sim, bgc, time_series, forcing, MTM);
 end
  
 disp([mfilename,' finished...'])
