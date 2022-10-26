@@ -179,9 +179,6 @@ for tracer_str = tracer_loop
     [sim, bgc, ~, time_series, forcing] = init_sim(marbl_file, sim.inputRestartFile, sim, phi_years, time_step_hr);
 
     tot_t = sim.dt*sim.num_time_steps;  % used only for debug output
-    if (or (sim.logDiags, sim.logTracers))
-        getMemSize(time_series,1e3);
-    end
 
     % DEBUG: run on a few locations, rather global, MUCH faster debug something
     % sim.domain.num_wet_loc = 1; % comment out too run entire world
@@ -277,7 +274,7 @@ for tracer_str = tracer_loop
         parms  = [maxit,maxitl, maxarm];
 
         % Get the current drift of all the tracers to pick a sensible rtol for the selected tracer
-        %     [r0,G0, x1] = calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
+        % [r0,G0,x1] = calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
 
         atol =  sqrt(eps);      % stop when norm(drift,2) < sqrt(eps) (numerical noise)
         % rtol =  1e-2;           % stop when norm(drift,2) < 1% of of G(x0)
@@ -335,7 +332,7 @@ for tracer_str = tracer_loop
 
             % Note x = x1, not "x0" which is normal thing for sol iterations
 
-            [r,G, x1] = calc_G(x,c0,sim,bgc_sol,time_series,forcing,MTM,PQ_inv);
+            [r, G, x1] = calc_G(x,c0,sim,bgc_sol,time_series,forcing,MTM,PQ_inv);
 
             % DEBUG
             fprintf('%s.m: itc %d norm(G) = %g\n',mfilename, itc, norm(G))
@@ -370,7 +367,7 @@ for tracer_str = tracer_loop
     bgc_fwd = bgc;
     for fwd_itc = 1:num_forward_years
         fprintf("\n%s.m: starting forward integrate year #%d of %d\n", mfilename, fwd_itc, num_forward_years)
-        [sim, bgc_fwd, time_series, tracer_0] = phi(sim, bgc_fwd, time_series, forcing, MTM);
+        [sim, bgc_fwd, time_series] = phi(sim, bgc_fwd, time_series, forcing, MTM);
 
         current_yr    = round(sim.start_yr);
         % current_yr    = round(sim.start_yr+years_gone_by);
@@ -412,7 +409,4 @@ if ~exist(logDir, 'dir')
 end
 save_timer = tic; disp('Saving (possibly) large workspace file...'); save(strcat(logDir,'last_run.mat'),'-v7.3','-nocompression'); toc(save_timer);
 
-
-disp(['Log file of one location for all time steps uses ',num2str(getMemSize(time_series)/1024/1024, '%1.1f'),' MB'])
-disp(['Log file of one location uses ',num2str(getMemSize(time_series)/1024/sim.num_time_steps, '%1.1f'),' KB per time step'])
 toc(timer_total)

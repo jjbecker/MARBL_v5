@@ -68,7 +68,8 @@ x1_bgc = bgc2nsoli(sim, bgc.tracer); % unitless end of year values
 % x1 = reshape(x1_bgc, sz);
 % x1 = x1(:,sim.selection);
 
-G = reshape(x1_bgc -x0_bgc, sz);    % x1 -x0 = phi(x0) -x0
+% x1 -x0 = phi(x0) -x0
+G = reshape(x1_bgc -x0_bgc, sz);    
 G = G(:,sim.selection);             % just selected cols
 G = G(:);                           % nsoli format
 fprintf('||G(x)|| = (max(abs(%s))) = %g \n', gStr, max(abs(G)));

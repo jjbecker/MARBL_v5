@@ -25,4 +25,7 @@ if (sim.logDiags)
     time_series.surf_diag           = squeeze( zeros([bgc_struct.size.surf_diag, sim.num_time_steps   ]));
     %     time_series.tendency            = zeros([bgc_struct.size.tracer, sim.num_time_steps               ] );
 end
+
+disp(['Log file of one location for all time steps uses ',num2str(getMemSize(time_series)/1024/1024, '%1.1f'),' MB'])
+disp(['Log file of one location uses ',num2str(getMemSize(time_series)/1024/sim.num_time_steps, '%1.1f'),' KB per time step'])
 end

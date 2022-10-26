@@ -1,6 +1,5 @@
 function J = calc_J_Single_Tracer(sim, bgc, time_series, forcing, MTM)
 
-fprintf('%s.m: Start at %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 %calc_J_O2 Summary of this function goes here
 %   Detailed explanation goes here
 %
@@ -23,6 +22,7 @@ fprintf('%s.m: Start at %s\n', mfilename, datestr(datetime('now','TimeZone','loc
 %
 %   J(:,i,j) = d(MARBL(:,i,idxTr)) / d(tracer(:,j,idxTr) @ all water col
 
+fprintf('%s.m: Start at %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 bgc_0 = bgc;
 
 tName = tracer_names(0);    % no CISO tracers
