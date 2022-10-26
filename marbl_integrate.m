@@ -38,7 +38,9 @@ timer_total = tic;
 % start_yr = 2525;  inputRestartFileStem = 'restart_0_1_output/restart_260_NH4_x0_sol.mat';
 % start_yr = 12345; inputRestartFileStem = 'restart_0_1_output/restart_12345_DOP_x0.mat';
 % start_yr = 1323;  inputRestartFileStem = 'restart_0_1_output/bak/restart_O2_fwd_x1.mat';
-start_yr = 1323;  inputRestartFileStem = 'restart_0_1_output/bak/restart_1323_DON_x1.mat';
+  start_yr = 1323;  inputRestartFileStem = 'restart_0_1_output/bak/restart_1323_DON_x1.mat';
+% start_yr = 260;   inputRestartFileStem = 'restart_260_integrate_from_0.mat';
+
 inputRestartFile = strcat(myDataDir(), inputRestartFileStem);
 
 % always need a selected tracer! For plot time series, or solve
@@ -48,7 +50,8 @@ tName = tracer_names(0);    % no CISO tracers
 % to 1% of starting value, while looping over all the tracers, and then
 % repeat until to get final very accurate result where G is sqrt(eps)
 
-tracer_loop = {'DOC' 'DOP' 'diazFe' 'diazP'};
+% tracer_loop = {'DOPr' 'DONr' 'DOCr' 'O2' 'DON' 'DOC' 'DOP' 'diatSi' 'spCaCO3' 'diazFe' };
+  tracer_loop = {'DOC' 'DOP' 'spCaCO3' 'diatSi' 'diazFe' };
 % tracer_loop = {'O2' };
 for tracer_str = tracer_loop
 
@@ -87,11 +90,11 @@ for tracer_str = tracer_loop
 
     %%%%
     % DEBUG stuff
-% % logTracers          = 0;
+    % % logTracers          = 0;
 % % % time_step_hr        = 12; % FAST debug
-% % debug_PQ_inv        = 1
-% % debug_disable_phi   = 1
-% % recalculate_PQ_inv  = 0
+    % % debug_PQ_inv        = 1
+    % % debug_disable_phi   = 1
+    % % recalculate_PQ_inv  = 0
 
     %%%%%%
     marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
@@ -276,9 +279,9 @@ for tracer_str = tracer_loop
         % Get the current drift of all the tracers to pick a sensible rtol for the selected tracer
         %     [r0,G0, x1] = calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
 
-        atol   = sqrt(eps);     % stop when norm(drift,2) < sqrt(eps) (numerical noise)
-        rtol   = 1e-2;          % stop when norm(drift,2) < 1% of of G(x0)
-        rtol   = 1e-1;          % stop when norm(drift,2) <10% of of G(x0)
+        atol =  sqrt(eps);      % stop when norm(drift,2) < sqrt(eps) (numerical noise)
+        % rtol =  1e-2;           % stop when norm(drift,2) < 1% of of G(x0)
+        rtol = 10e-2;           % stop when norm(drift,2) <10% of of G(x0)
 
         % remember that "sol" of nsoli() is an x0 value !!!
 
@@ -322,9 +325,9 @@ for tracer_str = tracer_loop
         %     it_histx = zeros(num_relax_iterations,1);
 
         % % remember! First relax iteration of sol_x0" is same as x1 of sol, so in
-        % % that case, to be useful, num_relax_iterations >= 2. 
+        % % that case, to be useful, num_relax_iterations >= 2.
         % But if using x1_sol num_relax_iterations >= 1 is ok.
-        
+
         x = x1_sol;
         for itc = 1:num_relax_iterations
 
@@ -347,7 +350,7 @@ for tracer_str = tracer_loop
 
         % if we did NOT relax, then x = x1_sol
         %   If we relaxed x1, x = x2_sol, etc, etc
-       
+
 
         nsoli_relax = replaceSelectedTracers(sim, c0, x, sim.selection);
         bgc_relax = bgc;
