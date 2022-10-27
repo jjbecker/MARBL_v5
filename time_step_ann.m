@@ -55,8 +55,8 @@ C_1 = packMarbl( bgc.tracer, sim.domain.iwet_JJ );
 % source/sink term
 % S = bgc.tendency + bgc.river_flux/thickness;
 %
-% LHS is the implicit diffusion
-% RHS is the explitc advection
+% LHS is implicit diffusion
+% RHS is explitc advection
 %
 %     LHS  = d0(1+xi(:,2)) + dt.*(-TR.D);   % -CONSTANT- same LHS on all tracers
 %     FLHS = mfactor(LHS);
@@ -83,7 +83,7 @@ end
 
 for it = 1:steps_per_period
 
-    % This "short circuit is to calc the Jacobian withOUT getting transport
+    % This "short circuit is to calc Jacobian withOUT getting transport
     % involved...
 
     n = n+1;
@@ -101,10 +101,10 @@ for it = 1:steps_per_period
         [bgc, time_series] = MARBL_loop          (n, sim, bgc,time_series);
     end
 
-    % This "short circuit is to calc the Jacobian withOUT getting transport
+    % This "short circuit is to calc Jacobian withOUT getting transport
     % involved...
     %
-    % we have the MARBL output, and that is ALL we want. No transport, etc.
+    % we have MARBL output, and that is ALL we want. No transport, etc.
     if returnAfterOneTimeStep
         break
     end
@@ -129,7 +129,7 @@ for it = 1:steps_per_period
     %     toc
     %%
     % Capture time series of global volume integral of tracers and tendency
-    % as part of the unpack
+    % as part of unpack
     switch (it)
         case 1
             w1 = C_1;

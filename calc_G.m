@@ -58,25 +58,26 @@ sz = [numWaterParcels, numTracers];
 
 x0_bgc = replaceSelectedTracers(sim, c0, x0, sim.selection);
 bgc.tracer = nsoli2bgc(sim, bgc, x0_bgc);   % marbl format x0
+moles_G_x0 = global_moles(bgc.tracer, sim)';
 
 % initial_moles = global_moles(bgc.tracer, sim);  % DEBUG
 [sim, bgc, ~] = phi(sim, bgc, time_series, forcing, MTM);
 % final_moles = global_moles(bgc.tracer, sim);    % DEBUG
+moles_G_x1 = global_moles(bgc.tracer, sim)';
 
 x1_bgc = bgc2nsoli(sim, bgc.tracer); % unitless end of year values
 % checkNegAndHisto(sim, selectedTracers(sim, x1_bgc, sim.selection), 100.0, 'x', 900+gFileCnt);
-% x1 = reshape(x1_bgc, sz);
-% x1 = x1(:,sim.selection);
 
-% x1 -x0 = phi(x0) -x0
 G = reshape(x1_bgc -x0_bgc, sz);    
 G = G(:,sim.selection);             % just selected cols
 G = G(:);                           % nsoli format
-fprintf('||G(x)|| = (max(abs(%s))) = %g \n', gStr, max(abs(G)));
-x1 = x0 +G;
 
+% % x1 -x0 = phi(x0) -x0
+% x1 = reshape(x1_bgc, sz);
+% x1 = x1(:,sim.selection);
+x1 = x0 +G;                         % x1 only of selection
 
-% Precondition the residual
+% Precondition residual
 
 if ~sim.debug_PQ_inv
     r = mfactor(PQ_inv, G) - G;
@@ -85,6 +86,8 @@ else
     r = G;
 end
 
+
+fprintf('||G(x)|| = (max(abs(%s))) = %g \n', gStr, max(abs(G)));
 fprintf('||Precon( %s )|| = (max(abs(r))) = %g \n', gStr, max(abs(r)));
 
 
@@ -142,7 +145,7 @@ myRng = 1:20;
 [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxAbsR(myRng), sim, 998); title('Largest Abs')
 
 
-% % Save everything in G, which is not everything in the whole sim
+% % Save everything in G, which is not everything in whole sim
 % tracer = bgc.tracer;
 % copyfile( sim.inputRestartFile, myGfile);
 % save( myGfile, 'tracer', '-append' ); % overwrites tracer from input
