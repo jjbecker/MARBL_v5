@@ -86,7 +86,7 @@ outstat(itc+1, :) = [itc fnrm 0 0]
 if fnrm < stop_tol
     sol=x;
     it_hist=it_histx(1:itc+1,:);
-    return
+    disp(outstat(itc+1,:)); return
 end
 %
 % initialize the iteration history storage matrices
@@ -157,7 +157,7 @@ while(itc < maxit)
         if nargout == 4
             x_hist=[x_hist,x];
         end
-        return;
+        disp(outstat(itc+1,:)); return;
     end
 %
 %   How many function evaluations did this iteration require?
@@ -175,10 +175,7 @@ while(itc < maxit)
         outstat(itc+1, :) = [itc fnrm iarm rat];
         it_hist=it_histx(1:itc+1,:)
 %        it_hist(itc+1)=fnrm;
-        if debug==1
-            disp(outstat(itc+1,:))
-        end
-        return
+        disp(outstat(itc+1,:)); return
     end
 %
 %
@@ -195,7 +192,7 @@ while(itc < maxit)
 %    it_hist(itc+1)=fnrm; 
     rat=fnrm/fnrmo;
     outstat(itc+1, :) = [itc fnrm iarm rat];
-        if debug==1
+        if debug>1
             disp(outstat(itc+1,:))
         end
 %
@@ -250,7 +247,7 @@ if nargout == 4
     x_hist=[x_hist,x];
 end
 ierr=1;
-if debug==1
+if debug>1
     disp(outstat)
 end
 %
