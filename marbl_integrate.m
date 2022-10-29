@@ -12,7 +12,7 @@
 % "main" of cyclostationary transport version of MARBL,
 
 fprintf('%s.m: Start at %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
-clear all; % Need this to clear the "persistent" variables in "G()", "time_step()" and "calculate_forcing()"
+clear all; % Need this to clear "persistent" variables in "G()", "time_step()" and "calculate_forcing()"
 dbstop if error
 format short g
 addpath('MEX');
@@ -38,24 +38,25 @@ timer_total = tic;
 % start_yr = 2525;  inputRestartFileStem = 'restart_0_1_output/restart_260_NH4_x0_sol.mat';
 % start_yr = 12345; inputRestartFileStem = 'restart_0_1_output/restart_12345_DOP_x0.mat';
 % start_yr = 1323;  inputRestartFileStem = 'restart_0_1_output/bak/restart_O2_fwd_x1.mat';
-  start_yr = 1323;  inputRestartFileStem = 'restart_0_1_output/bak/restart_1323_DON_x1.mat';
+start_yr = 1323;  inputRestartFileStem = 'restart_0_1_output/bak/restart_1323_DON_x1.mat';
 % start_yr = 260;   inputRestartFileStem = 'restart_260_integrate_from_0.mat';
 
 inputRestartFile = strcat(myDataDir(), inputRestartFileStem);
 
 % always need a selected tracer! For plot time series, or solve
-% Most of these work very well in the single tracer solution...
+% Most of these work very well in single tracer solution...
 tName = tracer_names(0);    % no CISO tracers
 % FIXME: rather than get accurate solution, loop over tracers and try to reduce G
-% to 1% of starting value, while looping over all the tracers, and then
+% to 1% of starting value, while looping over all tracers, and then
 % repeat until to get final very accurate result where G is sqrt(eps)
 
 % tracer_loop = {'DOPr' 'DONr' 'DOCr' 'O2' 'DON' 'DOC' 'DOP' 'diatSi' 'spCaCO3' 'diazFe' };
-  tracer_loop = {'DOC' 'DOP' 'spCaCO3' 'diatSi' 'diazFe' };
+% tracer_loop = {'DOC' 'DOP' 'spCaCO3' 'diatSi' 'diazFe' };
+tracer_loop = {'spCaCO3' 'diatSi' 'diazFe' };
 % tracer_loop = {'O2' };
 for tracer_str = tracer_loop
 
-    % Need this to clear the "persistent" variables in "G()"
+    % Need this to clear "persistent" variables in "G()"
     clear calc_G
 
     % matches(tName,tracer_str)
@@ -75,7 +76,7 @@ for tracer_str = tracer_loop
     num_relax_iterations   = 1; % 0 means no relax steps, just use NK x1_sol
 
     % if fwd only, this is num fwd;
-    num_forward_years      = 2;
+    num_forward_years      = 0;
     % else this is num fwd after relax step of x1_sol
 
     logTracers                = 1;
@@ -90,11 +91,11 @@ for tracer_str = tracer_loop
 
     %%%%
     % DEBUG stuff
-    % % logTracers          = 0;
-% % % time_step_hr        = 12; % FAST debug
-    % % debug_PQ_inv        = 1
-    % % debug_disable_phi   = 1
-    % % recalculate_PQ_inv  = 0
+% % logTracers          = 0;
+% % time_step_hr        = 12; % FAST debug
+% % debug_PQ_inv        = 1
+% % debug_disable_phi   = 1
+% % recalculate_PQ_inv  = 0
 
     %%%%%%
     marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
@@ -192,7 +193,7 @@ for tracer_str = tracer_loop
 
     %%%%%%
 
-    % =============== This is the NK solver code ================
+    % =============== This is NK solver code ================
 
     toc(timer_total)
 
@@ -232,11 +233,13 @@ for tracer_str = tracer_loop
     % tracer = [7881, 60, 32]
     % x, sol = [379913]
     % c      = [379913, 32]
-    % c1     = 12157216]
+    % c0     = 12157216]
 
-    c0 = bgc2nsoli(sim, bgc.tracer);    % nsoli format; unitless; aka scaled FP
+    moles_0 = global_moles(bgc.tracer, sim)';
+    bgc_0 = bgc;
     sz = [ numel(sim.domain.iwet_JJ) , size(bgc.tracer,3) ];
-    c = reshape(c0, sz);
+    c0 = bgc2nsoli(sim, bgc.tracer);    % nsoli format; unitless; aka scaled FP
+    c  = reshape(c0, sz);
 
     % Solve only on selected tracers
 
@@ -262,7 +265,7 @@ for tracer_str = tracer_loop
         end % calculate or load PQ_inv
 
         fprintf('%s: Parameters nsoli()... \n', mfilename)
-        maxit  = 7;            % maximum number of nonlinear iterations (Newton steps) default = 40
+        maxit  = 5;            % maximum number of nonlinear iterations (Newton steps) default = 40
         maxitl = 3;            % maximum number of Broyden iterations before restart, so maxdim-1 vectors are stored default = 40
         maxarm = 1;
         % used only by nsoli()
@@ -273,24 +276,25 @@ for tracer_str = tracer_loop
         % first 2 of these parms are used by brsola, reat are specific to nsoli
         parms  = [maxit,maxitl, maxarm];
 
-        % Get the current drift of all the tracers to pick a sensible rtol for the selected tracer
+        % Get current drift of all tracers to pick a sensible rtol for selected tracer
         % [r0,G0,x1] = calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
 
         atol =  sqrt(eps);      % stop when norm(drift,2) < sqrt(eps) (numerical noise)
         % rtol =  1e-2;           % stop when norm(drift,2) < 1% of of G(x0)
         rtol = 10e-2;           % stop when norm(drift,2) <10% of of G(x0)
+        rtol = 0;               % stop when norm(drift,2) <10% of of G(x0)
 
         % remember that "sol" of nsoli() is an x0 value !!!
 
         [sol_x0,it_hist,ierr,x_hist] = brsola(x0, @(x) calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), [atol,rtol], parms);
 
-        % save a comple bgc with the -sol- tracers
+        % save complete bgc with -sol- tracers
 
-        bgc_sol = bgc;      % this has c0 for tracers
-        % FIXME: use the x0 or the x1 of the solution?
-        % to get x1 need to read x1 restart file phi() dropped last call...
-        % bgc_sol.tracer = load(sprintf('%s/restart_x0.mat', sim.outputRestartDir), 'tracer').tracer;
+        bgc_sol = bgc;          % this has c0 for all tracer
+        % FIXME: use x0 or x1 of solution?
+        % bgc_sol.tracer = load(sprintf('%s/restart_x0.mat', sim.outputRestartDir), 'tracer').tracer;     % [78881, 60, 32]
         bgc_sol.tracer = load(sprintf('%s/restart_x1.mat', sim.outputRestartDir), 'tracer').tracer;     % [78881, 60, 32]
+        moles_sol_x1 = global_moles(bgc_sol.tracer, sim)';
 
         % confusing? YES
         % tracer = [7881, 60, 32]
@@ -299,7 +303,7 @@ for tracer_str = tracer_loop
         % c1     = 12157216]
 
         c1 = bgc2nsoli(sim, bgc_sol.tracer);    % nsoli format; unitless; aka scaled FP
-        c1  = reshape(c1, sz);                  % [393913,32]
+        c1 = reshape(c1, sz);                  % [393913,32]
         x1_sol = c1(:,sim.selection);           % [393913] initial condition for Nsoli()
         x1_sol = x1_sol(:);                     % unitless
 
@@ -331,7 +335,7 @@ for tracer_str = tracer_loop
             fprintf("\n%s.m: starting relaxation year #%d of %d\n", mfilename, itc, num_relax_iterations)
 
             % Note x = x1, not "x0" which is normal thing for sol iterations
-
+            % Note c0 is correct
             [r, G, x1] = calc_G(x,c0,sim,bgc_sol,time_series,forcing,MTM,PQ_inv);
 
             % DEBUG
@@ -349,6 +353,7 @@ for tracer_str = tracer_loop
         %   If we relaxed x1, x = x2_sol, etc, etc
 
 
+        % Note c0 is correct
         nsoli_relax = replaceSelectedTracers(sim, c0, x, sim.selection);
         bgc_relax = bgc;
         bgc_relax.tracer = nsoli2bgc(sim, bgc_relax, nsoli_relax);
@@ -364,24 +369,23 @@ for tracer_str = tracer_loop
     %    do pure forward integration for a while...
 
     years_gone_by = 0;
-    bgc_fwd = bgc;
     for fwd_itc = 1:num_forward_years
         fprintf("\n%s.m: starting forward integrate year #%d of %d\n", mfilename, fwd_itc, num_forward_years)
-        [sim, bgc_fwd, time_series] = phi(sim, bgc_fwd, time_series, forcing, MTM);
+        [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
 
         current_yr    = round(sim.start_yr);
         % current_yr    = round(sim.start_yr+years_gone_by);
         myRestartFile = sprintf('%s/restart_%d_%s_fwd_x1.mat', sim.outputRestartDir, current_yr,strjoin(tName(sim.selection)));
         sim.start_yr  = sim.start_yr+1;
         % years_gone_by = years_gone_by +1;
-        % years gone by is actually the number of years-1 spent in phi.
+        % years gone by is actually number of years-1 spent in phi.
 
         if mod(current_yr, sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
             [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile);
         end
 
     end % fwd loop
-    bgc = bgc_fwd; % this is my final answer!
+    % this is my final answer!
     % always save my final answer
     [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile);
 
