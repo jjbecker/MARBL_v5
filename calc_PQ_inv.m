@@ -13,10 +13,10 @@ function [PQ_inv, J_FP] = calc_PQ_inv(sim, bgc, time_series, forcing, MTM)
 % R =  d0( temp(iwet) / tau );   % (1/sec)
 % T = 12*num_step_per_month*dt;
 
+fprintf('%s.m: Start at %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 tName = tracer_names(0);    % no CISO tracers
-fprintf('%s.m: calculating PQ_inv for tracers: [%s]\n', mfilename, strjoin(tName(sim.selection)) )
-
-fprintf('\n%s.m: Takes about 20 mins to average transport, compute a single tracer J, and mfactor PQ...\n', mfilename)
+fprintf('%s.m: Calculating PQ_inv for tracers: [%s]\n', mfilename, strjoin(tName(sim.selection)) )
+fprintf('%s.m: Takes about 20 mins to average transport, compute a single tracer J, and mfactor PQ...\n', mfilename)
 fprintf('%s.m: Averaging transport...\n', mfilename)
 tic
 Q =  MTM(1).A + MTM(1).H + MTM(1).D;
@@ -47,4 +47,5 @@ clear Q J PQ
 
 % elapsedTime = toc(tStart);
 fprintf('%s.m: %1.0f (s) to factor and save PQinv \n',mfilename, toc(tStart));
+fprintf('End of %s.m: %s\n\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 end

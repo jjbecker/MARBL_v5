@@ -212,7 +212,7 @@ J = J + d0( geologic_term *ones(size(J,1),1));
 
 
 elapsedTime = toc(tStart);
-fprintf('%s.m: nzmax(J_FP) = %.0f\n\n', mfilename, nzmax(J_FP));
+fprintf('%s.m: nzmax(J_FP) = %.0f\n', mfilename, nzmax(J_FP));
 fprintf('%s.m: %1.0f (s) for partial of MARBL tendency(%s) on all levels, w.r.t. %s on all levels of same column, for all columns\n', mfilename, elapsedTime, tStr, tStr);
 
 fprintf('%s.m: nnz(J) = %.0f\n', mfilename, nnz(J));
