@@ -49,7 +49,7 @@ bgc.tracer = nsoli2bgc(sim, bgc, x0_bgc);   % marbl format x0
 x1_bgc = bgc2nsoli(sim, bgc.tracer); % unitless end of year values
 % checkNegAndHisto(sim, selectedTracers(sim, x1_bgc, sim.selection), 100.0, 'x', 900+gFileCnt);
 
-G = reshape(x1_bgc -x0_bgc, sz);    
+G = reshape(x1_bgc -x0_bgc, sz);
 G = G(:,sim.selection);             % just selected cols
 G = G(:);                           % nsoli format
 
@@ -68,48 +68,49 @@ else
 end
 
 
-fprintf('||G(x)|| = (max(abs(%s))) = %g \n', gStr, max(abs(G)));
-fprintf('||Precon( %s )|| = (max(abs(r))) = %g \n', gStr, max(abs(r)));
-disp('  ')
-fprintf('%s.m: Npt = %d %s max(x0)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), max(x0));
-fprintf('%s.m: Npt = %d %s min(x0)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), min(x0));
-fprintf('%s.m: Npt = %d %s mean(x0) = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), mean(x0));
-fprintf('%s.m: Npt = %d %s std(x0)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), std(x0));
-disp('  ')
-fprintf('%s.m: Npt = %d %s max(G)   = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), max(G));
-fprintf('%s.m: Npt = %d %s min(G)   = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), min(G));
-fprintf('%s.m: Npt = %d %s mean(G)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), mean(G));
-fprintf('%s.m: Npt = %d %s std(G)   = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), std(G));
-disp('  ')
 fprintf('%s.m: Npt = %d %s norm(G,2)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), norm(G));
 fprintf('%s.m: Npt = %d %s norm(r,2)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), norm(r));
 disp('  ')
-fprintf('%s.m: Npt = %d %s median(G)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), median(G));
-fprintf('%s.m: Npt = %d %s madMed(G)= %1.7g\n',  mfilename, Npt, strjoin(tName(sim.selection)), max((G)));
-fprintf('%s.m: Npt = %d %s madAvg(G)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), mad(G,1));
-% % DEBUG
-tmp = replaceSelectedTracers(sim, c0, G, sim.selection);
-res_moles = global_moles(nsoli2bgc(sim, bgc, tmp), sim);
-res_moles = res_moles(sim.selection);
-fprintf('%s.m: Npt = %d %s moles/y = %1.7g\n',   mfilename, Npt, gStr, res_moles);
+fprintf('||G(x)|| = (max(abs(%s))) = %g \n', gStr, max(abs(G)));
+fprintf('||Precon( %s )|| = (max(abs(r))) = %g \n', gStr, max(abs(r)));
+if (sim.verbose_debug)
+    disp('  ')
+    fprintf('%s.m: Npt = %d %s max(x0)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), max(x0));
+    fprintf('%s.m: Npt = %d %s min(x0)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), min(x0));
+    fprintf('%s.m: Npt = %d %s mean(x0) = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), mean(x0));
+    fprintf('%s.m: Npt = %d %s std(x0)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), std(x0));
+    disp('  ')
+    fprintf('%s.m: Npt = %d %s max(G)   = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), max(G));
+    fprintf('%s.m: Npt = %d %s min(G)   = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), min(G));
+    fprintf('%s.m: Npt = %d %s mean(G)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), mean(G));
+    fprintf('%s.m: Npt = %d %s std(G)   = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), std(G));
+    disp('  ')
+    fprintf('%s.m: Npt = %d %s median(G)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), median(G));
+    fprintf('%s.m: Npt = %d %s madMed(G)= %1.7g\n',  mfilename, Npt, strjoin(tName(sim.selection)), max((G)));
+    fprintf('%s.m: Npt = %d %s madAvg(G)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), mad(G,1));
+    % % DEBUG
+    tmp = replaceSelectedTracers(sim, c0, G, sim.selection);
+    res_moles = global_moles(nsoli2bgc(sim, bgc, tmp), sim);
+    res_moles = res_moles(sim.selection);
+    fprintf('%s.m: Npt = %d %s moles/y = %1.7g\n',   mfilename, Npt, gStr, res_moles);
 
-figure (900); scatter(x0,r); title(strjoin(["scatter( r(",gStr,"), ",strjoin(tName(sim.selection)),")"]));    xlabel(strjoin(tName(sim.selection)));  ylabel(strjoin(["r(",gStr,")"]))
-figure (901); plot(r);       title(strjoin(["r(",gStr,")"]));          xlabel('idx FP');   ylabel(strjoin(["r(",gStr,")"]))
-figure (902); qqplot(r);     title(strjoin(["qqplot( r(",gStr,"))"]))
-figure (602); histogram(r);  title(strjoin(["histogram( r(",gStr,"))"]));     xlabel(strjoin(["r(",gStr,")"]));   ylabel('Count')
+    figure (900); scatter(x0,r); title(strjoin(["scatter( r(",gStr,"), ",strjoin(tName(sim.selection)),")"]));    xlabel(strjoin(tName(sim.selection)));  ylabel(strjoin(["r(",gStr,")"]))
+    figure (901); plot(r);       title(strjoin(["r(",gStr,")"]));          xlabel('idx FP');   ylabel(strjoin(["r(",gStr,")"]))
+    figure (902); qqplot(r);     title(strjoin(["qqplot( r(",gStr,"))"]))
+    figure (602); histogram(r);  title(strjoin(["histogram( r(",gStr,"))"]));     xlabel(strjoin(["r(",gStr,")"]));   ylabel('Count')
 
-myRng = 1:20;
-[maxR,idxMaxR]     = sort(   (G),"descend",'MissingPlacement','last');
-% fprintf("max(%s) %g\n", gStr, maxR(1));
-[~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxMaxR(myRng), sim, 996);  title('Most postive')
+    myRng = 1:20;
+    [maxR,idxMaxR]     = sort(   (G),"descend",'MissingPlacement','last');
+    % fprintf("max(%s) %g\n", gStr, maxR(1));
+    [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxMaxR(myRng), sim, 996);  title('Most postive')
 
-[minR,idxMinR]     = sort(   (G),"ascend",'MissingPlacement','last');
-% fprintf("min(%s) %g\n", gStr, minR(1));
-[~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxMinR(myRng), sim, 997);  title('Most Negative')
+    [minR,idxMinR]     = sort(   (G),"ascend",'MissingPlacement','last');
+    % fprintf("min(%s) %g\n", gStr, minR(1));
+    [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxMinR(myRng), sim, 997);  title('Most Negative')
 
-[maxAbsR,idxAbsR]  = sort(abs(G),"descend",'MissingPlacement','last');
-[~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxAbsR(myRng), sim, 998); title('Largest Abs')
-
+    [maxAbsR,idxAbsR]  = sort(abs(G),"descend",'MissingPlacement','last');
+    [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxAbsR(myRng), sim, 998); title('Largest Abs')
+end
 
 x0_prev = x0;
 

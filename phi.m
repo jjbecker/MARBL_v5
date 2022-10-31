@@ -15,11 +15,10 @@ phiStr = sprintf('phi( %s )', tendStr);
 persistent phiFileCnt %x0_prev
 if isempty(phiFileCnt)
     phiFileCnt = 1;
-    fprintf('\ncall #%d to %s\n', phiFileCnt, phiStr);
 else
     phiFileCnt = phiFileCnt +1;
-    fprintf('\ncall #%d to %s\n', phiFileCnt, phiStr);
 end
+fprintf('\ncall #%d to %s', phiFileCnt, phiStr);
 
 timer_total = tic;
 
@@ -30,7 +29,7 @@ total_months = 12* round(sim.num_time_steps *sim.dt /sim.const.sec_y);
 if (total_months ~= 12)
     keyboard
 end
-fprintf('\n%s.m: Start integration of %s years: ',mfilename, int2str(total_months/12))
+fprintf('\n%s.m: Start  integration of %s years: ',mfilename, int2str(total_months/12))
 fprintf('%s\n', datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')))
 
 % save initial state
@@ -60,10 +59,10 @@ while current_month < total_months
     current_yr = round(sim.start_yr+years_gone_by);
 
     if sim.debug_disable_phi
-        if (phiFileCnt <= 3 )
-            bgc.tracer = (1. -   phiFileCnt/10) +0*bgc.tracer;
+        if ( phiFileCnt<=2000 || phiFileCnt>=50000 )
+            bgc.tracer = (1. -   phiFileCnt/10) +0*bgc.tracer;  % normal case phi decrease from previous value
         else
-            bgc.tracer = (1. - 0*phiFileCnt/10) +0*bgc.tracer;
+            bgc.tracer = (1. - 0*phiFileCnt/10) +0*bgc.tracer;  % trigger Armijo steps
         end
         fprintf('%s.m: Finish integration of %s years: %s\n',mfilename,num2str(1+years_gone_by,2),datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
         return

@@ -85,9 +85,8 @@ load(restart_file,'tracer','state','forcing');
 bgc.tracer       = tracer;      clear tracer;
 % load(restart_file,'tracer','state','forcing','old_tracer');
 % bgc.old_tracer   = old_tracer;  clear old_tracer;
-toc
 
-disp('Initializing global grids for tracer, tendency, etc...')
+if (sim.verbose_debug) disp('Initializing global grids for tracer, tendency, etc...'), end;
 [sim, bgc_struct] = init_marbl(marbl_file,sim, bgc_struct, forcing(1).surf_forcing);
 
 % Make sure size of tracers, e.g. CISO, matches sim we are about
@@ -129,13 +128,13 @@ sim.bgc_struct_base = bgc_struct;
 time_series = init_time_series(sim, bgc_struct);
 
 toc
-checkRestartFile(sim, bgc, forcing)
+if (sim.verbose_debug) checkRestartFile(sim, bgc, forcing), end
 %%
 if (sim.runInParallel)
     tic;
 
     % First shut down client MARBL previously used to get dim of MEX arrays
-    disp('Shutting down client mex (aka serial) because it interfers with parallel mex threads')
+    disp('Shutting down client MEX (aka serial) because it interfers with parallel MEX threads')
     mex_marbl_driver('shutdown');
 
     % Also shutdown existing worker pool, if any

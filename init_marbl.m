@@ -2,7 +2,7 @@ function [sim, bgc_struct] = init_marbl (marbl_file, sim, bgc_struct, surf_forci
 
 % read settings file of choice (if any)
 
-fprintf('%s.m: using arbitrary default tracers...\n',mfilename);
+% fprintf('%s.m: using arbitrary default tracers...\n',mfilename);
 % mfilename() is name of this file...
 ioerr = mex_marbl_driver('read_settings_file', marbl_file);
 if (ioerr), error('read_settings_file'), end
