@@ -3,19 +3,14 @@ function [r,G,x1] = calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv)
 %   Detailed explanation goes here
 
 tName = tracer_names(0);    % no CISO tracers
-% selection = [ ...
-%     find( strcmp(tName,'SiO3') ) ];     % #3
 tendStr   = strjoin(tName(sim.selection));
 gStr = sprintf('G( %s )', tendStr);
-% fprintf('%s.m: %s...\n',mfilename, gStr);
 
 persistent gFileCnt x0_prev
 if isempty(gFileCnt)
     gFileCnt = 1;
     fprintf('\ncall #%d to %s\n', gFileCnt, gStr);
     fprintf('norm(x0         ) = %-#15.7g\n', norm(x0         ));
-    % checkNegAndHisto(sim, x0, 100.0, 'x0', 900);
-    %     figure (500); plot(x0); title('x0')
 else
     gFileCnt = gFileCnt +1;
     fprintf('\ncall #%d to %s\n', gFileCnt, gStr);
@@ -23,28 +18,14 @@ else
     fprintf('norm(x0         ) = %-#15.7g\n', norm(x0         ));
     dx0 = x0 -x0_prev;
     fprintf('norm(x0 -x0_prev) = %-#15.7g\n', norm(dx0) );
-    %     figure (501); plot(x0_prev); title('x0_prev', 'Interpreter', 'none')
-    %     figure (502); plot(x0)     ; title('x0')
     figure (503); plot(dx0)    ; title('dx0'); xlabel('idx FP'); ylabel(strjoin(tName(sim.selection)));
 end
 Npt = -gFileCnt;
 
-% Check for negative tracers
-
-% accept = 1;
-% c0 = bgc2nsoli(sim, bgc.tracer);    % nsoli format; unitless; aka scaled FP
-% [~,c0] = ck_constraints(c0,-2);     % corrected any negatives
-%
-% tmp = x0;
-% [accept,x0] = ck_constraints(x0,Npt);
-% if (accept == false)
-%     disp('accept = false; histo our input in fig(999)')
-%     figure(999); histogram(tmp)
-%     keyboard
-%     r = NaN(size(x0));
-%     return
-% end % if not within constraints
-
+if sim.debug_disable_phi
+    %         bgc.tracer = -bgc.tracer;
+    x0 = 0 *x0;
+end
 
 % Combine current tracers being changed by Nsoli, aka "sim.selection",
 % with ones not being fiddled with to create full set of tracer to input
@@ -58,12 +39,12 @@ sz = [numWaterParcels, numTracers];
 
 x0_bgc = replaceSelectedTracers(sim, c0, x0, sim.selection);
 bgc.tracer = nsoli2bgc(sim, bgc, x0_bgc);   % marbl format x0
-moles_G_x0 = global_moles(bgc.tracer, sim)';
+
 
 % initial_moles = global_moles(bgc.tracer, sim);  % DEBUG
 [sim, bgc, ~] = phi(sim, bgc, time_series, forcing, MTM);
 % final_moles = global_moles(bgc.tracer, sim);    % DEBUG
-moles_G_x1 = global_moles(bgc.tracer, sim)';
+
 
 x1_bgc = bgc2nsoli(sim, bgc.tracer); % unitless end of year values
 % checkNegAndHisto(sim, selectedTracers(sim, x1_bgc, sim.selection), 100.0, 'x', 900+gFileCnt);
@@ -89,14 +70,6 @@ end
 
 fprintf('||G(x)|| = (max(abs(%s))) = %g \n', gStr, max(abs(G)));
 fprintf('||Precon( %s )|| = (max(abs(r))) = %g \n', gStr, max(abs(r)));
-
-
-
-% % DEBUG
-tmp = replaceSelectedTracers(sim, c0, G, sim.selection);
-res_moles = global_moles(nsoli2bgc(sim, bgc, tmp), sim);
-res_moles = res_moles(sim.selection);
-
 disp('  ')
 fprintf('%s.m: Npt = %d %s max(x0)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), max(x0));
 fprintf('%s.m: Npt = %d %s min(x0)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), min(x0));
@@ -114,18 +87,11 @@ disp('  ')
 fprintf('%s.m: Npt = %d %s median(G)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), median(G));
 fprintf('%s.m: Npt = %d %s madMed(G)= %1.7g\n',  mfilename, Npt, strjoin(tName(sim.selection)), max((G)));
 fprintf('%s.m: Npt = %d %s madAvg(G)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), mad(G,1));
+% % DEBUG
+tmp = replaceSelectedTracers(sim, c0, G, sim.selection);
+res_moles = global_moles(nsoli2bgc(sim, bgc, tmp), sim);
+res_moles = res_moles(sim.selection);
 fprintf('%s.m: Npt = %d %s moles/y = %1.7g\n',   mfilename, Npt, gStr, res_moles);
-
-if (0)
-    % Matlab load() has trouble with filenames that space and so on.
-    % KISS
-    myGfile = sprintf('%s/G_%s_%d.mat', sim.outputRestartDir, strjoin(tName(sim.selection)), round(gFileCnt));
-    fprintf('%s.m: Saving "%s"...\n', mfilename,myGfile);
-    variables = who;
-    toexclude = {'MTM','PQ_inv'};
-    variables = variables(~ismember(variables, toexclude));
-    save(myGfile, variables{:}, '-v7.3','-nocompression');
-end
 
 figure (900); scatter(x0,r); title(strjoin(["scatter( r(",gStr,"), ",strjoin(tName(sim.selection)),")"]));    xlabel(strjoin(tName(sim.selection)));  ylabel(strjoin(["r(",gStr,")"]))
 figure (901); plot(r);       title(strjoin(["r(",gStr,")"]));          xlabel('idx FP');   ylabel(strjoin(["r(",gStr,")"]))
@@ -145,16 +111,6 @@ myRng = 1:20;
 [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxAbsR(myRng), sim, 998); title('Largest Abs')
 
 
-% % Save everything in G, which is not everything in whole sim
-% tracer = bgc.tracer;
-% copyfile( sim.inputRestartFile, myGfile);
-% save( myGfile, 'tracer', '-append' ); % overwrites tracer from input
-% save( myGfile, 'r', '-append' );      % overwrites tracer from input
-% save( myGfile, 'x0', '-append' );      % overwrites tracer from input
-% save( myGfile, 'x0_prev', '-append' );      % overwrites tracer from input
-% save( myGfile, 'x0_prev', '-append' );      % overwrites tracer from input
-
 x0_prev = x0;
-
 
 end % G()
