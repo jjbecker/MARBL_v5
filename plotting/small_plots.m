@@ -1,6 +1,6 @@
 function small_plots (sim, time_series, n, row, lvl )
 
-% As "learning tool" the plot routine makes literally 100's plots.
+% As "learning tool" plot routine makes literally 100's plots.
 % Edit "small_plots.m" code to make plots that are actually of interest.
 
 tic;
@@ -25,7 +25,7 @@ t = (0:n-1) /dx;
 % surface tracers
 
 fig = 1;
-idx = 1:size(nameUnits');        % plot -ALL- the tracers???
+idx = 1:size(nameUnits');        % plot -ALL- tracers???
 myTitle = sprintf('Surface Tracers v. Time (d) @row %d', row);
 myData = squeeze(time_series.tracer(1,:,1:n))';
 fig = plot_log(fig, myTitle, t, myData, nameUnits(idx), idx, false);
@@ -36,7 +36,7 @@ idx = 1:size(surfaceDiagName');
 myTitle = sprintf('Surface Diags v. Time (d) @row %d', row);
 
 if (sim.logDiags)
-    myData = time_series.surf_diag(:,1:n)';        % plot -ALL- the diags???
+    myData = time_series.surf_diag(:,1:n)';        % plot -ALL- diags???
     fig = plot_log(fig, myTitle, t, myData, surfaceDiagName(idx), idx, false);
 end
 
@@ -70,20 +70,20 @@ if (sim.logDiags)
 end
 
 % fig = 7;
-idx = 1:size(nameUnits');        % plot -ALL- the tracers???
+idx = 1:size(nameUnits');        % plot -ALL- tracers???
 myTitle = sprintf('***MOLES*** Global Volume Integrated Tracers(mole) v. Time (d)');
 myData = squeeze(time_series.moles(:,1:n))';
 fig = plot_log(fig, myTitle, t, myData, globalUnits(idx), idx, false);
 
 % fig = 8;
-idx = 1:size(nameUnits');        % plot -ALL- the tracers???
+idx = 1:size(nameUnits');        % plot -ALL- tracers???
 myTitle = sprintf('Global Volume Integrated(MARBL+River Tendency) ./Tracer *1y v. Time (d)');
 % myData = squeeze(time_series.Dmoles(:,1:n));
 myData = sim.const.sec_y *(squeeze(time_series.Dmoles(:,1:n)) ./ squeeze(eps+time_series.moles(:,1:n)))';
 fig = plot_log(fig, myTitle, t, myData, globalUnits(idx), idx, false);
 
 % % fig = 9;
-% idx = 1:size(nameUnits');        % plot -ALL- the tracers???
+% idx = 1:size(nameUnits');        % plot -ALL- tracers???
 % myTitle = sprintf('Fractional Global Volume Integrated (D(Tracer)/dt /(Tracer/dt) v. Time (d)');
 % myData = squeeze(time_series.Dmoles(:,1:n))' ./ squeeze(time_series.moles(:,1:n))';
 % fig = plot_log(fig, myTitle, t, myData, nameUnits(idx), idx, false);
@@ -130,7 +130,7 @@ return
 % fig = plot3dDiagTimeSeries  ( fig, small_data, sim, idx, n_cnt, dt);
 %
 % % Interior tracer #18 zoo plankton C
-% % Great way to show Zoo do -NOT- move vertically during the day/night
+% % Great way to show Zoo do -NOT- move vertically during day/night
 % small_data = time_series.tracer(:,:,n_range);
 % idx = 18;
 % fig = plot3dTracerTimeSeries( fig, small_data, sim, idx, n_cnt, dt);

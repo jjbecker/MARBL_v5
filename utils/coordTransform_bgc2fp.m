@@ -4,7 +4,7 @@ function [idx_fp] = coordTransform_bgc2fp(iCol, iLvl, sim)
 %
 % ==================
 % Basically removing bottom levels made it at least tricky, not impossible,
-% to convert "fp" idx back to (iLat, iLon, iLvl). The "find()" operation is
+% to convert "fp" idx back to (iLat, iLon, iLvl). "find()" operation is
 % culprit.
 %
 %   wet_loc         = find(M3d(:,:,1));           % "water colum locations"
@@ -12,7 +12,7 @@ function [idx_fp] = coordTransform_bgc2fp(iCol, iLvl, sim)
 % Convert both land and ocean to 2 subscripts: 3d->2d index = (sub2ind(lat,lon),lvl)
 %   M3d_linear      = reshape(M3d, [sz(1)*sz(2), sz(3)]);
 %
-% Keep only ocean locations, with all levels: aka a water colum with all levels, even the bottom
+% Keep only ocean locations, with all levels: aka a water colum with all levels, even bottom
 %   M3d_linear_wet  = M3d_linear(wet_loc(:),:);
 %   iwet_linear_wet = find(M3d_linear_wet(:));    % "" no bottom levels
 %   iwet            = iwet_linear_wet;            % single index

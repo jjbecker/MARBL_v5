@@ -1,7 +1,7 @@
 function [tracer] = init_tracers ( surf_forcing, lciso_on )
 
-% FIXME: at the very end of all this mess we switch from MARL shape of
-% tracers to the shape we use in Matlab (lat,lon,lvl,tracer), way to much
+% FIXME: at very end of all this mess we switch from MARL shape of
+% tracers to shape we use in Matlab (lat,lon,lvl,tracer), way to much
 % confusion to do this everywhere
 
 
@@ -11,27 +11,27 @@ function [tracer] = init_tracers ( surf_forcing, lciso_on )
 % column with 5 levels has at lest 160 initial conditions required.
 %
 % Furthermore, MARBL is not "tolerant" of inconsistent values. For example
-% if the dust flux and Fe values are not realistic, MARBL crashes.
+% if dust flux and Fe values are not realistic, MARBL crashes.
 %
 % If carbonate and pH values are inconsistent, MARBL does NOT usually crash
-% but the results will be wrong. This is hard to detect. Its best to use a
+% but results will be wrong. This is hard to detect. Its best to use a
 % know good set of carbonate values and slowly change these in sort simple
 % simulations till you get something that is obviously CORRECT..
 %
 % I couldn't find a test case from MARBL developers that I could use as a
 % starting point. And it has been extremely tedious to find a consistent
 % set of initial conditions for all 32 or 46 tracers. But after a great
-% deal of trial and error, the following values are consisten with the
+% deal of trial and error, following values are consisten with the
 % values in intial forcing "default_forcing.m" and initial pH or
 % "default_states.m".
 %
-% Becasue these intital conditions in the 3 "default_sim.m" routines are
-% consistent, it is possible to run the simulation with a reasonable time
-% step, say 15 simualted minutes, for a few simulated years, and the final
+% Becasue these intital conditions in 3 "default_sim.m" routines are
+% consistent, it is possible to run simulation with a reasonable time
+% step, say 15 simualted minutes, for a few simulated years, and final
 % values are somewaht realistic, in particular as a realistic intial
 % condition.
 %
-% Saving the results is better, "spun up", initial condition.
+% Saving results is better, "spun up", initial condition.
 %
 % Note: surface and interior have "level" and tracer indices swapped...
 
@@ -63,7 +63,7 @@ tracer(mex_marbl_driver('tracer_index','DOPr'),:) =   0.01; % (mmol/m^3)
 tracer(mex_marbl_driver('tracer_index','DONr'),:) =    0.2; % (mmol/m^3)
 tracer(mex_marbl_driver('tracer_index','DOCr'),:) =    2.4; % (mmol/m^3)
 
-% The following "biota" tracers can be left at zero and will not crash the
+% "biota" tracers can be left at zero and will not crash the
 % simulation.
 
 % intitalize zoo and autotrophs at noticible amount
@@ -72,10 +72,10 @@ tracer(mex_marbl_driver('tracer_index','spC'),:)   = 0.30;
 tracer(mex_marbl_driver('tracer_index','diatC'),:) = 0.04;
 tracer(mex_marbl_driver('tracer_index','diazC'),:) = 0.04;
 
-% The autrophs only require above "Carbon" or "xxxC" tracers to be set,
+% autrophs only require above "Carbon" or "xxxC" tracers to be set,
 % but there might be a big startup transient if you do not set reasonable
-% inital values for the chlorophl, P, Fe, CaCO3 and Si as appropriate.
-% These are approximated with very ad hoc fractions of the carbon.
+% inital values for chlorophl, P, Fe, CaCO3 and Si as appropriate.
+% These are approximated with very ad hoc fractions of carbon.
 
 % small phyto at noticible amount
 tracer(mex_marbl_driver('tracer_index','spChl'),:)   =  0.2 * tracer(mex_marbl_driver('tracer_index','spC'),:); % Chl

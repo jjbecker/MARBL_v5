@@ -30,7 +30,7 @@ end
 % myRestartFile = sprintf('%s/restart_%d_%s_x0.mat', sim.outputRestartDir, round(sim.start_yr+years_gone_by),strjoin(tName(sim.selection)));
 % fprintf('%s.m: Saving "%s"...\n', mfilename, newRestartFileName);
 % % copy original restart file, then replace original "tracer" with
-% % the current bgc.tracer. Surprisingly fast!
+% % current bgc.tracer. Surprisingly fast!
 % copyfile( sim.inputRestartFile, newRestartFileName);
 % 
 % tracer = tracer_0;                            % --- these are x0 everywhere  ---

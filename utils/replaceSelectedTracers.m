@@ -3,7 +3,7 @@ function c = replaceSelectedTracers(sim, c0, x0, selection)
 % c0 is ALL tracers, in 1d format.
 % x0 is a subset of tracers; probably from from Nsoli()...
 % Need to reshape c0 to size = [ numWaterParcels, 32 ].
-% Then replace the selected tracers with the ones from Nsoli
+% Then replace selected tracers with ones from Nsoli
 
 numWaterParcels = numel(sim.domain.iwet_JJ);
 numTracers = sim.bgc_struct_base.size.tracer(2);

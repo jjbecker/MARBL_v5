@@ -1,12 +1,12 @@
 function [bgc_struct] = init_bgc_struct(sim)
 
 
-% The size of one water column. Not efficient to transfer data to MARBL but
+% size of one water column. Not efficient to transfer data to MARBL but
 % claifies data struct code
 
-% Create a struct that has meta data like the size, names, and units.
+% Create a struct that has meta data like size, names, and units.
 % FIXME: possibly use this struct to hold values for a single water column
-% to make it easy to create the global arrays we actually use...
+% to make it easy to create global arrays we actually use...
 
 % Global grid size and number of water levels for all water columns.
 

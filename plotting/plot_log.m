@@ -1,6 +1,6 @@
 function myFig = plot_log(myFig, myTitle, t_or_z, y_array, name, idx, depthNotTime)
 
-% plot_time_series plot the time evolution of array of tracers
+% plot_time_series plot time evolution of array of tracers
 
 figure(myFig)
 myFig = myFig +1;
@@ -13,7 +13,7 @@ tl = tiledlayout('flow','TileSpacing','compact','Padding','compact');
 
 for i=1:size(y_array,2)
     ax(i) = nexttile(tl);
-    plot(t_or_z, y_array(:,i)); % FIXME: Surprisingly this takes the first of a multiple column array!
+    plot(t_or_z, y_array(:,i)); % FIXME: Surprisingly this takes first of a multiple column array!
     %     ylabel (idx(i)+". "+name(i), 'Interpreter', 'none')
     ylabel (idx(i)+". "+name(i), 'Interpreter', 'none')
     if (depthNotTime)

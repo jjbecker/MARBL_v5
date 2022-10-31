@@ -53,8 +53,8 @@ month = 1;
 
 f0 = bgc.tendency;
 f0 = squeeze(f0(:,:,tend_idx));            % size(f0) = [7881,60]
-% remember that f0, f1 and df are SUPPOSED to be zero below the bottom
-% this check and the isfinite next takes total of 11 milli seconds...
+% remember that f0, f1 and df are SUPPOSED to be zero below bottom
+% this check and isfinite next takes total of 11 milli seconds...
 % tic
 for j = 1 : numel(bgc.kmt)
     f0(j, bgc.kmt(j)+1:60 ) = 0;
@@ -92,14 +92,14 @@ for h_lvl = 1:sz(2)       % loop over all levels
 
     f1 = bgc.tendency;                      % f1(x1) = tendency all tracers
     f1 = squeeze(f1(:,:,tend_idx));    % tendency of selected tracer
-    % remember that f0, f1 and df are SUPPOSED to be zero below the bottom
+    % remember that f0, f1 and df are SUPPOSED to be zero below bottom
     for j = 1 : numel(bgc.kmt)
         f1(j, bgc.kmt(j)+1:60 ) = 0;
     end
     if sum( ~isfinite(f1(:)) ) > 0, keyboard; end     % Always be checking MARBL
 
 
-    % remember that f0, f1 and df are SUPPOSED to be zero below the bottom
+    % remember that f0, f1 and df are SUPPOSED to be zero below bottom
     df = f1 -f0;                            % delta(tend)
 
     % only do df_dx calculation where kmt >= h_lvl (wet at depth)
@@ -109,14 +109,14 @@ for h_lvl = 1:sz(2)       % loop over all levels
     % check it!
     if sum( ~isfinite(df(:)) ) > 0, keyboard; end     % Always be checking MARBL
 
-    % divide df, the change of tendency of every water column on every 
-    % level by dh the change of of its own water columnm tracer but ONLY 
-    % on the given level
+    % divide df, change of tendency of every water column on every 
+    % level, by dh change of of its own water columnm tracer but ONLY 
+    % on given level
     
     dh = x1 - x0;
     dh = dh(:,h_lvl);                       % [7881,1]
 
-    % remember that f0, f1 and df are SUPPOSED to be zero below the bottom
+    % remember that f0, f1 and df are SUPPOSED to be zero below bottom
     %
     % only do calculation on columns where kmt >= h_lvl (aka wet at this
     % depth)

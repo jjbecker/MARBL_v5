@@ -8,7 +8,7 @@ function [my_cell] = surface_flux_output_names()
 
 my_cell{ 1} = 'flux_o2 nmol/cm^2/s';    % O2 flux from sea to air = pv_o2 * (o2-o2_sat)
 my_cell{ 2} = 'flux_co2 nmol/cm^2/s';   % CO2 "" = pv_co2 * CO2STAR
-my_cell{ 3} = 'flux_nhx nmol/cm^2/s';   % NHX "" = "nhx_surface_emis" = FIXME = what the heck?
+my_cell{ 3} = 'flux_nhx nmol/cm^2/s';   % NHX "" = "nhx_surface_emis" = FIXME = what heck?
 my_cell{ 4} = 'totalChl mg/m^3';   % Cholorphyl "" = "totalChl_loc" = FIXME surface -concentration-?
 
 end

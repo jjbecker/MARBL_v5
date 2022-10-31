@@ -3,7 +3,7 @@ function [surface] = update_surface (dt, surface, interior, skip )
 % use midpoint of time step to update surface?
 % 
 % FIXME: Midpoint update? How do we account for mixing and tendency?
-% FIXME: further more update_interior DOES update the state, but NOT tracer.
+% FIXME: further more update_interior DOES update state, but NOT tracer.
 % 
 % surface.state  = (interior.state_old (:,1)  +interior.state (:,1) ) ./2;
 % 
@@ -40,7 +40,7 @@ surface.flux  = mex_marbl_driver ( 'surface_fluxes' );
 % surface.sfo   = mex_marbl_driver ( 'sfo' );
 
 % Mike Levi says using this output on next input speeds code up, but to me
-% this output state is just a diagnostic, it's the pH. 
+% this output state is just a diagnostic, it's pH. 
 % save it for use as IC next iteration
 
 surface.state = mex_marbl_driver ( 'surface_flux_saved_state' );
@@ -62,7 +62,7 @@ end
 % Units of -METERS- are used in matlab domain.
 %   convert depth here to units (cm?) used in MARBL
 
-% FIXME: Hard coded units for depth for the moment. MARBL uses cm, we use m
+% FIXME: Hard coded units for depth for moment. MARBL uses cm, we use m
 MARBL_depth_per_m = 100;
 
 surface.tendency = surface.flux' /( interior.domain.dzt(1) *MARBL_depth_per_m);

@@ -7,7 +7,7 @@ function [sim] = setPeek(sim)
 % logging.
 % %
 % However MARBL diagnostics, while occasionally invaluable are HUGE and
-% slow the sim down by at least a factor 2x, require huge memry etc; so I
+% slow sim down by at least a factor 2x, require huge memry etc; so I
 % very rarely capture them...
 
 if (or (sim.logDiags, sim.logTracers))
@@ -36,7 +36,7 @@ if (or (sim.logDiags, sim.logTracers))
     [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(iFp, sim, 999); title('Time Series "Peek" Localtion')
     %     [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(iFp, sim);
     sim.time_series_loc = iFp ;
-    % % % ... now set the level
+    % % % ... now set level
     sim.time_series_lvl = iLvl;
     disp(['Time series(loc,lvl) = (', num2str(sim.time_series_loc), ', ', num2str(sim.time_series_lvl),')']);
     [~,~,~, lat, lon, ~] = col2latlon(sim, sim.time_series_loc);

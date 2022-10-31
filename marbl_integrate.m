@@ -35,13 +35,9 @@ timer_total = tic;
 % start_yr = 4101;  inputRestartFileStem = 'Data/InputFromAnn/restart4101.mat';
 % start_yr =   0;   inputRestartFileStem = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
 % start_yr = 260;   inputRestartFileStem = 'Data_GP/restart_260_integrate_from_0.mat';
-% start_yr = 2525;  inputRestartFileStem = 'restart_0_1_output/restart_260_NH4_x0_sol.mat';
-% start_yr = 12345; inputRestartFileStem = 'restart_0_1_output/restart_12345_DOP_x0.mat';
-% start_yr = 1323;  inputRestartFileStem = 'restart_0_1_output/bak/restart_O2_fwd_x1.mat';
-% start_yr = 1323;  inputRestartFileStem = 'restart_0_1_output/bak/restart_1323_DON_x1.mat';
 start_yr = 1323;  inputRestartFileStem = 'restart_0_1_output/restart_1323_DOP_sol_x1.mat';
 
-inputRestartFile = strcat(myDataDir(), inputRestartFileStem);
+inputRestartFile = strcat(myDataDir(), inputRestartFileStem)
 
 % always need a selected tracer! For plot time series, or solve
 % Most of these work very well in single tracer solution...
@@ -101,7 +97,7 @@ for tracer_str = tracer_loop
     marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
     %%%%%%
 
-    fprintf('%s.m: Reading OFFline input restart file with tracers and transports: %s\n', mfilename, inputRestartFile);
+    fprintf('%s.m: Reading (Matlab) OFFline sim restart file with tracers and transports: %s\n', mfilename, inputRestartFile);
     % load() does NOT need file extension, but copy() does. sigh
     if ~isfile(inputRestartFile)
         error("missing file or typo in name of inputRestartFile")
@@ -121,9 +117,9 @@ for tracer_str = tracer_loop
     sim.debug_PQ_inv            = debug_PQ_inv;
     sim.debug_disable_phi       = debug_disable_phi;
 
-    % FIXME: lots of old code floating around...
-    %     clear inputRestartFile
-    %     clear start_yr
+    % FIXME: lots of old and or leftover broken code floating around, clear tmp vars...
+    clear inputRestartFile
+    clear start_yr
     clear selection captureAllSelectedTracers logTracers
 
     sim.checkNeg = 0;
@@ -266,7 +262,7 @@ for tracer_str = tracer_loop
         fprintf('%s: Parameters nsoli()... \n', mfilename)
         maxit  = 40;            % maximum number of Newton steps
         maxitl = 5;             % max number of all calls to G. Need at least 1 to get f0, plus what gets used in Armijo
-        maxarm = 1;             % maximum number of Armijo evaluations of phi; but ==1 is pointless because the first one is evaluating the new value of f0
+        maxarm = 1;             % maximum number of Armijo evaluations of phi; but ==1 is pointless because first one is evaluating new value of f0
         % used only by nsoli()
         etamax = 0.9;           % maximum error tol for residual in inner iteration, default = 0.9
         lmeth  = 2;             % Nsoli() method 2 = GMRES(m), not used by brsola().
@@ -292,7 +288,7 @@ for tracer_str = tracer_loop
 
         x0_bgc  = replaceSelectedTracers(sim, c0, x0_sol, sim.selection);
         bgc.tracer = nsoli2bgc(sim, bgc, x0_bgc);   % marbl format x0
-        bgc_sol = bgc;  % this has c0 for all tracer
+        bgc_sol_x0 = bgc;  % this has c0 for all tracer
 
         sol_fname = sprintf('%s/sol_%s_ierr_%d_x0', sim.outputRestartDir, string(tName(sim.selection)), ierr);
         fprintf('%s.m: Saving just x0_sol, ierr, it_hist, x_hist in %s\n', mfilename, sol_fname);
@@ -301,7 +297,10 @@ for tracer_str = tracer_loop
         myRestartFile = sprintf('%s/restart_%d_%s_sol_x0.mat', sim.outputRestartDir, round(sim.start_yr), strjoin(tName(sim.selection)));
         [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile);
 
-        % The "sol" from brsola() will be the last x that was smallest --not-- the last
+        inputRestartFile = myRestartFile
+
+
+        % "sol" from brsola() will be last x that was smallest --not-- last
         % one caclualated which is "restart_x0.mat"
         %
         % confusing? YES
@@ -309,20 +308,25 @@ for tracer_str = tracer_loop
         % x, sol = [379913]
         % c      = [379913, 32]
         % c1     = 12157216]
-        %         bgc_sol.tracer = load(sprintf('%s/restart_x0.mat', sim.outputRestartDir), 'tracer').tracer;     % [78881, 60, 32]
-        %         bgc_sol.tracer = load(sprintf('%s/restart_x1.mat', sim.outputRestartDir), 'tracer').tracer;     % [78881, 60, 32]
-        % 
-        % c1 = bgc2nsoli(sim, bgc_sol.tracer);    % nsoli format; unitless; aka scaled FP
-        % c1 = reshape(c1, sz);                  % [393913,32]
-        % x1_sol = c1(:,sim.selection);           % [393913] initial condition for Nsoli()
-        % x1_sol = x1_sol(:);                     % unitless
-        % myRestartFile = sprintf('%s/restart_%d_%s_sol_x1.mat', sim.outputRestartDir, round(sim.start_yr), strjoin(tName(sim.selection)));
-        % [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile);
+        
+%         % FIXME: this is NOT x1 od sol, it is last x1 calulate; IOW it might be x1 from a line search and hence terrible
+%         bgc_sol_x1.tracer = load(sprintf('%s/restart_x1.mat', sim.outputRestartDir), 'tracer').tracer;     % [78881, 60, 32]
+%         
+%         c1 = bgc2nsoli(sim, bgc_sol_x1.tracer);    % nsoli format; unitless; aka scaled FP
+%         c1 = reshape(c1, sz);                  % [393913,32]
+%         x1_sol = c1(:,sim.selection);           % [393913] initial condition for Nsoli()
+%         % x1_sol = x1_sol(:);                     % unitless
+%         myRestartFile = sprintf('%s/restart_%d_%s_sol_x1.mat', sim.outputRestartDir, round(sim.start_yr), strjoin(tName(sim.selection)));
+%         [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile);
+
 
 
         % FIXME: use x0 or x1 of solution?
-        %
+        
         x = x0_sol;
+
+
+
         if num_relax_iterations > 0
 
             fprintf('\n%s.m: Now we "relax" or forward integtration single variable solution a few iterations: %s\n',mfilename,datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
@@ -330,9 +334,9 @@ for tracer_str = tracer_loop
                 mfilename, sim.T/sim.dt, sim.dt/sim.const.sec_h, tot_t /sim.const.sec_y)
 
             % FIXME: keep history of relax steps???
-            %     x_histx = x;
-            %     r_hist = zeros(size(x));
-            %     it_histx = zeros(num_relax_iterations,1);
+            x_histx = x;
+            r_hist = zeros(size(x));
+            it_histx = zeros(num_relax_iterations,1);
 
             % % remember! First relax iteration of x0_sol" is same as x1 of sol, so in
             % % that case, to be useful, num_relax_iterations >= 2.
@@ -344,14 +348,14 @@ for tracer_str = tracer_loop
 
                 % Note x = x1, not "x0" which is normal thing for sol iterations
                 % Note c0 is correct
-                [r, G, x1] = calc_G(x,c0,sim,bgc_sol,time_series,forcing,MTM,PQ_inv);
+                [r, G, x1] = calc_G(x,c0,sim,bgc_sol_x1,time_series,forcing,MTM,PQ_inv);
 
                 % DEBUG
                 fprintf('%s.m: itc %d norm(G) = %g\n',mfilename, itc, norm(G))
                 fprintf('%s.m: itc %d norm(r) = %g\n',mfilename, itc, norm(r))
-                %         x_histx = [x_histx,x];
-                %         r_hist  = [r_hist, r];
-                %         it_histx(itc,1) = norm(r);
+                x_histx = [x_histx,x];
+                r_hist  = [r_hist, r];
+                it_histx(itc,1) = norm(r);
 
                 x = x1;
 
@@ -368,9 +372,11 @@ for tracer_str = tracer_loop
 
             bgc = bgc_relax;    % final answer or input to fwd integration...
 
-            myRestartFile = sprintf('%s/restart_%d_%s_relax_x1.mat', sim.outputRestartDir, round(sim.start_yr), strjoin(tName(sim.selection)));
-            relaxedRestartFile = myRestartFile;
+            relaxedRestartFile = sprintf('%s/restart_%d_%s_relax_x1.mat', sim.outputRestartDir, round(sim.start_yr), strjoin(tName(sim.selection)));
             [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile);
+
+            inputRestartFile = relaxedRestartFile
+
         end % relax step
     end % Solve for selected tracer
 
@@ -379,24 +385,27 @@ for tracer_str = tracer_loop
 
     years_gone_by = 0;
     for fwd_itc = 1:num_forward_years
+
         fprintf("\n%s.m: starting forward integrate year #%d of %d\n", mfilename, fwd_itc, num_forward_years)
+
         [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
 
-        current_yr    = round(sim.start_yr);
-        % current_yr    = round(sim.start_yr+years_gone_by);
-        myRestartFile = sprintf('%s/restart_%d_%s_fwd_x1.mat', sim.outputRestartDir, current_yr,strjoin(tName(sim.selection)));
         sim.start_yr  = sim.start_yr+1;
-        % years_gone_by = years_gone_by +1;
-        % years gone by is actually number of years-1 spent in phi.
-
-        if mod(current_yr, sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
+        if mod(round(sim.start_yr), sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
+            
+            myFwdRestartFile = sprintf('%s/restart_%d_%s_fwd_x1.mat', sim.outputRestartDir, round(sim.start_yr),strjoin(tName(sim.selection)));
             [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile);
+            
+            inputRestartFile = myFwdRestartFile
+
         end
 
+
     end % fwd loop
+
     % this is my final answer!
     % always save my final answer
-    [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile);
+  x inputRestartFile = relaxedRestartFile;
 
 
 
@@ -409,7 +418,7 @@ for tracer_str = tracer_loop
     disp(['Runtime all location per sim year : ', num2str(elapsedTime_all_loc/60/1440/tot_t*sim.const.sec_y, '%1.2f'), ' (d/y_sim)'])
     disp(['Simulation speed: ', num2str(tot_t/elapsedTime_all_loc/sim.const.days_y, '%1.1f'), ' (sim y/d) aka (SYPD)'])
 
-    inputRestartFile = relaxedRestartFile;
+x    inputRestartFile = x
 
 end % of loop over tracers
 toc(timer_total)

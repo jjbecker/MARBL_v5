@@ -7,11 +7,11 @@ function [iLat, iLon, iLvl, latitude, longitude, depth] = coordTransform_fp2xyz(
 % If "debugFigNum" is input, geoscatter plot of locations is opened.
 %
 % If you want to convert "fp2xyz(idx,iTr)" just call fp2xyz(idx) because fp
-% is the same for all tracers in a given water parcel.
+% is same for all tracers in a given water parcel.
 %
 % ==================
 % Basically removing bottom levels made it at least tricky, not impossible,
-% to convert "fp" idx back to (iLat, iLon, iLvl). The "find()" operation is
+% to convert "fp" idx back to (iLat, iLon, iLvl). "find()" operation is
 % culprit.
 %
 %   wet_loc         = find(M3d(:,:,1));           % "water colum locations"
@@ -19,7 +19,7 @@ function [iLat, iLon, iLvl, latitude, longitude, depth] = coordTransform_fp2xyz(
 % Convert both land and ocean to 2 subscripts: 3d->2d index = (sub2ind(lat,lon),lvl)
 %   M3d_linear      = reshape(M3d, [sz(1)*sz(2), sz(3)]);
 %
-% Keep only ocean locations, with all levels: aka a water colum with all levels, even the bottom
+% Keep only ocean locations, with all levels: aka a water colum with all levels, even bottom
 %   M3d_linear_wet  = M3d_linear(wet_loc(:),:);
 %   iwet_linear_wet = find(M3d_linear_wet(:));    % "" no bottom levels
 %   iwet            = iwet_linear_wet;            % single index
@@ -54,7 +54,7 @@ function [iLat, iLon, iLvl, latitude, longitude, depth] = coordTransform_fp2xyz(
 %   coordTransform_xyz2nsoli, coordTransform_xyz2fp, coordTransform_xyz2bgc
 %
 
-% First step is the worst.
+% First step is worst.
 %
 % iwet_FP = find(M3d(:));   % linear index of wet water parcel
 %

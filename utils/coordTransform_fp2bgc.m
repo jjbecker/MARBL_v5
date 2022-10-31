@@ -5,11 +5,11 @@ function [iCol, iLvl, iLat, iLon, lat, lon, depth] = coordTransform_fp2bgc(idx_f
 % Optional: output iLat, iLon, lat, lon, depth
 % Optional: map location in figure(debugFigNum)
 %
-% First two steps is the very tricky part, at least to understand fully.
+% First two steps is very tricky part, at least to understand fully.
 %
 % ==================
 % Basically removing bottom levels made it at least tricky, not impossible,
-% to convert "fp" idx back to (iLat, iLon, iLvl). The "find()" operation is
+% to convert "fp" idx back to (iLat, iLon, iLvl). "find()" operation is
 % culprit.
 %
 %   wet_loc         = find(M3d(:,:,1));           % "water colum locations"
@@ -17,7 +17,7 @@ function [iCol, iLvl, iLat, iLon, lat, lon, depth] = coordTransform_fp2bgc(idx_f
 % Convert both land and ocean to 2 subscripts: 3d->2d index = (sub2ind(lat,lon),lvl)
 %   M3d_linear      = reshape(M3d, [sz(1)*sz(2), sz(3)]);
 %
-% Keep only ocean locations, with all levels: aka a water colum with all levels, even the bottom
+% Keep only ocean locations, with all levels: aka a water colum with all levels, even bottom
 %   M3d_linear_wet  = M3d_linear(wet_loc(:),:);
 %   iwet_linear_wet = find(M3d_linear_wet(:));    % "" no bottom levels
 %   iwet            = iwet_linear_wet;            % single index
@@ -47,7 +47,7 @@ function [iCol, iLvl, iLat, iLon, lat, lon, depth] = coordTransform_fp2bgc(idx_f
 
 % number of wet surface locations,
 % which is also number of water cols
-% which is the cnt we want...
+% which is cnt we want...
 
 num_location = numel(sim.domain.wet_loc);
 num_parcels  = numel(sim.domain.iwet_FP);
@@ -74,7 +74,7 @@ else
 
     [iLat, iLon] = ind2sub(size(sim.domain.M3d,[1 2]), sim.domain.wet_loc(iCol)');
 
-    for i=numel(idx):-1:1 % trick to effectively pre allocate the arrays
+    for i=numel(idx):-1:1 % trick to effectively pre allocate arrays
         lat(i) = sim.grd.YT(iLat(i),iLon(i),iLvl(i));   % +/- deg
         lon(i) = sim.grd.XT(iLat(i),iLon(i),iLvl(i));   % +/- deg
         lon(i) = mod(180+lon(i),360)-180;               % +/- deg
@@ -107,7 +107,7 @@ else
         geoscatter(lat, lon, mySize, myColors,'^','filled');
 
         %         a = myColors;                  c = num2cell(a); % strings to label
-        %         dx = 0.; dy = 0.; % displacement so the text does not overlay the data points
+        %         dx = 0.; dy = 0.; % displacement so text does not overlay data points
         %         text(lat+dx, lon+dy, c);
 
         colorbar;

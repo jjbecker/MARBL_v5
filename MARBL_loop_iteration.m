@@ -5,10 +5,10 @@ function [ surface, interior ] = MARBL_loop_iteration(dt, n, col_num, surface, i
 
 % t1 = tic;
 
-% FIXME: the time step can generate tracers that are slightly negative, however
+% FIXME: time step can generate tracers that are slightly negative, however
 % FIXME: negative tracer is nonsense. MARBL might limit to 0. Force that.
 % FIXME: those negative values get here so global mass is conserved.
-% FIXME: The limiting needs to be  done here before we call MARBL.
+% FIXME: limiting needs to be  done here before we call MARBL.
 %
 % Code should be
 %
@@ -25,13 +25,13 @@ function [ surface, interior ] = MARBL_loop_iteration(dt, n, col_num, surface, i
 % Use to get mid point of time step for surface flux update
 
 % FIXME: MARBL did NOT change tracers during update_interior, so old_tracer
-% == new tracer, but it does update the pH or state...
+% == new tracer, but it does update pH or state...
 
 interior.state_old  = interior.state;
 interior.tracer_old = interior.tracer;
 
 % Integrate forcing to get tendency
-% Calculate surface flux and update the interior with it
+% Calculate surface flux and update interior with it
 
 if (n == 1  && col_num == 1)
     

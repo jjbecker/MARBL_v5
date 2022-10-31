@@ -3,11 +3,11 @@ function [sim, bgc_struct] = init_marbl (marbl_file, sim, bgc_struct, surf_forci
 % read settings file of choice (if any)
 
 fprintf('%s.m: using arbitrary default tracers...\n',mfilename);
-% mfilename() is the name of this file...
+% mfilename() is name of this file...
 ioerr = mex_marbl_driver('read_settings_file', marbl_file);
 if (ioerr), error('read_settings_file'), end
 
-% FIXME: writing the chemistry file fails because varcount = 0 in F90 code.
+% FIXME: writing chemistry file fails because varcount = 0 in F90 code.
 % ioerr = mex_marbl_driver('write_settings_file', 'new.input');
 %
 % FIXME: something as simple as changing a setting... sigh
@@ -42,7 +42,7 @@ if (firstErr >0)
 end
 mex_marbl_driver('set_depth', size(sim.domain.M3d,3) )
 
-% initialze the forcing first so we can use the CISO values to init tracers
+% initialze forcing first so we can use CISO values to init tracers
 % These are make believe values at one water columns
 
 % [bgc_struct.value.surf_forcing, bgc_struct.value.forcing] ...

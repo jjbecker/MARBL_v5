@@ -11,11 +11,11 @@ arraySize = size( myArray );
 
 % FIXME: must be a clever "Matlab" way to do all this in one step...
 
-% Make something with the right basic idea, but wrong shape (lvl, tracer, lat, lon)...
+% Make something with right basic idea, but wrong shape (lvl, tracer, lat, lon)...
 
 gridOfArray = repmat( myArray, [1, 1, gridSize] );
 
-% ...then make the right shape (lat, lon, lvl, tracer)...
+% ...then make right shape (lat, lon, lvl, tracer)...
 
 gridOfArray = permute( gridOfArray, [3 4 1 2] );      
 
@@ -25,7 +25,7 @@ gridOfArray = permute( gridOfArray, [3 4 1 2] );
 
 gridOfArray = reshape( gridOfArray, [ prod( gridSize ), arraySize] );
 
-% keep only the wet locations
+% keep only wet locations
 
 gridOfArray = gridOfArray( wet_loc, :, : );
 

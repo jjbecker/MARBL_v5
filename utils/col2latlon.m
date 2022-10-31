@@ -12,7 +12,8 @@ if and(numel(colNum) >500, exist('debugFigNum','var'))
 end
 [iLat, iLon, ~] = ind2sub(size(sim.domain.M3d), sim.domain.wet_loc(colNum));
 % tmp = sim.domain.bottom_lvl(:);
-% FIXME: skip the drama of finding the cute in line formula...
+% % % % skip drama and use a for loop. Ohhhh no!!!
+
 for i=numel(colNum):-1:1
     kmt(i)            = sim.domain.bottom_lvl(iLat(i), iLon(i));   % kmt is level of bottom
     lat(i)            = sim.grd.YT(iLat(i), iLon(i),1);
@@ -56,7 +57,7 @@ else
 %     b = num2str(myColors'); 
     b = num2str(colNum); 
     c = cellstr(b); % strings to label
-    dx = 0.; dy = 0.; % displacement so the text does not overlay the data points
+    dx = 0.; dy = 0.; % displacement so text does not overlay data points
     text(lat+dx, lon+dy, c);
     title(debugStr, 'Interpreter', 'none');
     geobasemap topographic

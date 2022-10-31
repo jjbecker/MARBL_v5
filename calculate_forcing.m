@@ -2,9 +2,9 @@ function [sim,bgc] = calculate_forcing(sim,bgc, timeStep)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
-% All of the interior forcing is constant, for simplicity, except for PAR.
+% All of interior forcing is constant, for simplicity, except for PAR.
 %
-%  Calulate PAR everywhere, then "nan" the bottom
+%  Calulate PAR everywhere, then "nan" from bottom to last element of array
 
 % kmt          = bgc.kmt;
 % [iLat, iLon] = ind2sub(size(sim.domain.M3d), sim.domain.wet_loc);
@@ -16,7 +16,7 @@ function [sim,bgc] = calculate_forcing(sim,bgc, timeStep)
 % %
 % % MARBL attenuates PAR with depth including "blooms" in layers above.
 % %
-% % Should have a GCM tell us the weather (clouds, aka air mass, etc)
+% % Should have a GCM tell us weather (clouds, aka air mass, etc)
 % %
 % % https://www.pveducation.org/pvcdrom/properties-of-sunlight/air-mass
 % 
@@ -32,12 +32,12 @@ function [sim,bgc] = calculate_forcing(sim,bgc, timeStep)
 % % irradiance = K *cos_zenith(sim.JD, lat, lon)' ;
 % irradiance = K *cos_zenith(0, lat, lon)' ;
 % 
-% % need this on every level for some reason, "nan" the bottom
+% % need this on every level for some reason, "nan" below bottom
 % 
 % num_lvl = size(bgc.forcing(:,:,2),2);
 % irradiance = repmat(irradiance',[1,num_lvl]);
 % 
-% % % skip the drama and use a for loop. Ohhhh no!!!
+% % % skip drama and use a for loop. Ohhhh no!!!
 % %
 % % FIXME: need to add bottom CORRECTLY
 % % FIXME: why do we need to add bottom????

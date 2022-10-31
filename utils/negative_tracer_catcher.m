@@ -51,7 +51,7 @@ for fld=1:size(nameUnits')
         idx = idx(sorted_idx);
 
         % Show some of worst of bad locations.
-        % Possibly want the first bad, rather than worst.
+        % Possibly want first bad, rather than worst.
 
         [iCol, iLvl, iLat, iLon, lat, lon, depth] = coordTransform_fp2bgc( idx, sim);
 

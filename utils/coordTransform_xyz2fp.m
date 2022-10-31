@@ -4,7 +4,7 @@ function [idx_fp] = coordTransform_xyz2fp(iLat, iLon, iLvl, sim)
 %
 % ==================
 % Basically removing bottom levels made it at least tricky, not impossible,
-% to convert "fp" idx back to (iLat, iLon, iLvl). The "find()" operation is
+% to convert "fp" idx back to (iLat, iLon, iLvl). "find()" operation is
 % culprit.
 %
 %   wet_loc         = find(M3d(:,:,1));           % "water colum locations"
@@ -12,7 +12,7 @@ function [idx_fp] = coordTransform_xyz2fp(iLat, iLon, iLvl, sim)
 % Convert both land and ocean to 2 subscripts: 3d->2d index = (sub2ind(lat,lon),lvl)
 %   M3d_linear      = reshape(M3d, [sz(1)*sz(2), sz(3)]);
 %
-% Keep only ocean locations, with all levels: aka a water colum with all levels, even the bottom
+% Keep only ocean locations, with all levels: aka a water colum with all levels, even bottom
 %   M3d_linear_wet  = M3d_linear(wet_loc(:),:);
 %   iwet_linear_wet = find(M3d_linear_wet(:));    % "" no bottom levels
 %   iwet            = iwet_linear_wet;            % single index
@@ -39,7 +39,7 @@ function [idx_fp] = coordTransform_xyz2fp(iLat, iLon, iLvl, sim)
 %   coordTransform_xyz2nsoli, coordTransform_xyz2fp, coordTransform_xyz2bgc
 
 
-% First step is the worst.
+% First step is worst.
 %
 % iwet_FP = find(M3d(:));   % linear index of wet water parcel
 %
@@ -51,13 +51,13 @@ iCol = sub2ind(sz,iLat,iLon);       % linear index of (ilat,ilon) in level
 if numel(iLat)>1 && (numel(iLvl) ~= numel(iLat))
 % FIXME: this works if iLvl is a scalar or if iLat (hence iLon) have the
 % same dimension as iLvl; which makes sense but tempting to use a couple of
-% level rather than the intersection of a lvl for every lat and lon
+% level rather than intersection of a lvl for every lat and lon
     keyboard
 end
 
 idx_xyz = iCol + prod(sz)*(iLvl-1); % linear index of xyz in all of M3d
 
-% This is the tricky bit use sim.domain.iwet_FP,idx_xyz) to convert to 
+% This is tricky bit use sim.domain.iwet_FP,idx_xyz) to convert to 
 % index in wet part of M3d. 
 % 
 % There are several clever ways to do this. "ismemeber" is fastest

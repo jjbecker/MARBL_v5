@@ -1,6 +1,6 @@
 function [bgc, time_series] = MARBL_loop (n, sim, bgc, time_series)
 
-% A little note to me about the dimensions and shapes of all these variable..
+% A little note to me about dimensions and shapes of all these variable..
 %
 % interior.forcing = 6x24                 bgc.forcing     (loc,1:24,6  )'
 % interior.domain.kmt = 1x1               bgc.kmt         (loc)
@@ -39,7 +39,7 @@ for row = 1: sim.domain.num_wet_loc
     %     surface.river_flux  = squeeze(bgc.river_flux   (row,:,:))';
     interior.forcing    = squeeze(bgc.forcing      (row,:,:))';
 
-    % Feed MARBL the structs and get updated structs with the result
+    % Feed MARBL structs and get updated structs with result
 
     [surface, interior] = MARBL_loop_iteration(sim.dt, n, row, surface, interior);
 

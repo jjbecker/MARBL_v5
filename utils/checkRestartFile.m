@@ -10,13 +10,13 @@ fprintf('\n%s.m: Display a WHOLE LOT of debug info to get a sanity check of inpu
 % squeeze(bgc.river_flux);
 % Check it!
 
-% average them over the year
+% average them over year
 bgc.forcing      = 0*forcing(1).interior;
 bgc.surf_forcing = 0*forcing(1).surf_forcing;
 bgc.river_flux   = 0*forcing(1).river_flux;
 
 % FIXME: obviously we should check if this input struct has monthly, annual
-% yearly, or whatever members for the forcing...
+% yearly, or whatever members for forcing...
 for ii=1:12 
     bgc.forcing      = forcing(ii).interior     +bgc.forcing      /12;
     bgc.surf_forcing = forcing(ii).surf_forcing +bgc.surf_forcing /12;
@@ -24,9 +24,9 @@ for ii=1:12
 end
 
 
-% Next statement works only because Areat is organized as la,lon, depth. 
-% Hence wet location which only enough elements for the the first page of 
-% Areat accidently is the top layer.
+% Next statement works only because "Areat" is organized as lat,lon, depth. 
+% So wet locations which only has enough elements for first page of "Areat"
+% accidently is top layer.
 dA_m  = sim.grd.Areat(:,:,1);      % Surface Area of land and water
 dA_m  = dA_m(sim.domain.wet_loc);  % Surface Area of water cols in m^2
 dA_cm = dA_m *(1E+2)^2;            % cm^2
@@ -81,7 +81,7 @@ disp(['mean(FESEDFLUX) = ', num2str(globalAvgFeSedFlux,3), ' (nmol/cm^2/s), expe
 
 % Convert flux at surface between each and every layers into volume
 % tendency in each layer. e.g. just divide value of flux by layer thickness
-% Make sure we get the same answer for annual average!
+% Make sure we get same answer for annual average!
 
 dFlux = dFeSed * 1E4;               % nmol/m^2/s
 dFlux = dFlux ./sim.domain.dzt;    % nmol/m^3/s

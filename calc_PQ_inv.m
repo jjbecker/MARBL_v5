@@ -2,7 +2,7 @@ function [PQ_inv, J_FP] = calc_PQ_inv(sim, bgc, time_series, forcing, MTM)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 % 
-% From NK-EXAMPLES: make a sparse operator that restores the surface to zero with a time scale of tau
+% From NK-EXAMPLES: make a sparse operator that restores surface to zero with a time scale of tau
 % msk  = sim.domain.M3d;     % wet == 1, dry == 0
 % iwet = sim.domain.iwet_FP;
 % % tau = 24 * 60^2;                % (sec/d)

@@ -46,7 +46,7 @@ time_series_lab         = 0;
 % FIXME: It would be a little complex, but "state" is unused anywhere but
 % in MARBL, so S_out could be copied over S_in, and skip scatter/gather...
 
-% FIXME: kmt and almost all of the forcing are constant in time, should not
+% FIXME: kmt and almost all of forcing are constant in time, should not
 % need to scatter ever time step, not that this is particularily slow.
 % However it does NOT work to just scatter on first pass for some reason
 
@@ -59,7 +59,7 @@ spmd(num_threads)
     SF_in  = codistributed(Surf_Forcing_client , codistributor1d(1));
 
     % deterime which of "lab" or worker has data for location being logged
-    % determine row on this worker of the client's row for time_series_loc.
+    % determine row on this worker of client's row for time_series_loc.
 
     global_rows_this_worker_stores = globalIndices(kmt_in, 1);
     row_time_series_loc = find( global_rows_this_worker_stores == time_series_loc_client);
@@ -77,7 +77,7 @@ spmd(num_threads)
     % % input every time step: State and current Tracers
     % % Using 'distributed" is odd because a) takes as long as codistributed even
     % % if it sends way less (1/numWorks) data and b) does not work because it
-    % % distributes over the last index instead of the first.
+    % % distributes over last index instead of first.
     % % if (n == 1); ticBytes(gcp); end;
     % % S_in2 = distributed(States_client );
     % % T_in2 = distributed(Tracers_client);
@@ -130,26 +130,26 @@ spmd(num_threads)
     interior = interior_base_client;
     surface  = surface_base_client;
 
-    % build local storage on each thread for the outputs. Do NOT write to
-    % client in the for loop!
+    % build local storage on each thread for outputs. Do NOT write to
+    % client in for loop!
 
     tend_localSize = tend_globalSize;
     tend_localSize ( tend_codistr.Dimension ) = tend_codistr.Partition ( labindex );
-    tend_L = zeros ( tend_localSize );          % What we write to in the loop
+    tend_L = zeros ( tend_localSize );          % What we write to in loop
 
     S_out_localSize = S_out_globalSize;
     S_out_localSize ( S_out_codistr.Dimension ) = S_out_codistr.Partition ( labindex );
-    S_out_L = zeros ( S_out_localSize );          % What we write to in the loop
+    S_out_L = zeros ( S_out_localSize );          % What we write to in loop
 
     % FIXME: currently we do NOT use these, probably should NOT waste time
-    % FIXME: collecting them in the mex read and/or D_out and SD_out writes
+    % FIXME: collecting them in mex read and/or D_out and SD_out writes
     %     diag_localSize = diag_globalSize;
     %     diag_localSize ( diag_codistr.Dimension ) = diag_codistr.Partition ( labindex );
-    %     diag_L = zeros ( diag_localSize );          % What we write to in the loop
+    %     diag_L = zeros ( diag_localSize );          % What we write to in loop
 
     %     surf_localSize = surf_globalSize;
     %     surf_localSize ( surf_codistr.Dimension ) = surf_codistr.Partition ( labindex );
-    %     surf_L = zeros ( surf_localSize );          % What we write to in the loop
+    %     surf_L = zeros ( surf_localSize );          % What we write to in loop
     % end
     % if (n == 1)
     %     whos S_out_globalSize S_out_codistr tend_globalSize tend_codistr
@@ -178,7 +178,7 @@ spmd(num_threads)
         %         surface.river_flux  = squeeze(bgc.river_flux(row,:,:))';
         interior.forcing    = squeeze(F_local       (row,:,:))';  % size(F_local(row,:,:))    % 1x60x6
 
-        % Run the actual MARBL calulations
+        % Run actual MARBL calulations
 
         [surface, interior] = MARBL_loop_iteration ( dt_client, n, row, surface, interior );
 
@@ -187,7 +187,7 @@ spmd(num_threads)
         tend_L(row,:,:) = interior.tendency';
         S_out_L(row,:,:) = interior.state';
         % FIXME: currently we do NOT use these, probably should NOT waste time
-        % FIXME: collecting them in the mex read and/or D_out and SD_out writes
+        % FIXME: collecting them in mex read and/or D_out and SD_out writes
         %         diag_L(row,:,:) = mex_marbl_driver ( 'interior_tendency_diags')'; % large and slow to store
         % surf_L(row,:,:) = mex_marbl_driver ( 'surface_flux_diags'             )'; % neither large or slow
         % bgc.sfo       (row,:,:) = mex_marbl_driver ( 'sfo'                    )'; % neither large or slow
@@ -216,7 +216,7 @@ end
 %     S_out  = codistributed.build( S_out_L, S_out_codistr,'noCommunication');
 %
 %     % FIXME: currently we do NOT use these, probably should NOT waste time
-%     % FIXME: collecting them in the mex read and/or D_out and SD_out writes
+%     % FIXME: collecting them in mex read and/or D_out and SD_out writes
 %     %     D_out  = codistributed.build( diag_L, diag_codistr);
 %     %     SD_out = codistributed.build( surf_L, surf_codistr);
 %
@@ -258,7 +258,7 @@ else
 end
 
 % FIXME: currently we do NOT use these, probably should NOT waste time
-% FIXME: collecting them in the mex read and/or D_out and SD_out writes
+% FIXME: collecting them in mex read and/or D_out and SD_out writes
 % bgc.diag      = gather ( D_out);
 % bgc.surf_diag = gather (SD_out);
 

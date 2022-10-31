@@ -26,7 +26,7 @@ num_wet_loc = size(wet_loc,1);  % just number water cols
 % disp(['fraction of grid that is a water column: ', num2str(num_wet_loc/numel(M3d(:,:,1)))]);
 
 % indx of deepest ocean level aka water level above bottom. IOW this is a 
-% wet location, the land under ocean is +1 of this.
+% wet location, land under ocean is +1 of this.
 bottom_lvl= sum(M3d,3); % 2d(ilat, ilon), includes land
 
 % kmt = bottom_lvl(wet_loc);    % deepest wet level for each water column
@@ -46,7 +46,7 @@ M3d_linear_wet 	= M3d_linear(wet_loc(:),:);             % (7881, 60)
 iwet_linear_wet = find(M3d_linear_wet(:));  % converts from (iCol,iLvl) to iLat,iLon,iLvl)
 iwet_JJ = iwet_linear_wet;                  % converts from (iCol,iLvl) to iLat,iLon,iLvl)
 
-% Note '*' in the above comment; i.e (10441,24) -> (200160)
+% Note '*' in above comment; i.e (10441,24) -> (200160)
 
 % get idx_FP into M3d from (iCol,iLvl) 
 % iParcel = iColLvlFromFp(iCol, iLvl);

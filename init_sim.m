@@ -5,10 +5,10 @@ fprintf('Starting %s.m...\n',mfilename)
 timer_total = tic;
 tic;
 
-% set the size of OCEAN -not- world grids...  (num_wet_loc)
+% set size of OCEAN -not- world grids...  (num_wet_loc)
 % Copy initial state, tracer, and so on -NOT- M3d
 
-% Define the time_step in seconds and the number of time steps
+% Define time_step in seconds and number of time steps
 % Note: for really long sim, like 1,000 years have to think carefully about
 % sideral days and all that stuff. Here we are talking "mean solar day"
 %
@@ -31,17 +31,17 @@ sim.dt = sim.const.sec_h *dt;
 sim.num_time_steps = round ( phi_years *sim.const.sec_y /sim.dt );
 sim.T  = sim.num_time_steps * sim.dt;
 
-% Define the gird dimensions in meters
+% Define gird dimensions in meters
 
 sim.domain.zt   = sim.grd.zt;
-sim.domain.zw   = sim.grd.zw+sim.grd.dzt; % in MARBL zw is the bottom, not top...
+sim.domain.zw   = sim.grd.zw+sim.grd.dzt; % in MARBL zw is bottom, not top...
 sim.domain.dzt  = sim.grd.dzt;
 sim.domain.dzw  = sim.grd.dzw;
 
 % ---> MARBL uses units of - CM - for depths, Matlab code uses meters!
 sim.domain.MARBL_depth_per_m = 100;     % 1 meter here is 100 cm MARBL uses
 
-% Create a struct that has meta data like the size, names, and units.
+% Create a struct that has meta data like size, names, and units.
 
 bgc_struct= init_bgc_struct(sim);
 
@@ -74,11 +74,11 @@ sim.domain.dVt_FP = sim.domain.dVt(sim.domain.iwet_FP);
 
 %%%%%%%%%%%%%%
 
-% Initialize MARBL with the "domain" aka the grid dimensions.
+% Initialize MARBL with "domain" aka grid dimensions.
 % FIXME: initialize MARBL and read number of trancers, etc ??? forces
-% dimensions here match, however if the dimensions here do not match, then
-% most of the "names, units, etc" files in the "utils" directory are going
-% to be wrong too. Use the dimension in utils files and then check that
+% dimensions here match, however if dimensions here do not match, then
+% most of "names, units, etc" files in "utils" directory are going
+% to be wrong too. Use dimension in utils files and then check that
 % they match when MARBL is initialized.
 
 load(restart_file,'tracer','state','forcing');
@@ -90,14 +90,14 @@ toc
 disp('Initializing global grids for tracer, tendency, etc...')
 [sim, bgc_struct] = init_marbl(marbl_file,sim, bgc_struct, forcing(1).surf_forcing);
 
-% Make sure the size of tracers, e.g. CISO, matches sim we are about
-% to run, not the size we used to make the default (which is always
+% Make sure size of tracers, e.g. CISO, matches sim we are about
+% to run, not size we used to make default (which is always
 % with CISO)
 %
-% This is about creating the correct sizes of the array for the whole
-% ocean; its not about loading in the values from the forcing file...
+% This is about creating correct sizes of array for whole
+% ocean; its not about loading in values from forcing file...
 
-% We are given the actual values of bgc.tracer
+% We are given actual values of bgc.tracer
 % bgc.tracer    = makeLinearGrid(sim.domain.wet_loc, bgc_struct.size.grd, bgc_struct.value.tracer);
 
 bgc.kmt         = sim.domain.bottom_lvl(sim.domain.wet_loc);
@@ -121,7 +121,7 @@ bgc.river_flux  = makeLinearGrid(sim.domain.wet_loc, bgc_struct.size.grd, bgc_st
 % bgc.accumulate  = 0 *packMarbl( bgc.tracer, sim.domain.iwet_JJ );
 
 
-% Limit the default value? If they are that far off, why is it a default?
+% Limit default value? If they are that far off, why is it a default?
 % FIXME:% Interpolation can produce small negative oscillations.
 % bgc.tracer(:)   = max(1e-15, bgc.tracer(:));
 
@@ -135,7 +135,7 @@ if (sim.runInParallel)
     tic;
 
     % First shut down client MARBL previously used to get dim of MEX arrays
-    disp('Shutting down the client mex (aka serial) because it interfers with parallel mex threads')
+    disp('Shutting down client mex (aka serial) because it interfers with parallel mex threads')
     mex_marbl_driver('shutdown');
 
     % Also shutdown existing worker pool, if any
@@ -151,8 +151,8 @@ if (sim.runInParallel)
     %     interior_base_client = interior_base;
     if (sim.runInParallel)
         % sim.number_of_threads = 4;
-        % FIXME: this is not the place for this; not needed; etc
-        % synchronize all the labs
+        % FIXME: this is not place for this; not needed; etc
+        % synchronize all labs
         %    labBarrier;
         mpiprofile reset
         % mpiprofile on

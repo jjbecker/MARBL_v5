@@ -23,7 +23,7 @@ unpacked = reshape(unpacked,sz_unpacked);
 % % % tst_unpacked = zeros(sz_unpacked);  % one tracer
 % % % 
 % % % for iTracer = 1: num_tracers
-% % %     my_slice = zeros(sz_unpacked);      % restore the bottom of water col
+% % %     my_slice = zeros(sz_unpacked);      % restore bottom of water col
 % % %     my_slice(iwet_JJ) = packed(:,iTracer);    
 % % %     tst_unpacked(:,:,iTracer) = my_slice;   
 % % % end
