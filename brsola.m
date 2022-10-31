@@ -17,7 +17,7 @@ function [sol, it_hist, ierr, x_hist] = brsola(x,f,tol, parms)
 %            maxit = maxmium number of nonlinear iterations
 %                default = 40
 %            maxdim = maximum number of Broyden iterations
-%                before restart, so maxdim-1 vectors are 
+%                before restart, so maxdim-1 vectors are
 %                stored
 %                default = 40
 %
@@ -57,7 +57,7 @@ debug=1;
 %
 % initialize it_hist, ierr, x_hist, and set the iteration parameters
 %
-ierr = 0; maxit=40; maxdim=39;  
+ierr = 0; maxit=40; maxdim=39;
 it_histx=zeros(maxit,3);
 maxarm=10;
 %
@@ -85,8 +85,8 @@ outstat(itc+1, :) = [itc fnrm 0 0]
 %
 if fnrm < stop_tol
     sol=x;
-    it_hist=it_histx(1:itc+1,:);
-    disp(outstat(itc+1,:)); return
+    it_hist=it_histx(1:itc+1,:);    % itc is 0!
+    disp(outstat); return
 end
 %
 % initialize the iteration history storage matrices
@@ -104,36 +104,38 @@ stp_nrm(1)=stp(:,1)'*stp(:,1);
 % main iteration loop
 %
 while(itc < maxit)
-%
+    %
     nbroy=nbroy+1;
-%
-%   keep track of successive residual norms and 
-%   the iteration counter (itc)
-%
+    %
+    %   keep track of successive residual norms and
+    %   the iteration counter (itc)
+    %
     fnrmo=fnrm; itc=itc+1;
-%
-%   compute the new point, test for termination before
-%   adding to iteration history
-%
+    %
+    %   compute the new point, test for termination before
+    %   adding to iteration history
+    %
     xold=x; lambda=1; iarm=0; lrat=.5; alpha=1.d-4;
     x = x + stp(:,nbroy);
+    fprintf('%s.m: itc = %d, iarm = %d: norm(xold) = %g, norm(x) = %g \n', mfilename, itc, iarm, norm(xold), norm(x))
     if nargout == 4
         x_hist=[x_hist,x];
     end
     fc=feval(f,x);
     fnrm=norm(fc);
     ff0=fnrmo*fnrmo; ffc=fnrm*fnrm; lamc=lambda;
-%
-%
-%   Line search, we assume that the Broyden direction is an
-%   ineact Newton direction. If the line search fails to
-%   find sufficient decrease after maxarm steplength reductions
-%   brsola.m returns with failure. 
-%
-%   Three-point parabolic line search
-%
+    %
+    %
+    %   Line search, we assume that the Broyden direction is an
+    %   ineact Newton direction. If the line search fails to
+    %   find sufficient decrease after maxarm steplength reductions
+    %   brsola.m returns with failure.
+    %
+    %   Three-point parabolic line search
+    %
     while fnrm >= (1 - lambda*alpha)*fnrmo & iarm < maxarm
-%       lambda=lambda*lrat;
+        fprintf('%s.m: Line search in brsola.m at itc = %d, iarm = %d\n', mfilename, itc, iarm)
+        %       lambda=lambda*lrat;
         if iarm==0
             lambda=lambda*lrat;
         else
@@ -146,73 +148,73 @@ while(itc < maxit)
         ffc=fnrm*fnrm;
         iarm=iarm+1;
     end
-%
-%   set error flag and return on failure of the line search
-%
+    %
+    %   set error flag and return on failure of the line search
+    %
     if iarm == maxarm
-        disp('Line search failure in brsola.m ')
+        fprintf('%s.m: Line search failure in brsola.m at itc = %d, iarm = %d\n', mfilename, itc, iarm)
         ierr=2;
         it_hist=it_histx(1:itc+1,:);
         sol=xold;
         if nargout == 4
             x_hist=[x_hist,x];
         end
-        disp(outstat(itc+1,:)); return;
+        disp(outstat); return;
     end
-%
-%   How many function evaluations did this iteration require?
-%
+    %
+    %   How many function evaluations did this iteration require?
+    %
     it_histx(itc+1,1)=fnrm;
     it_histx(itc+1,2)=it_histx(itc,2)+iarm+1;
     if(itc == 1) it_histx(itc+1,2) = it_histx(itc+1,2)+1; end;
     it_histx(itc+1,3)=iarm;
-%
-%   terminate?
-%
+    %
+    %   terminate?
+    %
     if fnrm < stop_tol
         sol=x;
         rat=fnrm/fnrmo;
         outstat(itc+1, :) = [itc fnrm iarm rat];
         it_hist=it_histx(1:itc+1,:)
-%        it_hist(itc+1)=fnrm;
-        disp(outstat(itc+1,:)); return
+        %        it_hist(itc+1)=fnrm;
+        disp(outstat); return
     end
-%
-%
-%   modify the step and step norm if needed to reflect the line 
-%   search
-%
+    %
+    %
+    %   modify the step and step norm if needed to reflect the line
+    %   search
+    %
     lam_rec(nbroy)=lambda;
     if lambda ~= 1
-         stp(:,nbroy)=lambda*stp(:,nbroy);
-         stp_nrm(nbroy)=lambda*lambda*stp_nrm(nbroy);
+        stp(:,nbroy)=lambda*stp(:,nbroy);
+        stp_nrm(nbroy)=lambda*lambda*stp_nrm(nbroy);
     end
-%
-%
-%    it_hist(itc+1)=fnrm; 
+    %
+    %
+    %    it_hist(itc+1)=fnrm;
     rat=fnrm/fnrmo;
     outstat(itc+1, :) = [itc fnrm iarm rat];
-        if debug>1
-            disp(outstat(itc+1,:))
-        end
-%
-%
-%   if there's room, compute the next search direction and step norm and
-%   add to the iteration history 
-%
+    if debug==1
+        disp(outstat)
+    end
+    %
+    %
+    %   if there's room, compute the next search direction and step norm and
+    %   add to the iteration history
+    %
     if nbroy < maxdim+1
         z=-fc;
         if nbroy > 1
             for kbr = 1:nbroy-1
-                 ztmp=stp(:,kbr+1)/lam_rec(kbr+1);
-                 ztmp=ztmp+(1 - 1/lam_rec(kbr))*stp(:,kbr);
-                 ztmp=ztmp*lam_rec(kbr);
-                 z=z+ztmp*((stp(:,kbr)'*z)/stp_nrm(kbr));
+                ztmp=stp(:,kbr+1)/lam_rec(kbr+1);
+                ztmp=ztmp+(1 - 1/lam_rec(kbr))*stp(:,kbr);
+                ztmp=ztmp*lam_rec(kbr);
+                z=z+ztmp*((stp(:,kbr)'*z)/stp_nrm(kbr));
             end
         end
-%
-%       store the new search direction and its norm
-%
+        %
+        %       store the new search direction and its norm
+        %
         a2=-lam_rec(nbroy)/stp_nrm(nbroy);
         a1=1 - lam_rec(nbroy);
         zz=stp(:,nbroy)'*z;
@@ -220,22 +222,22 @@ while(itc < maxit)
         a4=1+a2*zz;
         stp(:,nbroy+1)=(z-a3*stp(:,nbroy))/a4;
         stp_nrm(nbroy+1)=stp(:,nbroy+1)'*stp(:,nbroy+1);
-%
-%
-%
+        %
+        %
+        %
     else
-%
-%   out of room, time to restart
-%
+        %
+        %   out of room, time to restart
+        %
         stp(:,1)=-fc;
         stp_nrm(1)=stp(:,1)'*stp(:,1);
         nbroy=0;
-%
-%
-%
+        %
+        %
+        %
     end
-%
-% end while
+    %
+    % end while
 end
 %
 % We're not supposed to be here, we've taken the maximum
