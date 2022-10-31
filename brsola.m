@@ -57,13 +57,12 @@ debug=1;
 %
 % initialize it_hist, ierr, x_hist, and set the iteration parameters
 %
-ierr = 0; maxit=40; maxdim=39;
-it_histx=zeros(maxit,3);
-maxarm=10;
-%
+ierr = 0; maxit=40; maxdim=39; maxarm=10;
 if nargin == 4
     maxit=parms(1); maxdim=parms(2)-1; maxarm=parms(3);
 end
+it_histx=zeros(maxit,3);
+%
 if nargout==4
     x_hist=x;
 end
@@ -149,25 +148,25 @@ while(itc < maxit)
         iarm=iarm+1;
     end
     %
-    %   set error flag and return on failure of the line search
-    %
-    if iarm == maxarm
-        fprintf('%s.m: Line search failure in brsola.m at itc = %d, iarm = %d\n', mfilename, itc, iarm)
-        ierr=2;
-        it_hist=it_histx(1:itc+1,:);
-        sol=xold;
-        if nargout == 4
-            x_hist=[x_hist,x];
-        end
-        disp(outstat); return;
-    end
-    %
     %   How many function evaluations did this iteration require?
     %
     it_histx(itc+1,1)=fnrm;
     it_histx(itc+1,2)=it_histx(itc,2)+iarm+1;
     if(itc == 1) it_histx(itc+1,2) = it_histx(itc+1,2)+1; end;
     it_histx(itc+1,3)=iarm;
+    %
+    %   set error flag and return on failure of the line search
+    %
+    if iarm == maxarm
+        fprintf('%s.m: Line search failure in brsola.m at itc = %d, iarm = %d\n', mfilename, itc, iarm)
+        ierr=2;
+        it_hist=it_histx(1:itc+1,:)
+        sol=xold;
+        if nargout == 4
+            x_hist=[x_hist,x];
+        end
+        disp(outstat); return;
+    end
     %
     %   terminate?
     %
@@ -244,7 +243,7 @@ end
 % number of iterations and not terminated.
 %
 sol=x;
-it_hist=it_histx(1:itc+1,:);
+it_hist=it_histx(1:itc+1,:)
 if nargout == 4
     x_hist=[x_hist,x];
 end
