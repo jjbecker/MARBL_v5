@@ -1,42 +1,70 @@
-function [x0_sol, c0, sim, bgc, time_series, forcing, MTM, PQ_inv, myRestartFile_x0] = marbl_solve(~, x0, c0, sim, bgc, time_series, forcing, MTM, PQ_inv)
+function [ierr, myRestartFile_x0, x0_sol, c0, sim, bgc, time_series, forcing, MTM, PQ_inv] = marbl_solve(x0, c0, sim, bgc, time_series, forcing, MTM, PQ_inv)
 fprintf('%s: Parameters nsoli()... \n', mfilename)
-% The max POSSIBLE total calls to G (or phi) ~ maxit*maxarm
-%   realistically: ~maxit <=  total calls to G <= ~maxit+maxarm
-%   because line search rarely actually works
-maxit  = 1+7;   % Max number of calls to phi() where norm(G) decreases (+1).
-% >2 because need at least 1 for f0;
-% maxmium number of nonlinear iterations *** NOT in line search ***
-maxdim = 40;    % maximum number of x in history (aka emperical Jacobian)
-maxarm = 10;     % >0 or always fails (ierr=2) or any one given itc, *** 1+max allowed calls to phi() *** with norm(G) not decreaasing
-%   = maximum number of steplength reductions;
-% POSSIBLE calls to phi COULD be ~maxit*maxit, if steplength reductions actually do any good,
-% which could be a
-%   VERY long time
-% And == 1 is pointless because first one is
-% evaluating new value of f0, so 1 means waste a
-% call to phi and then quit anyway
+
+% Get initial G of all tracers to pick sensible rtol for selected tracer???
+% [r0,G0,x1] = calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
+
+
+% DEBUG stops when residual < tol, perfect residual = 0? does not stop run
+atol = sqrt(eps);         % stop if norm(drift,2) < sqrt(eps) (noise)
+rtol = 1e-2;              % stop if norm(drift,2) < 10% of G(x0)
+% atol = eps;
+% rtol = 0;       % DEBUG
+% atol = 150;     %
+
+% maxfeval or maxit == 1 is pointless.
+% 
+% Nsoli() always evaluates value of f(x0), so 1 means wasted a call to phi,
+% t always quits AFTER that call.
+%
+% maxfeval is the absolute max number of calls to G. must be >2; need at 
+% least 1 for f0 and then 1 for a Newton;
+%
+% maxitl is NOT maxmium number of nonlinear iterations because of possible
+% line searches; maybe many line searches. maxit = Max number of calls to G
+% or phi() IF AND ONLY IF G always decreases. 
+% Must be>2 because need at least 1 for a call to get f0 and 1 for a Newton
+% 
+% COULD BE maxitl = maxit*maxit, (if steplength reductions do work on last 
+% try), and that could be a VERY long time. maxfeval bounds the total cnt 
+% of calls to G to definite value.
+%
+%   realistically: maxit ~ total calls to G ~ ~maxit+maxarm
+%   because line search rarely works, and search fails quickly...
+%
+% maxdim = maximum number of x in history (aka emperical Jacobian). 
+% size(x_hist) = [393913, maxdim];
+%
+% Given x is a large array, do NOT want large maxdim, and it could never be
+% case we need maxdim > maxfeval which is the max POSSIBLE total calls to G
+%
+% first 3 of these parms are used by (modified) brsola,
+% rest are specific to nsoli
+
+maxfeval = 1+4;
+
+maxit    = maxfeval;
+
+maxdim   = 40;            % default is 40 in brsola()
+maxdim   = max(maxfeval, maxdim);
+
 % used only by nsoli()
 % etamax = 0.9;           % maximum error tol for residual in inner iteration, default = 0.9
 % lmeth  = 2;             % Nsoli() method 2 = GMRES(m), not used by brsola().
 % restart_limit = 10;     % max number of restarts for GMRES if lmeth = 2, default = 20;
 
-% first 3 of these parms are used by (modified) brsola, rest are specific to nsoli
-parms  = [maxit,maxdim, maxarm];
-
-% Get current drift of all tracers to pick a sensible rtol for selected tracer
-% [r0,G0,x1] = calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
-
-atol = sqrt(eps);       % stop when norm(drift,2) < sqrt(eps) (numerical noise)
-rtol = 1e-2;            % stop when norm(drift,2) <10% of of G(x0)
-% atol = eps;     % DEBUG it stops when residual is < this, so perfect residual ==0 will not stop run :-)
-% rtol = 0;       % DEBUG
-% atol = 150
-% % DEBUG it stops when residual is < this, so perfect residual ==0 will not stop run :-)
-
-% remember that "sol" of nsoli() is an x0 value !!!
+parms  = [maxit, maxdim, maxfeval];
 
 [x0_sol,it_hist,ierr,x_hist] = brsola(x0, @(x) calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), [atol,rtol], parms);
+x0_sol_norm=norm(x0_sol)
+norm_x_hist = vecnorm(x_hist)
+if ierr >1
+    fprintf('\n\nn%s.m: ierr = %d\n\n', mfilename,ierr);
+    keyboard
+end
 
+% remember that "sol" of nsoli() is an x0 value !!!
+%
 % if ierr == 0, or 1, last column of x_hist is x0_sol
 %
 % if ierr == 2 then last column x_hist is x when iarm == maxarm,
