@@ -57,12 +57,13 @@ debug=1;
 %
 % initialize it_hist, ierr, x_hist, and set the iteration parameters
 %
-ierr = 0; maxit=40; maxdim=39; maxarm=10;
-if nargin == 4
-    maxit=parms(1); maxdim=parms(2)-1; maxarm=parms(3);
-end
+ierr = 0; maxit=40; maxdim=39;  
 it_histx=zeros(maxit,3);
+maxarm=10;
 %
+if nargin == 4
+    maxit=parms(1); maxdim=parms(2)-1; maxfeval=parms(3);
+end
 if nargout==4
     x_hist=x;
 end
@@ -71,7 +72,7 @@ rtol=tol(2); atol=tol(1); n = length(x); fnrm=1; itc=0; nbroy=0;
 % evaluate f at the initial iterate
 % compute the stop tolerance
 %
-f0=feval(f,x);
+f0=feval(f,x); num_calls_f = 1;
 fc=f0;
 fnrm=norm(f0);
 it_histx(itc+1,1)=fnrm; it_histx(itc+1,2)=0; it_histx(itc+1,3)=0;
@@ -102,7 +103,7 @@ stp_nrm(1)=stp(:,1)'*stp(:,1);
 %
 % main iteration loop
 %
-while(itc < maxit)
+while(itc < maxit && num_calls_f < maxfeval)
     %
     nbroy=nbroy+1;
     %
@@ -120,7 +121,7 @@ while(itc < maxit)
     if nargout == 4
         x_hist=[x_hist,x];
     end
-    fc=feval(f,x);
+    fc=feval(f,x); num_calls_f = num_calls_f +1;
     fnrm=norm(fc);
     ff0=fnrmo*fnrmo; ffc=fnrm*fnrm; lamc=lambda;
     %
@@ -132,7 +133,7 @@ while(itc < maxit)
     %
     %   Three-point parabolic line search
     %
-    while fnrm >= (1 - lambda*alpha)*fnrmo & iarm < maxarm
+    while fnrm >= (1 - lambda*alpha)*fnrmo && iarm < maxarm && num_calls_f < maxfeval
         fprintf('%s.m: Line search in brsola.m at itc = %d, iarm = %d\n', mfilename, itc, iarm)
         %       lambda=lambda*lrat;
         if iarm==0
@@ -142,7 +143,7 @@ while(itc < maxit)
         end
         lamm=lamc; ffm=ffc; lamc=lambda;
         x = xold + lambda*stp(:,nbroy);
-        fc=feval(f,x);
+        fc=feval(f,x); num_calls_f = num_calls_f +1;
         fnrm=norm(fc);
         ffc=fnrm*fnrm;
         iarm=iarm+1;
@@ -157,7 +158,7 @@ while(itc < maxit)
     %
     %   set error flag and return on failure of the line search
     %
-    if iarm == maxarm
+    if iarm == maxarm || ( fnrm >= (1 - lambda*alpha)*fnrmo )
         fprintf('%s.m: Line search failure in brsola.m at itc = %d, iarm = %d\n', mfilename, itc, iarm)
         ierr=2;
         it_hist=it_histx(1:itc+1,:)
