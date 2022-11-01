@@ -12,7 +12,10 @@
 % "main" of cyclostationary transport version of MARBL,
 
 fprintf('%s.m: Start at %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
+
 clear all; % Need this to clear "persistent" variables in "G()", "time_step()" and "calculate_forcing()"
+timer_total = tic;
+
 dbstop if error
 format short g
 addpath('MEX');
@@ -21,16 +24,17 @@ addpath(genpath('plotting'));
 % dname = sprintf('%s/../',myDataDir());
 % addpath(dname);
 % % FIXME: diary behavior is such that if renamed it's still active diary!!
+
 diary off; diary off; diary on; diary off; diary on; diary on;
+
 % Clean up for threads, more complex and much slower than expected.
 % killAndCleanThreads();  % Leftover threads and dumps cause BIG trouble
-timer_total = tic;
 
 %%%%%%
 
 % Setup big picture parts of a simulation and/or NK solution.
 
-verbose_debug = 0;
+verbose_debug = 1;
 
 % Input restart file
 
@@ -41,6 +45,7 @@ start_yr = 1323;  inputRestartFileStem = 'restart_0_1_output/restart_1323_DOP_so
 % clear start_yr
 
 inputRestartFile = strcat(myDataDir(), inputRestartFileStem);
+%     [outputArg1,outputArg2] = setInputAndOutputFilePaths(inputArg1,inputArg2);
 fprintf('%s.m: Loop over tracers starts with: %s\n', mfilename, inputRestartFile);
 
 % always need a selected tracer! For plot time series, or solve
@@ -70,8 +75,8 @@ for tracer_str = tracer_loop
     % First relax iteration of x0 gives same x1 as sol run.
     % To be useful num_relax_iterations >= 2 if using x0_sol, but OK for x1_sol
 
-    num_relax_iterations      = 2;      % 0 means no relax steps, just use NK x1_sol
-    num_forward_years         = 3;      % if fwd only, num fwd, else this inum fwd after relax step
+    num_relax_iterations      = 0;      % 0 means no relax steps, just use NK x1_sol
+    num_forward_years         = 0;      % if fwd only, num fwd, else this inum fwd after relax step
     yearsBetweenRestartFiles  = 10;
     logTracers                = 1;
     captureAllSelectedTracers = 0;
@@ -84,11 +89,11 @@ for tracer_str = tracer_loop
 
     %%%%
     % DEBUG stuff
-%     logTracers         = 0;
-    time_step_hr       = 12; % FAST debug
-%     debug_PQ_inv       = 1
-%     debug_disable_phi  = 1
-%     recalculate_PQ_inv = 0
+% logTracers         = 0;
+time_step_hr       = 12; % FAST debug
+% debug_PQ_inv       = 1
+% debug_disable_phi  = 1
+recalculate_PQ_inv = 0
 
     %%%%%%
     marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
@@ -97,6 +102,7 @@ for tracer_str = tracer_loop
     fprintf('%s.m: Solving for tracer: %s\n', mfilename, string(tracer_str));
     fprintf('%s.m: Reading (Matlab) OFFLINE sim restart file with tracers and transports: %s\n', mfilename, inputRestartFile);
     % load() does NOT need file extension, but copy() does. sigh
+
     if ~isfile(inputRestartFile)
         error("missing file or typo in name of inputRestartFile")
     end
@@ -141,17 +147,6 @@ for tracer_str = tracer_loop
     else
         clear status msg msgID
     end
-
-    %%%%%%
-
-    % parallel is hard to debug, but 2x faster
-
-    sim.runInParallel = 1;
-    if (sim.runInParallel)
-        sim.number_of_threads = 4; % only 4 on laptop or 12 on GP supported
-    end
-
-    %%%%%%
 
     % In past I debuged MARBL Carbon isotopes. "lciso_on", and that stuff, it
     % probably still works but they makes everything bigger and mch slower.
@@ -260,8 +255,8 @@ for tracer_str = tracer_loop
 
 
 
-        [x0_sol, c0, sim, bgc, time_series, forcing, MTM, PQ_inv, myRestartFile_x0] = ...
-            marbl_solve(num_relax_iterations, x0, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
+        [ierr, myRestartFile_x0, x0_sol, c0, sim, bgc, time_series, forcing, MTM, PQ_inv] = ...
+            marbl_solve(x0, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
 
 
         % FIXME: use x0 or x1 of solution?

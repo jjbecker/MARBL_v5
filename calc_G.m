@@ -68,8 +68,6 @@ else
 end
 
 
-fprintf('%s.m: Npt = %d %s norm(r,2)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), norm(r));
-fprintf('%s.m: Npt = %d %s norm(G,2)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), norm(G));
 if (sim.verbose_debug)
     disp('  ')
     fprintf('%s.m: Npt = %d %s max(x0)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), max(x0));
@@ -86,8 +84,6 @@ if (sim.verbose_debug)
     fprintf('%s.m: Npt = %d %s madMed(G)= %1.7g\n',  mfilename, Npt, strjoin(tName(sim.selection)), max((G)));
     fprintf('%s.m: Npt = %d %s madAvg(G)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), mad(G,1));
     disp('  ')
-    fprintf('||G(x)|| = (max(abs(%s))) = %g \n', gStr, max(abs(G)));
-    fprintf('||Precon( %s )|| = (max(abs(r))) = %g \n', gStr, max(abs(r)));
     % % DEBUG
     tmp = replaceSelectedTracers(sim, c0, G, sim.selection);
     res_moles = global_moles(nsoli2bgc(sim, bgc, tmp), sim);
@@ -111,6 +107,10 @@ if (sim.verbose_debug)
     [maxAbsR,idxAbsR]  = sort(abs(G),"descend",'MissingPlacement','last');
     [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxAbsR(myRng), sim, 998); title('Largest Abs')
 end
+fprintf('%s.m: Npt = %d %s norm(G,2)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), norm(G));
+fprintf('%s.m: Npt = %d %s norm(G,inf)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), norm(G));
+fprintf('%s.m: Npt = %d %s norm(r,inf)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), norm(r));
+fprintf('%s.m: Npt = %d %s norm(r,2)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), norm(r));
 
 x0_prev = x0;
 

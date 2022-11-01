@@ -104,7 +104,7 @@ bgc.forcing     = makeLinearGrid(sim.domain.wet_loc, bgc_struct.size.grd, bgc_st
 bgc.surf_forcing= makeLinearGrid(sim.domain.wet_loc, bgc_struct.size.grd, bgc_struct.value.surf_forcing);
 % FIXME: surface_state???
 if exist('state','var')
-%     bgc.surf_state  = surf_state;
+    %     bgc.surf_state  = surf_state;
     bgc.state       = state;
 else
     bgc.state       = makeLinearGrid(sim.domain.wet_loc, bgc_struct.size.grd, bgc_struct.value.state);
@@ -129,7 +129,18 @@ time_series = init_time_series(sim, bgc_struct);
 
 toc
 if (sim.verbose_debug) checkRestartFile(sim, bgc, forcing), end
+
 %%
+% parallel is hard to debug, but 2x faster
+
+runInParallel = 0
+sim.runInParallel = 0;
+if (sim.runInParallel)
+    sim.number_of_threads = 4; % only 4 on laptop or 12 on GP supported
+else
+    fprintf('\n\n%s.m: NOT running in parallel\n\n\n', mfilename);
+end
+
 if (sim.runInParallel)
     tic;
 
