@@ -59,7 +59,7 @@ while current_month < total_months
     current_yr = round(sim.start_yr+years_gone_by);
 
     if sim.debug_disable_phi
-        if ( phiFileCnt<=2000 || phiFileCnt>=50000 )
+        if ( phiFileCnt<=3 || phiFileCnt>=5 )
             bgc.tracer = (1. -   phiFileCnt/10) +0*bgc.tracer;  % normal case phi decrease from previous value
         else
             bgc.tracer = (1. - 0*phiFileCnt/10) +0*bgc.tracer;  % trigger Armijo steps
