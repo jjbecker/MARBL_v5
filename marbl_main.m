@@ -42,7 +42,7 @@ verbose_debug = 1;
 % start_yr =   0;   inputRestartFileStem = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
 % start_yr = 260;   inputRestartFileStem = 'Data_GP/restart_260_integrate_from_0.mat';
 start_yr = 1323;  inputRestartFileStem = 'restart_0_1_output/restart_1323_DOP_sol_x1.mat';
-% clear start_yr
+% start_yr = 260;   inputRestartFileStem = 'restart_0_1_output/restart_261_O2_fwd_x1.mat';
 
 inputRestartFile = strcat(myDataDir(), inputRestartFileStem);
 %     [outputArg1,outputArg2] = setInputAndOutputFilePaths(inputArg1,inputArg2);
@@ -90,10 +90,10 @@ for tracer_str = tracer_loop
     %%%%
     % DEBUG stuff
 % logTracers         = 0;
-time_step_hr       = 12; % FAST debug
+% time_step_hr       = 12; % FAST debug
 % debug_PQ_inv       = 1
 % debug_disable_phi  = 1
-recalculate_PQ_inv = 0
+% recalculate_PQ_inv = 0
 
     %%%%%%
     marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
