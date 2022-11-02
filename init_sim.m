@@ -133,8 +133,7 @@ if (sim.verbose_debug) checkRestartFile(sim, bgc, forcing), end
 %%
 % parallel is hard to debug, but 2x faster
 
-runInParallel = 0
-sim.runInParallel = 0;
+sim.runInParallel = 1;
 if (sim.runInParallel)
     sim.number_of_threads = 4; % only 4 on laptop or 12 on GP supported
 else
