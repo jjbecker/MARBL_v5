@@ -107,10 +107,10 @@ if (sim.verbose_debug)
     [maxAbsR,idxAbsR]  = sort(abs(G),"descend",'MissingPlacement','last');
     [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxAbsR(myRng), sim, 998); title('Largest Abs')
 end
-fprintf('%s.m: Npt = %d %s norm(G,2)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), norm(G));
-fprintf('%s.m: Npt = %d %s norm(G,inf)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), norm(G));
-fprintf('%s.m: Npt = %d %s norm(r,inf)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), norm(r));
-fprintf('%s.m: Npt = %d %s norm(r,2)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), norm(r));
+fprintf('%s.m: Npt = %d %s norm(G,2)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), norm(G,2));
+fprintf('%s.m: Npt = %d %s norm(G,inf)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), norm(G,inf));
+fprintf('%s.m: Npt = %d %s norm(r,inf)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), norm(r,inf));
+fprintf('%s.m: Npt = %d %s norm(r,2)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), norm(r,2));
 
 x0_prev = x0;
 
