@@ -46,7 +46,7 @@ maxfeval = 1+4;
 maxit    = maxfeval;
 
 maxdim   = 40;            % default is 40 in brsola()
-maxdim   = max(maxfeval, maxdim);
+maxdim   = min(maxfeval, maxdim);
 
 % used only by nsoli()
 % etamax = 0.9;           % maximum error tol for residual in inner iteration, default = 0.9
