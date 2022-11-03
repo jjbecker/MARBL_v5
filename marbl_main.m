@@ -1,3 +1,9 @@
+function [ierr, x0_sol] = marbl_main(varargin) % tracer_loop, inputRestartFile, time_step_hr, logTracers, recalculate_PQ_inv, short_circuit
+% function varargout = redplot(varargin)
+%     [varargout{1:nargout}] = plot(varargin{:},'Color',[1,0,0]);
+% end
+
+
 % "main" of cyclostationary transport version of MARBL,
 %
 % Try to solve MARBL using "Newton Like" methods from Kelley
@@ -13,7 +19,10 @@
 
 fprintf('%s.m: Start at %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 
-clear all; % Need this to clear "persistent" variables in "G()", "time_step()" and "calculate_forcing()"
+clear functions globals
+clearvars -except varargin;
+
+% Need this to clear "persistent" variables in "G()", "time_step()" and "calculate_forcing()"
 timer_total = tic;
 
 dbstop if error
@@ -34,142 +43,60 @@ diary off; diary off; diary on; diary off; diary on; diary on;
 
 % Setup big picture parts of a simulation and/or NK solution.
 
-verbose_debug = 1;
+forwardIntegrationOnly    = 0; % 1 -> no NK just fwd integration
+num_relax_iterations      = 0;      % 0 means no relax steps, just use NK x1_sol
+num_forward_years         = 0;      % if fwd only, num fwd, else this inum fwd after relax step
 
-% Input restart file
-
-% start_yr = 4101;  inputRestartFileStem = 'Data/InputFromAnn/restart4101.mat';
-% start_yr =   0;   inputRestartFileStem = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
-% start_yr = 260;   inputRestartFileStem = 'Data_GP/restart_260_integrate_from_0.mat';
-start_yr = 1323;  inputRestartFileStem = 'restart_0_1_output/restart_1323_DOP_sol_x1.mat';
-% start_yr = 260;   inputRestartFileStem = 'restart_0_1_output/restart_261_O2_fwd_x1.mat';
-
-inputRestartFile = strcat(myDataDir(), inputRestartFileStem);
-%     [outputArg1,outputArg2] = setInputAndOutputFilePaths(inputArg1,inputArg2);
-fprintf('%s.m: Loop over tracers starts with: %s\n', mfilename, inputRestartFile);
-
-% always need a selected tracer! For plot time series, or solve
-% Most of these work very well in single tracer solution...
-% FIXME: rather than get accurate solution, loop over tracers and try to reduce G
-% to 1% of starting value, while looping over all tracers, and then
-% repeat until to get final very accurate result where G is sqrt(eps)
-
-% tracer_loop = {'DOPr' 'DONr' 'DOCr' 'O2' 'DON' 'DOC' 'DOP' 'diatSi' 'spCaCO3' 'diazFe' };
-% tracer_loop = {'DOC' 'DOP' 'spCaCO3' 'diatSi' 'diazFe' };
-tracer_loop = {'spCaCO3' 'diatSi' 'diazFe' };
-tracer_loop = {'O2' };
+sim.verbose_debug = 1;
+sim = setInputAndOutputFilePaths(sim, varargin)
 
 tName = tracer_names(0);    % no CISO tracers
-for tracer_str = tracer_loop
-    % Need this to clear "persistent" variables in "G()"
-    clear calc_G
+if ~all(matches(sim.tracer_loop,tName))
+    %         error('%s.m: tracer %s not in {%s}', mfilename, string(tracer_str), strjoin(tName));
+    error('\n%s.m: tracer list "%s" contains invalid tracer name', mfilename, strjoin(string(sim.tracer_loop)));
+end
 
-    % matches(tName,tracer_str)
-    selection = [ find( strcmp(tName,tracer_str) ) ];
 
-    forwardIntegrationOnly = 0; % 1 -> no NK just fwd integration
-    recalculate_PQ_inv     = 1; % recalculate J, PQ,PQ_inv or load file
+for tracer_str = sim.tracer_loop
+
+    fprintf('%s.m: Solving for tracer: %s\n', mfilename, string(tracer_str));
+    % ALWAYS punt "ALT" methods that do NOT depend on any other tracers...
+    % remove duplicates and make sure all the choices are valid...
+    sim.selection = [ find( strcmp(tName,tracer_str) ) ];
+    sim.selection(ismember(sim.selection, [9,11]))=[];
+    sim.selection = unique(sort(sim.selection));
+    cstr = tName(sim.selection)';
+    fprintf('%s.m: Selected tracers: %s \n', mfilename, cstr{:});
+
+
+    % Need this to clear "persistent" variables in "G()" and "phi()"
+    clear calc_G phi
+
+    fprintf('%s.m: Reading (Matlab) OFFLINE sim restart file with tracers and transports: %s\n', mfilename, sim.inputRestartFile);
+    if ~isfile(sim.inputRestartFile)
+        error("missing file or typo in name of inputRestartFile")
+    end
+
+    MTM = load(sim.inputRestartFile,'MTM').MTM;
+    sim.grd     = load(sim.inputRestartFile,'sim').sim.grd;
+    sim.domain  = load(sim.inputRestartFile,'sim').sim.domain;
+
+    sim = setPeek(sim);
+
+    sim.phi_years = 1;      % NK always uses 1 year integration
 
     % remember brsola() "sol" is x0 value. x1 value is NOT last col of
     % x_hist; it is sol !!!
     % First relax iteration of x0 gives same x1 as sol run.
     % To be useful num_relax_iterations >= 2 if using x0_sol, but OK for x1_sol
-
-    num_relax_iterations      = 0;      % 0 means no relax steps, just use NK x1_sol
-    num_forward_years         = 0;      % if fwd only, num fwd, else this inum fwd after relax step
-    yearsBetweenRestartFiles  = 10;
-    logTracers                = 1;
-    captureAllSelectedTracers = 0;
-
-    % FIXME: Someday, when we know what inputs need to be, put all this a file
-    time_step_hr              = 3;
-    phi_years                 = 1;      % NK always using 1 year integration
-    debug_PQ_inv              = 0;
-    debug_disable_phi         = 0;
-
-    %%%%
-    % DEBUG stuff
-% logTracers         = 0;
-% time_step_hr       = 12; % FAST debug
-% debug_PQ_inv       = 1
-% debug_disable_phi  = 1
-% recalculate_PQ_inv = 0
-
-    %%%%%%
-    marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
-    %%%%%%
-
-    fprintf('%s.m: Solving for tracer: %s\n', mfilename, string(tracer_str));
-    fprintf('%s.m: Reading (Matlab) OFFLINE sim restart file with tracers and transports: %s\n', mfilename, inputRestartFile);
-    % load() does NOT need file extension, but copy() does. sigh
-
-    if ~isfile(inputRestartFile)
-        error("missing file or typo in name of inputRestartFile")
-    end
-    load(inputRestartFile,'sim','MTM');
-
-    % We just over wrote sim struct, so now we can save stuff in it again. sigh
-
-    sim.verbose_debug           = verbose_debug;
-    sim.forwardIntegrationOnly  = forwardIntegrationOnly ;
-    sim.inputRestartFile        = inputRestartFile;
-    sim.start_yr                = start_yr;
-    sim.selection               = selection;
-    sim.captureAllSelectedTracers=captureAllSelectedTracers;
-    sim.logTracers              = logTracers;
-    sim.logDiags                = and (0, sim.logTracers) ; % Usually no diags..
-    sim.checkNeg = 0;
-
-
-    sim.debug_PQ_inv            = debug_PQ_inv;
-    sim.debug_disable_phi       = debug_disable_phi;
-
-
-    % FIXME: lots of old and or leftover broken code floating around, clear tmp vars...
-    clear inputRestartFile
-    clear selection captureAllSelectedTracers logTracers
-
-    %%%%%% OUTput restart file
-
-    % Need input restart name to make our output ???
-    %
-    % "restart file" -FROM- this OFFline sim for restart on Mac, not CESM.
-    % Another hack is needed to move results from NK here back to CESM.
-
-    sim.yearsBetweenRestartFiles = yearsBetweenRestartFiles;       % YEARS between drops of restart
-
-    sim.outputRestartDir = strcat(myDataDir(),'restart_0_1_output/');
-    disp(['Results will be saved in directory ', sim.outputRestartDir]); disp (' ');
-    [status, msg, msgID] = mkdir(sim.outputRestartDir);
-    if status ~=1
-        disp(msg); disp(msgID); disp(' ')
-        keyboard
-    else
-        clear status msg msgID
-    end
-
-    % In past I debuged MARBL Carbon isotopes. "lciso_on", and that stuff, it
-    % probably still works but they makes everything bigger and mch slower.
-
-    sim.lciso_on = 0;   % run with Carbon Isotopes ??
-
-    %%%%%%
-
-    sim.epsilon = -sqrt(eps);
-
-    %%%%%%
-
-    sim = setPeek(sim);
-
     %%%%%% End of "inputs"
 
     % Stuff below is not a simulation input. It is code to setup grids, etc a
     % forward integration, or NK(), or...
     %
 
-    [sim, bgc, ~, time_series, forcing] = init_sim(marbl_file, sim.inputRestartFile, sim, phi_years, time_step_hr);
-
-    sim.tot_t = sim.dt*sim.num_time_steps;  % used only for debug output
+    %%%%%%
+    [sim, bgc, ~, time_series, forcing] = init_sim(sim);
 
     % DEBUG: run on a few locations, rather global, MUCH faster debug something
     % sim.domain.num_wet_loc = 1; % comment out too run entire world
@@ -179,7 +106,6 @@ for tracer_str = tracer_loop
 
     sim = calc_global_moles_and_means(bgc, sim);
 
-    clear forwardIntegrationOnly marbl_file
 
     %%%%%%
 
@@ -193,23 +119,10 @@ for tracer_str = tracer_loop
 
     % NK always using 1 year integration
 
-    if phi_years ~= 1
-        disp('ERROR: NK requires phi_years = 1')
+    if sim.phi_years ~= 1
+        disp('ERROR: NK requires sim.phi_years = 1')
         keyboard
     end
-
-    %%%%
-    % ALWAYS punt "ALT" methods that do NOT depend on any other tracers...
-
-    idx = ismember(sim.selection, [9,11]);
-    sim.selection(idx)=[];
-
-    sim.selection = unique(sort(sim.selection));
-    if (min(sim.selection)<1) || (max(sim.selection)>32)
-        keyboard   % bogus tracer selected
-    end
-    cstr = tName(sim.selection)';
-    fprintf('%s: Selected tracers: %s \n', mfilename, cstr{:});
 
     %%%%
     % % DEBUG: add a known spike to see if it gets removed by Nsoli()spike_size = 1234.567;
@@ -236,11 +149,11 @@ for tracer_str = tracer_loop
     x0 = x0(:);                 % unitless
 
 
-    if( sim.forwardIntegrationOnly )
+    if( forwardIntegrationOnly )
         fprintf('%s.m: forward integration ONLY\n',mfilename);
     else
         % Solve for selected tracer
-        if(recalculate_PQ_inv)
+        if(sim.recalculate_PQ_inv)
             PQ_inv = calc_PQ_inv(sim, bgc, time_series, forcing, MTM);
         else
             fprintf('\n%s.m: Loading ~30 GB(!) mfactored preconditioner PQ_inv from %s solution...\n', mfilename, strcat(string(tName(sim.selection))))
@@ -305,7 +218,7 @@ for tracer_str = tracer_loop
     disp(['Simulation speed: ', num2str(sim.tot_t/elapsedTime_all_loc/sim.const.days_y, '%1.1f'), ' (sim y/d) aka (SYPD)'])
     disp(' ');
 
-    inputRestartFile = myRestartFile_x0;
+    sim.inputRestartFile = myRestartFile_x0;
 
 end % of loop over tracers
 fprintf('...end of loop over tracers : '); toc(timer_total)
@@ -319,3 +232,37 @@ end
 save_timer = tic; fprintf('Saving (possibly) large workspace file... '); save(strcat(logDir,'last_run.mat'),'-v7.3','-nocompression'); toc(save_timer);
 
 fprintf('... end of %s.m ', mfilename); toc(timer_total)
+
+end
+
+    %     % FIXME: Someday, when we know what inputs need to be, put all this a file
+    %     time_step_hr              = 3;
+    %     debug_PQ_inv              = 0;
+    %     debug_disable_phi         = 0;
+    %
+    %     %%%%
+    %     % DEBUG stuff
+    % % time_step_hr       = 12; % FAST debug
+    % logTracers         = 0;
+    % recalculate_PQ_inv = 0
+    % debug_PQ_inv       = 1
+    % debug_disable_phi  = 1
+
+    %     sim.verbose_debug           = verbose_debug;
+    %     forwardIntegrationOnly  = forwardIntegrationOnly ;
+    %     sim.inputRestartFile        = inputRestartFile;
+    %     sim.start_yr                = start_yr;
+    %     sim.selection               = selection;
+    %     sim.captureAllSelectedTracers=captureAllSelectedTracers;
+    %     sim.logTracers              = logTracers;
+    %     sim.checkNeg = 0;
+    %
+    %
+    %     sim.debug_PQ_inv            = debug_PQ_inv;
+    %     sim.debug_disable_phi       = debug_disable_phi;
+    %
+    %
+    %     % FIXME: lots of old and or leftover broken code floating around, clear tmp vars...
+    %     clear inputRestartFile
+    %     clear selection captureAllSelectedTracers logTracers
+
