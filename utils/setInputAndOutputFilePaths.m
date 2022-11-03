@@ -30,7 +30,8 @@ else
     % repeat until to get final very accurate result where G is sqrt(eps)
     % sim.tracer_loop = {'DOPr' 'DONr' 'DOCr' 'O2' 'DON' 'DOC' 'DOP' 'diatSi' 'spCaCO3' 'diazFe' };
     % sim.tracer_loop = {'DOC' 'DOP' 'spCaCO3' 'diatSi' 'diazFe' };
-    sim.tracer_loop = {'spCaCO3' 'spFe' 'diazFe' };
+    % sim.tracer_loop = {'spCaCO3' 'spFe' 'diazFe' };
+    sim.tracer_loop = {'diatFe' 'spP' 'diatP' 'diazP'};
     % sim.tracer_loop = {'O2' };
 end
 fprintf('%s.m: Loop over tracers : %s\n', mfilename, strjoin(sim.tracer_loop));
@@ -44,7 +45,8 @@ else
     % sim.start_yr = 4101;  inputRestartFileStem = 'Data/InputFromAnn/restart4101.mat';
     % sim.start_yr =   0;   inputRestartFileStem = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
     % sim.start_yr = 260;   inputRestartFileStem = 'Data_GP/restart_260_integrate_from_0.mat';
-    sim.start_yr = 1323;  inputRestartFileStem = 'restart_0_1_output/restart_1323_DOP_sol_x1.mat';
+%     sim.start_yr = 1323;  inputRestartFileStem = 'restart_0_1_output/restart_1323_DOP_sol_x1.mat';
+    sim.start_yr = 260;  inputRestartFileStem = 'restart_0_1_output/restart_260_diazFe_sol_x0.mat';
     % sim.start_yr = 260;   inputRestartFileStem = 'restart_0_1_output/restart_261_O2_fwd_x1.mat';
 
     sim.inputRestartFile = strcat(myDataDir(), inputRestartFileStem);
