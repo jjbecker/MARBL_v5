@@ -42,6 +42,7 @@ rtol = 1e-2;              % stop if norm(drift,2) < 10% of G(x0)
 % rest are specific to nsoli
 
 maxfeval = 1+4;
+maxfeval = 1+1;
 
 maxit    = maxfeval;
 
