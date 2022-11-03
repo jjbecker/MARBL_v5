@@ -16,7 +16,7 @@ function sim = setInputAndOutputFilePaths(sim, args) % tracer_loop inputRestartF
 %     varargout{k} = k;
 % end
 
-if  length(args) >=1    % Input restart file
+if  length(args) >= 1    % Input restart file
     if iscell(args{1})
         sim.tracer_loop = args{1};
     else
@@ -35,9 +35,9 @@ else
 end
 fprintf('%s.m: Loop over tracers : %s\n', mfilename, strjoin(sim.tracer_loop));
 
-if  length(args) >=2    % Input restart file INCLUDING PATH
+if  length(args) >= 2    % Input restart file INCLUDING PATH
     sim.inputRestartFile = args{2};
-    % FIXME:
+    % FIXME: what is start_yr? it's not in saved file, but it is in fname
     sim.start_yr = 0;
 else
     %     [outputArg1,outputArg2] = setInputAndOutputFilePaths(inputArg1,inputArg2);
@@ -49,43 +49,69 @@ else
 
     sim.inputRestartFile = strcat(myDataDir(), inputRestartFileStem);
 end
-fprintf('%s.m: Loop over tracers starts with year %d of offline restart file: "%s"\n', mfilename, sim.start_yr, sim.inputRestartFile);
+fprintf('%s.m: FIXME Loop over tracers starts with year %d of offline restart file: "%s"\n', mfilename, sim.start_yr, sim.inputRestartFile);
 if ~isfile(sim.inputRestartFile)
     error("missing file or typo in name of inputRestartFile")
 end
-sim.grd     = load(sim.inputRestartFile,'sim').sim.grd;
-sim.domain  = load(sim.inputRestartFile,'sim').sim.domain;
 
-if  length(args) >=3    % Input time step in hours
+if  length(args) >= 3    % Input time step in hours
     sim.time_step_hr = args{3};
 else
     sim.time_step_hr = 3;
 end
 fprintf('%s.m: time_step_hr is %d hr\n', mfilename, sim.time_step_hr);
 
-if  length(args) >=4    % recalculate_PQ_inv?
+if  length(args) >= 4    % recalculate_PQ_inv?
     sim.recalculate_PQ_inv = args{4};
 else
     sim.recalculate_PQ_inv = 1;
 end
 
-if  length(args) >=5    % short_circuit G() and phi()?
-    sim.debug_PQ_inv        = args{5};
+sim.debug_disable_phi = 0;
+if  length(args) >= 5                    % specify short_circuit phi()?
     sim.debug_disable_phi   = args{5};
-else
-    sim.debug_PQ_inv        = 0;
-    sim.debug_disable_phi   = 0;
+    sim.debug_PQ_inv        = sim.debug_disable_phi;
 end
 
-if  length(args) >=6    % log every time step?
+if  length(args) >= 6    % log every time step?
     sim.logTracers = args{6};
 else
     sim.logTracers = 1;
 end
-fprintf('%s.m: logTracers is %d\n', mfilename, sim.logTracers);
 
+%%%%%% OUTput restart file
+
+% Need input restart name to make our output ???
+%
+% "restart file" -FROM- this OFFline sim for restart on Mac, not CESM.
+% Another hack is needed to move results from NK here back to CESM.
+
+sim.yearsBetweenRestartFiles = 10;
+
+sim.outputRestartDir = strcat(myDataDir(),'restart_0_1_output/');
+fprintf('%s.m: Results will be saved in directory %s\n\n', mfilename,sim.outputRestartDir);
+[status, msg, msgID] = mkdir(sim.outputRestartDir);
+if status ~=1
+    disp(msg); disp(msgID); disp(' ')
+    keyboard
+else
+    clear status msg msgID
+end
+
+sim.marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
+
+
+fprintf('%s.m: logTracers is %d\n', mfilename, sim.logTracers);
 fprintf('%s.m: recalculate_PQ_inv is %d\n', mfilename, sim.recalculate_PQ_inv);
 fprintf('%s.m: debug_PQ_inv is %d\n', mfilename, sim.debug_PQ_inv);
 fprintf('%s.m: debug_disable_phi is %d\n', mfilename, sim.debug_disable_phi);
+
+% In past I debuged MARBL Carbon isotopes. "lciso_on", and that stuff, it
+% probably still works but they makes everything bigger and mch slower.
+
+sim.lciso_on = 0;   % run with Carbon Isotopes ??
+sim.epsilon = -sqrt(eps);
+sim.logDiags = and (0, sim.logTracers) ; % Usually no diags..
+sim.captureAllSelectedTracers = 0;
 
 end
