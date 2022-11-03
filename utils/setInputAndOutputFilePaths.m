@@ -70,9 +70,10 @@ else
 end
 
 sim.debug_disable_phi = 0;
+sim.debug_PQ_inv      = 0;
 if  length(args) >= 5                    % specify short_circuit phi()?
     sim.debug_disable_phi   = args{5};
-    sim.debug_PQ_inv        = sim.debug_disable_phi;
+    sim.debug_PQ_inv        = args{5};
 end
 
 if  length(args) >= 6    % log every time step?
