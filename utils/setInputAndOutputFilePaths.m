@@ -34,7 +34,7 @@ else
     sim.tracer_loop = {'diatFe' 'spP' 'diatP' 'diazP'};
     % sim.tracer_loop = {'O2' };
 end
-fprintf('%s.m: Loop over tracers : %s\n', mfilename, strjoin(sim.tracer_loop));
+fprintf('\n%s.m: Loop over tracers : %s\n', mfilename, strjoin(sim.tracer_loop));
 
 if  length(args) >= 2    % Input restart file INCLUDING PATH
     sim.inputRestartFile = args{2};

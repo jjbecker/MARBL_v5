@@ -1,11 +1,7 @@
 function [ierr, x0_sol] = marbl_main(varargin) % tracer_loop, inputRestartFile, time_step_hr, logTracers, recalculate_PQ_inv, short_circuit
-% function varargout = redplot(varargin)
-%     [varargout{1:nargout}] = plot(varargin{:},'Color',[1,0,0]);
-% end
-
+% function varargout = redplot(varargin) [varargout{1:nargout}] = plot(varargin{:},'Color',[1,0,0]); end
 
 % "main" of cyclostationary transport version of MARBL,
-%
 % Try to solve MARBL using "Newton Like" methods from Kelley
 %
 %        https://ctk.math.ncsu.edu/newtony.html
@@ -13,37 +9,28 @@ function [ierr, x0_sol] = marbl_main(varargin) % tracer_loop, inputRestartFile, 
 %   matlab -nodisplay -nodesktop -nosplash -noFigureWindows -logfile batch.txt < marbl_nsoli.m &
 %
 % MARBL code being used is https://github.com/marbl-ecosys/MARBL
-%
-% function marbl()
-% "main" of cyclostationary transport version of MARBL,
 
-fprintf('%s.m: Start at %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
-
-clear functions globals
+clear functions globals     % Need this to clear "persistent" variables in "G()", "time_step()" and "calculate_forcing()"
 clearvars -except varargin;
 
-% Need this to clear "persistent" variables in "G()", "time_step()" and "calculate_forcing()"
 timer_total = tic;
+fprintf('%s.m: Start at %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 
 dbstop if error
 format short g
-addpath('MEX');
-addpath(genpath('utils'));
-addpath(genpath('plotting'));
-% dname = sprintf('%s/../',myDataDir());
-% addpath(dname);
-% % FIXME: diary behavior is such that if renamed it's still active diary!!
 
-diary off; diary off; diary on; diary off; diary on; diary on;
-
+addpath('MEX', genpath('utils'), genpath('plotting'));    % dname = sprintf('%s/../',myDataDir()); addpath(dname);
+        
 % Clean up for threads, more complex and much slower than expected.
-% killAndCleanThreads();  % Leftover threads and dumps cause BIG trouble
+% killAndCleanThreads();  % Leftover threads and dumps cause a lot of issues
+
+diary off; diary off; diary on; diary off; diary on; diary on; % FIXME: diary behavior is such that if renamed it's still active diary!!
 
 %%%%%%
 
 % Setup big picture parts of a simulation and/or NK solution.
 
-forwardIntegrationOnly    = 0; % 1 -> no NK just fwd integration
+forwardIntegrationOnly    = 0;      % 1 -> no NK just fwd integration
 num_relax_iterations      = 0;      % 0 means no relax steps, just use NK x1_sol
 num_forward_years         = 0;      % if fwd only, num fwd, else this inum fwd after relax step
 
@@ -57,6 +44,7 @@ if ~all(matches(sim.tracer_loop,tName))
 end
 
 
+%%%%%%
 for tracer_str = sim.tracer_loop
 
     fprintf('%s.m: Solving for tracer: %s\n', mfilename, string(tracer_str));
@@ -171,6 +159,7 @@ for tracer_str = sim.tracer_loop
         [ierr, myRestartFile_x0, x0_sol, c0, sim, bgc, time_series, forcing, MTM, PQ_inv] = ...
             marbl_solve(x0, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
 
+        
 
         % FIXME: use x0 or x1 of solution?
         x = x0_sol;
@@ -185,7 +174,6 @@ for tracer_str = sim.tracer_loop
     % Next! allow ALL tracers, not just selection, to "relax' to solution.
     %    do pure forward integration for a while...
 
-    years_gone_by = 0;
     for fwd_itc = 1:num_forward_years
 
         fprintf("\n%s.m: starting forward integrate year #%d of %d\n", mfilename, fwd_itc, num_forward_years)
