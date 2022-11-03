@@ -1,4 +1,4 @@
-function [sim, bgc, bgc_struct, time_series, forcing] = init_sim(marbl_file, restart_file, sim)
+function [sim, bgc, bgc_struct, time_series, forcing] = init_sim(sim)
 %UNTITLED7 Summary of this function goes here
 
 fprintf('Starting %s.m...\n',mfilename)
@@ -30,6 +30,8 @@ sim.const.sec_y = sim.const.days_y *sim.const.sec_d;
 sim.dt = sim.const.sec_h *sim.time_step_hr;
 sim.num_time_steps = round ( sim.phi_years *sim.const.sec_y /sim.dt );
 sim.T  = sim.num_time_steps * sim.dt;
+sim.tot_t = sim.dt*sim.num_time_steps;  % used only for debug output
+
 
 % Define gird dimensions in meters
 
@@ -81,13 +83,15 @@ sim.domain.dVt_FP = sim.domain.dVt(sim.domain.iwet_FP);
 % to be wrong too. Use dimension in utils files and then check that
 % they match when MARBL is initialized.
 
-load(restart_file,'tracer','state','forcing');
+load(sim.inputRestartFile,'tracer','state','forcing');
 bgc.tracer       = tracer;      clear tracer;
-% load(restart_file,'tracer','state','forcing','old_tracer');
+% load(sim.inputRestartFile,'tracer','state','forcing','old_tracer');
 % bgc.old_tracer   = old_tracer;  clear old_tracer;
 
-if (sim.verbose_debug) disp('Initializing global grids for tracer, tendency, etc...'), end;
-[sim, bgc_struct] = init_marbl(marbl_file,sim, bgc_struct, forcing(1).surf_forcing);
+if (sim.verbose_debug) 
+    disp('Initializing global grids for tracer, tendency, etc...')
+end
+[sim, bgc_struct] = init_marbl(sim.marbl_file,sim, bgc_struct, forcing(1).surf_forcing);
 
 % Make sure size of tracers, e.g. CISO, matches sim we are about
 % to run, not size we used to make default (which is always
@@ -128,7 +132,9 @@ sim.bgc_struct_base = bgc_struct;
 time_series = init_time_series(sim, bgc_struct);
 
 toc
-if (sim.verbose_debug) checkRestartFile(sim, bgc, forcing), end
+if (sim.verbose_debug) 
+    checkRestartFile(sim, bgc, forcing)
+end
 
 %%
 % parallel is hard to debug, but 2x faster
@@ -168,7 +174,7 @@ if (sim.runInParallel)
     end
 
     spmd(sim.number_of_threads)
-        mex_marbl_driver('read_settings_file', marbl_file);
+        mex_marbl_driver('read_settings_file', sim.marbl_file);
 
         if sim.lciso_on
             mex_marbl_driver('put setting', 'ciso_on = .true.');
