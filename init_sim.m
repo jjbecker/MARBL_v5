@@ -1,4 +1,4 @@
-function [sim, bgc, bgc_struct, time_series, forcing] = init_sim(marbl_file, restart_file, sim, phi_years, dt)
+function [sim, bgc, bgc_struct, time_series, forcing] = init_sim(marbl_file, restart_file, sim)
 %UNTITLED7 Summary of this function goes here
 
 fprintf('Starting %s.m...\n',mfilename)
@@ -27,8 +27,8 @@ sim.const.days_y = 365;
 
 sim.const.sec_y = sim.const.days_y *sim.const.sec_d;
 
-sim.dt = sim.const.sec_h *dt;
-sim.num_time_steps = round ( phi_years *sim.const.sec_y /sim.dt );
+sim.dt = sim.const.sec_h *sim.time_step_hr;
+sim.num_time_steps = round ( sim.phi_years *sim.const.sec_y /sim.dt );
 sim.T  = sim.num_time_steps * sim.dt;
 
 % Define gird dimensions in meters
