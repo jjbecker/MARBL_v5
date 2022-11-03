@@ -59,8 +59,8 @@ parms  = [maxit, maxdim, maxfeval];
 x0_sol_norm=norm(x0_sol)
 norm_x_hist = vecnorm(x_hist)
 if ierr >1
-    fprintf('\n\nn%s.m: ierr = %d\n\n', mfilename,ierr);
-    keyboard
+    fprintf('\n\nn%s.m: #$@ ierr = %d\n\n', mfilename,ierr);
+%     keyboard
 end
 
 % remember that "sol" of nsoli() is an x0 value !!!
