@@ -37,6 +37,8 @@ num_forward_years         = 0;      % if fwd only, num fwd, else this inum fwd a
 sim.verbose_debug = 1;
 sim = setInputAndOutputFilePaths(sim, varargin)
 
+keyboard
+sim.time_step_hr = 12
 tName = tracer_names(0);    % no CISO tracers
 if ~all(matches(sim.tracer_loop,tName))
     %         error('%s.m: tracer %s not in {%s}', mfilename, string(tracer_str), strjoin(tName));
