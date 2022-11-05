@@ -3,9 +3,15 @@ function [sim, bgc] = saveRestartFiles(sim, bgc, tracer, newRestartFileName)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
+if sim.debug_disable_phi
+    fprintf('\n\n\n%s.m: ********* phi() is short circuited skip file save  *********\n\n\n',mfilename)
+    return
+end
+
 % copy sim.inputRestartFile, and replace it's "tracer" with input tracer 
 % 
 % Surprisingly fast
+
 
 fprintf('%s.m: Saving "%s"...\n', mfilename, newRestartFileName);
 
