@@ -38,11 +38,17 @@ sim.verbose_debug = 1;
 sim = setInputAndOutputFilePaths(sim, varargin)
 
 keyboard
-sim.time_step_hr = 12
+            sim.time_step_hr = 12;
+            sim.debug_disable_phi = 1;
+            sim.debug_PQ_inv = 1;
+            sim.recalculate_PQ_inv = 0;
+sim
 tName = tracer_names(0);    % no CISO tracers
 if ~all(matches(sim.tracer_loop,tName))
-    %         error('%s.m: tracer %s not in {%s}', mfilename, string(tracer_str), strjoin(tName));
-    error('\n%s.m: tracer list "%s" contains invalid tracer name', mfilename, strjoin(string(sim.tracer_loop)));
+    errStr = sim.tracer_loop(~matches(sim.tracer_loop,tName));
+    %         error('%s.m: tracers %s not in {%s}', mfilename, string(tracer_str), strjoin(tName));
+    %error('\n%s.m: tracer list \n\n"%s"\n\n contains invalid tracer name', mfilename, strjoin(string(sim.tracer_loop)));
+    error('\n%s.m: The tracer list "sim.tracer_loop"... \n\n\t"%s"\n\n contains one or more invalid tracer names: \n\n\t"%s"', mfilename, strjoin(string(sim.tracer_loop)), strjoin(string(errStr)))
 end
 
 
@@ -56,7 +62,7 @@ for tracer_str = sim.tracer_loop
     sim.selection(ismember(sim.selection, [9,11]))=[];
     sim.selection = unique(sort(sim.selection));
     cstr = tName(sim.selection)';
-    fprintf('%s.m: Selected tracers: %s \n', mfilename, cstr{:});
+    fprintf('%s.m: Selected tracer(s): #%d, "%s"\n', mfilename, sim.selection, string(cstr));
 
 
     % Need this to clear "persistent" variables in "G()" and "phi()"

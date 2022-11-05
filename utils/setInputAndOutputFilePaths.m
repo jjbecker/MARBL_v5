@@ -35,11 +35,19 @@ else
     % sim.tracer_loop = {'zooC' 'spC' 'spCaCO3' 'diatC' 'diatFe' 'diatSi' 'diazC' 'NH4' 'Fe' 'DOP' 'diatChl' 'diazChl'};
 
     sim.tracer_loop = tracer_names(0);    % no CISO tracers
-    excluded_tracer = {'spChl' 'diatChl' 'diazChl'}
-    [~,exlude_idx] = ismember ( excluded_tracer, sim.tracer_loop )
-    sim.tracer_loop(unique(exlude_idx)) = [];
-    disp(sim.tracer_loop)
+
 end
+
+% ALWAYS punt "ALT" methods that do NOT depend on any other tracers...
+excluded_tracer = {'DIC_ALT_CO2' 'ALK_ALT_CO2'};
+
+% FIXME: these tracers do NOT work in single column
+excluded_tracer = [excluded_tracer{:} {'spChl' 'diatChl' 'diazChl'}]
+
+% remove excluded, and duplicates and make sure all the choices are valid...
+[~,exlude_idx] = ismember ( excluded_tracer, sim.tracer_loop )
+sim.tracer_loop(unique(exlude_idx)) = [];
+% DEBUG sim.tracer_loop(22) = {'foo'}; sim.tracer_loop(2) = {'ppo'};
 fprintf('\n%s.m: Loop over tracers : %s\n', mfilename, strjoin(sim.tracer_loop));
 
 if  length(args) >= 2    % Input restart file INCLUDING PATH
@@ -50,11 +58,11 @@ else
     %     [outputArg1,outputArg2] = setInputAndOutputFilePaths(inputArg1,inputArg2);
     % sim.start_yr = 4101;  inputRestartFileStem = 'Data/InputFromAnn/restart4101.mat';
     % sim.start_yr =   0;   inputRestartFileStem = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
-    % sim.start_yr = 260;   inputRestartFileStem = 'Data_GP/restart_260_integrate_from_0.mat';
+    sim.start_yr = 260;   inputRestartFileStem = 'Data_GP/restart_260_integrate_from_0.mat';
+    % sim.start_yr = 260;   inputRestartFileStem = 'restart_260_integrate_from_0.mat';
     % sim.start_yr = 1323;  inputRestartFileStem = 'restart_0_1_output/restart_1323_DOP_sol_x1.mat';
-    sim.start_yr = 260;  inputRestartFileStem = 'restart_0_1_output/restart_260_diazFe_sol_x0.mat';
-    sim.start_yr = 260;  inputRestartFileStem = 'restart_0_1_output/restart_0_diazP_sol_x0.mat';
-    
+    % sim.start_yr = 260;  inputRestartFileStem = 'restart_0_1_output/restart_260_diazFe_sol_x0.mat';
+    % sim.start_yr = 260;  inputRestartFileStem = 'restart_0_1_output/restart_0_diazP_sol_x0.mat';
     % sim.start_yr = 260;   inputRestartFileStem = 'restart_0_1_output/restart_261_O2_fwd_x1.mat';
 
     sim.inputRestartFile = strcat(myDataDir(), inputRestartFileStem);
