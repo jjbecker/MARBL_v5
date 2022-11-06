@@ -38,7 +38,7 @@ for i = 1:size(marbl_log,1)
 end
 if (firstErr >0)
     disp(marbl_log(firstErr,:));
-    keyboard
+    error("Probably only fix is to restart Matlab...")
 end
 mex_marbl_driver('set_depth', size(sim.domain.M3d,3) )
 

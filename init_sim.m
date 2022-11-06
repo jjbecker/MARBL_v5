@@ -91,6 +91,13 @@ bgc.tracer       = tracer;      clear tracer;
 if (sim.verbose_debug) 
     disp('Initializing global grids for tracer, tendency, etc...')
 end
+persistent MARBL_IS_RUNNING
+if isempty(MARBL_IS_RUNNING)
+    MARBL_IS_RUNNING = 1;
+else
+    disp('Shutting down client MEX (aka serial) because it interfers with parallel MEX threads')
+    mex_marbl_driver('shutdown');
+end
 [sim, bgc_struct] = init_marbl(sim.marbl_file,sim, bgc_struct, forcing(1).surf_forcing);
 
 % Make sure size of tracers, e.g. CISO, matches sim we are about
