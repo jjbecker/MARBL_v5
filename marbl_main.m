@@ -40,24 +40,23 @@ sim = setInputAndOutputFilePaths(sim, varargin)
 
 
 % keyboard
-
-sim.time_step_hr = 12;
-sim.tracer_loop = {'Fe' 'spChl'};
-
-
-% % disable all simulation, just check logic of filenames etc
-% sim.runInParallel = 0;
-% sim.debug_disable_phi = 1;
+% sim.time_step_hr = 12;
+% sim.tracer_loop = {'Fe' 'spChl'};
+% 
+% 
+% % % disable all simulation, just check logic of filenames etc
+% % sim.runInParallel = 0;
+% % sim.debug_disable_phi = 1;
+% % sim.disable_Preconditioner = 1;
+% % sim.recalculate_PQ_inv = 0;
+% 
+% 
+% % calculate phi, but solve with G rather than r preconditioned in G()
+% sim.runInParallel = 1;
 % sim.disable_Preconditioner = 1;
-% sim.recalculate_PQ_inv = 0;
-
-
-% calculate phi, but solve with G rather than r preconditioned in G()
-sim.runInParallel = 1;
-sim.disable_Preconditioner = 1;
-sim.recalculate_PQ_inv = ~sim.debug_disable_phi && ~sim.disable_Preconditioner && 1; % tricky, many side cases...
-
-sim
+% sim.recalculate_PQ_inv = ~sim.debug_disable_phi && ~sim.disable_Preconditioner && 1; % tricky, many side cases...
+% 
+% sim
 
 
 tName = tracer_names(0);    % no CISO tracers
