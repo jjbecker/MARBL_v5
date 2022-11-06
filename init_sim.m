@@ -92,9 +92,6 @@ if (sim.verbose_debug)
     disp('Initializing global grids for tracer, tendency, etc...')
 end
 
-% parallel is hard to debug, but 2x faster
-
-sim.runInParallel = 0;
 if (sim.runInParallel)
     sim.number_of_threads = 4; % only 4 on laptop or 12 on GP supported
 else
@@ -160,7 +157,9 @@ time_series = init_time_series(sim, bgc_struct);
 
 toc
 if (sim.verbose_debug) 
-    checkRestartFile(sim, bgc, forcing)
+    % FIXME: super useful check of the Forcing flux for Fe and so on, but
+    % super verbose for sure
+    % checkRestartFile(sim, bgc, forcing)
 end
 
 %%
