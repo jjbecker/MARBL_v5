@@ -63,7 +63,7 @@ x1 = x0 +G;                         % x1 only of selection
 if ~sim.debug_PQ_inv
     r = mfactor(PQ_inv, G) - G;
 else
-    fprintf('\n\n ********Disabling mfactor in calc_G*******\n\n');
+    fprintf('\n\n\t%s.m: ********* Disabling mfactor in calc_G  *********\n\n',mfilename)
     r = G;
 end
 

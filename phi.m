@@ -5,7 +5,7 @@ function [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM)
 
 % DEBUG
 if sim.debug_disable_phi
-    fprintf('\n\n\n%s.m: ********* phi() is short circuited to return x0 or -x0 as x1 for debugging  *********\n\n\n',mfilename)
+    fprintf('\n\n\t%s.m: ********* phi() is short circuited *********\n\n',mfilename)
     %     return
 end
 
@@ -49,7 +49,7 @@ x0 = reshape(x0_bgc, sz);
 % allow for case of total_months==0, etc etc
 n = 0;
 current_month = 0;
-years_gone_by = -1; 
+years_gone_by = -1;
 
 initial_moles = global_moles(bgc_0.tracer, sim);
 while current_month < total_months
