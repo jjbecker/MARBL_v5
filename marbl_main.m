@@ -34,23 +34,52 @@ forwardIntegrationOnly    = 0;      % 1 -> no NK just fwd integration
 num_relax_iterations      = 0;      % 0 means no relax steps, just use NK x1_sol
 num_forward_years         = 0;      % if fwd only, num fwd, else this inum fwd after relax step
 
+sim.runInParallel = 1;      % parallel is hard to debug, but 2x faster
 sim.verbose_debug = 1;
 sim = setInputAndOutputFilePaths(sim, varargin)
 
+
 % keyboard
-% sim.time_step_hr = 12;
+
+sim.time_step_hr = 12;
+sim.tracer_loop = {'Fe' 'spChl'};
+
+
+% % disable all simulation, just check logic of filenames etc
+% sim.runInParallel = 0;
 % sim.debug_disable_phi = 1;
-% sim.debug_PQ_inv = 1;
+% sim.disable_Preconditioner = 1;
 % sim.recalculate_PQ_inv = 0;
-% sim
+
+
+% calculate phi, but solve with G rather than r preconditioned in G()
+sim.runInParallel = 1;
+sim.disable_Preconditioner = 1;
+sim.recalculate_PQ_inv = ~sim.debug_disable_phi && ~sim.disable_Preconditioner && 1; % tricky, many side cases...
+
+sim
+
+
 tName = tracer_names(0);    % no CISO tracers
 if ~all(matches(sim.tracer_loop,tName))
     errStr = sim.tracer_loop(~matches(sim.tracer_loop,tName));
     error('\n%s.m: The tracer list "sim.tracer_loop"... \n\n\t"%s"\n\n contains one or more invalid tracer names: \n\n\t"%s"', mfilename, strjoin(string(sim.tracer_loop)), strjoin(string(errStr)))
 end
 
-
 %%%%%%
+sim.grd     = load(sim.inputRestartFile,'sim').sim.grd;
+sim.domain  = load(sim.inputRestartFile,'sim').sim.domain;
+if sim.debug_disable_phi
+    fprintf('\n\n\t%s.m: ********* phi() is short circuited skip MTM read  *********\n\n',mfilename)
+    MTM = 1;
+else
+    MTM = load(sim.inputRestartFile,'MTM').MTM;
+end
+
+sim = setPeek(sim);
+
+sim.phi_years = 1;      % NK always uses 1 year integration
+
 for tracer_str = sim.tracer_loop
 
     % ALWAYS punt "ALT" methods that do NOT depend on any other tracers...
@@ -61,33 +90,18 @@ for tracer_str = sim.tracer_loop
     cstr = tName(sim.selection)';
     fprintf('%s.m: Selected tracer(s): #%d, "%s"\n', mfilename, sim.selection, string(cstr));
 
-    % FIXME: The endless headache of MARBL threads! Need to kill any 
-    % leftover MEX running on threads. This coincidentally clears persistent 
+    % FIXME: The endless headache of MARBL threads! Need to kill any
+    % leftover MEX running on threads. This coincidentally clears persistent
     % variables in G() and phi().
     clear functions
     clear calc_G phi       % clear debugging counters usedin G() and phi()
 
-    
+
 
     fprintf('%s.m: Reading (Matlab) OFFLINE sim restart file with tracers and transports: %s\n', mfilename, sim.inputRestartFile);
     if ~isfile(sim.inputRestartFile)
         error("missing file or typo in name of inputRestartFile")
     end
-
-    MTM = load(sim.inputRestartFile,'MTM').MTM;
-%     if sim.debug_disable_phi
-%         fprintf('\n\n\t%s.m: ********* phi() is short circuited skip file save  *********\n\n',mfilename)
-%         disp ["loading anyway"]
-%         MTM = load(sim.inputRestartFile,'MTM').MTM;
-%     else
-%         MTM = load(sim.inputRestartFile,'MTM').MTM;
-%     end    
-    sim.grd     = load(sim.inputRestartFile,'sim').sim.grd;
-    sim.domain  = load(sim.inputRestartFile,'sim').sim.domain;
-
-    sim = setPeek(sim);
-
-    sim.phi_years = 1;      % NK always uses 1 year integration
 
     % remember brsola() "sol" is x0 value. x1 value is NOT last col of
     % x_hist; it is sol !!!
@@ -161,11 +175,12 @@ for tracer_str = sim.tracer_loop
         if(sim.recalculate_PQ_inv)
             PQ_inv = calc_PQ_inv(sim, bgc, time_series, forcing, MTM);
         else
-            fprintf('\n%s.m: Loading ~30 GB(!) mfactored preconditioner PQ_inv from %s solution...\n', mfilename, strcat(string(tName(sim.selection))))
             tStart = tic;
-            if sim.debug_PQ_inv
+            if sim.disable_Preconditioner
+                fprintf('\n\n\t%s.m: ********* Replace preconditioner with 1 *********\n\n',mfilename)
                 PQ_inv = 1
             else
+                fprintf('\n%s.m: Loading ~30 GB(!) mfactored preconditioner PQ_inv from %s solution...\n', mfilename, strcat(string(tName(sim.selection))))
                 load (strcat(myDataDir(),'sol/',strjoin(tName(sim.selection)),'_QJ'), 'PQ_inv')
             end
             fprintf('%s.m: %1.0f (s) to init sim and load PQinv \n',mfilename, toc(tStart));
@@ -239,6 +254,9 @@ if ~exist(logDir, 'dir')
 end
 save_timer = tic; fprintf('Saving (possibly) large workspace file... '); save(strcat(logDir,'last_run.mat'),'-v7.3','-nocompression'); toc(save_timer);
 
-fprintf('... end of %s.m ', mfilename); toc(timer_total)
-
+fprintf('... end of %s.m ', mfilename);
+elapsedTime_all_loops_all_tracers = toc(timer_total);
+disp(' ');
+fprintf('\n%s.m: Finished outer solution loops over %d tracers\n', mfilename, numel(sim.tracer_loop));
+disp(['Runtime: ', num2str(elapsedTime_all_loops_all_tracers, '%1.0f'),' (s) or ', num2str(elapsedTime_all_loops_all_tracers/60, '%1.1f'), ' (m)'])
 end
