@@ -91,14 +91,34 @@ bgc.tracer       = tracer;      clear tracer;
 if (sim.verbose_debug) 
     disp('Initializing global grids for tracer, tendency, etc...')
 end
-persistent MARBL_IS_RUNNING
-if isempty(MARBL_IS_RUNNING)
-    MARBL_IS_RUNNING = 1;
+
+% parallel is hard to debug, but 2x faster
+
+sim.runInParallel = 0;
+if (sim.runInParallel)
+    sim.number_of_threads = 4; % only 4 on laptop or 12 on GP supported
 else
-    disp('Shutting down client MEX (aka serial) because it interfers with parallel MEX threads')
-    mex_marbl_driver('shutdown');
+    fprintf('\n\n%s.m: NOT running in parallel\n\n\n', mfilename);
 end
+
+% Need a local MARBL MEX running to get array sizes, even wthn looping over marbl_main.
+% HOWEVER, if we are running in parallel we killed the local  last call here
+% .. a real mess
+% persistent LOCAL_MARBL_IS_RUNNING
+% if isempty(LOCAL_MARBL_IS_RUNNING)
+%     LOCAL_MARBL_IS_RUNNING = 0;
+% end
+% if LOCAL_MARBL_IS_RUNNING == 1
+%     disp('local MEX -- IS -- already running, shut it down and then restart with init_marbl()')
+%     mex_marbl_driver('shutdown');
+%     disp('...local shutdown in persistent LOCAL_MARBL_IS_RUNNING worked.')
+%     LOCAL_MARBL_IS_RUNNING = 0;
+% end
+% disp('local MEX is -- NOT -- running, calling init_marbl()...')
+% LOCAL_MARBL_IS_RUNNING = 1;
+disp('Starting client MEX...')
 [sim, bgc_struct] = init_marbl(sim.marbl_file,sim, bgc_struct, forcing(1).surf_forcing);
+disp('...client MEX is running')
 
 % Make sure size of tracers, e.g. CISO, matches sim we are about
 % to run, not size we used to make default (which is always
@@ -144,25 +164,18 @@ if (sim.verbose_debug)
 end
 
 %%
-% parallel is hard to debug, but 2x faster
-
-sim.runInParallel = 1;
-if (sim.runInParallel)
-    sim.number_of_threads = 4; % only 4 on laptop or 12 on GP supported
-else
-    fprintf('\n\n%s.m: NOT running in parallel\n\n\n', mfilename);
-end
-
 if (sim.runInParallel)
     tic;
 
     % First shut down client MARBL previously used to get dim of MEX arrays
-    disp('Shutting down client MEX (aka serial) because it interfers with parallel MEX threads')
+    disp('Shutting down client MEX (aka serial) because it interfers with parallel MEX threads...')
     mex_marbl_driver('shutdown');
+    % LOCAL_MARBL_IS_RUNNING = 0;
+    disp('...client MEX shutdown inside if (sim.runInParallel) worked.')
 
     % Also shutdown existing worker pool, if any
 
-    disp('Shutting down existing pool, if any...')
+    disp('Shutting down existing pool of threads, if any...')
     delete(gcp('nocreate'));
     sim.number_of_threads = min(sim.number_of_threads, sim.domain.num_wet_loc);    % >= num of rows or crash
 
@@ -172,7 +185,6 @@ if (sim.runInParallel)
     toc
     %     interior_base_client = interior_base;
     if (sim.runInParallel)
-        % sim.number_of_threads = 4;
         % FIXME: this is not place for this; not needed; etc
         % synchronize all labs
         %    labBarrier;

@@ -39,15 +39,13 @@ sim = setInputAndOutputFilePaths(sim, varargin)
 
 % keyboard
 % sim.time_step_hr = 12;
-% % sim.debug_disable_phi = 1;
-% % sim.debug_PQ_inv = 1;
-% % sim.recalculate_PQ_inv = 0;
+% sim.debug_disable_phi = 1;
+% sim.debug_PQ_inv = 1;
+% sim.recalculate_PQ_inv = 0;
 % sim
 tName = tracer_names(0);    % no CISO tracers
 if ~all(matches(sim.tracer_loop,tName))
     errStr = sim.tracer_loop(~matches(sim.tracer_loop,tName));
-    %         error('%s.m: tracers %s not in {%s}', mfilename, string(tracer_str), strjoin(tName));
-    %error('\n%s.m: tracer list \n\n"%s"\n\n contains invalid tracer name', mfilename, strjoin(string(sim.tracer_loop)));
     error('\n%s.m: The tracer list "sim.tracer_loop"... \n\n\t"%s"\n\n contains one or more invalid tracer names: \n\n\t"%s"', mfilename, strjoin(string(sim.tracer_loop)), strjoin(string(errStr)))
 end
 
@@ -55,7 +53,6 @@ end
 %%%%%%
 for tracer_str = sim.tracer_loop
 
-    fprintf('%s.m: Solving for tracer: %s\n', mfilename, string(tracer_str));
     % ALWAYS punt "ALT" methods that do NOT depend on any other tracers...
     % remove duplicates and make sure all the choices are valid...
     sim.selection = [ find( strcmp(tName,tracer_str) ) ];
@@ -64,23 +61,27 @@ for tracer_str = sim.tracer_loop
     cstr = tName(sim.selection)';
     fprintf('%s.m: Selected tracer(s): #%d, "%s"\n', mfilename, sim.selection, string(cstr));
 
+    % FIXME: The endless headache of MARBL threads! Need to kill any 
+    % leftover MEX running on threads. This coincidentally clears persistent 
+    % variables in G() and phi().
+    clear functions
+    clear calc_G phi       % clear debugging counters usedin G() and phi()
 
-    % Need this to clear "persistent" variables in "G()" and "phi()"
-    clear calc_G phi
-    % FIXME: the endless headache of MARBL threads: may or may not need to
-    % kill init_sim to clear persistents there
-    % clear init_sim
+    
 
     fprintf('%s.m: Reading (Matlab) OFFLINE sim restart file with tracers and transports: %s\n', mfilename, sim.inputRestartFile);
     if ~isfile(sim.inputRestartFile)
         error("missing file or typo in name of inputRestartFile")
     end
 
-    if sim.debug_disable_phi
-        fprintf('\n\n\n%s.m: ********* phi() is short circuited skip file read  *********\n\n\n',mfilename)
-    else
-        MTM = load(sim.inputRestartFile,'MTM').MTM;
-    end    
+    MTM = load(sim.inputRestartFile,'MTM').MTM;
+%     if sim.debug_disable_phi
+%         fprintf('\n\n\t%s.m: ********* phi() is short circuited skip file save  *********\n\n',mfilename)
+%         disp ["loading anyway"]
+%         MTM = load(sim.inputRestartFile,'MTM').MTM;
+%     else
+%         MTM = load(sim.inputRestartFile,'MTM').MTM;
+%     end    
     sim.grd     = load(sim.inputRestartFile,'sim').sim.grd;
     sim.domain  = load(sim.inputRestartFile,'sim').sim.domain;
 
@@ -118,6 +119,7 @@ for tracer_str = sim.tracer_loop
 
     fprintf('\n%s.m: Start Newton (Broyden Method) solver: %s\n',mfilename,datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
     timer_PQ_init_solve_relax_fwd = tic;
+    fprintf('%s.m: Solving for tracer: %s\n', mfilename, string(tracer_str));
 
 
     % NK always using 1 year integration
@@ -222,7 +224,7 @@ for tracer_str = sim.tracer_loop
     disp(' ');
 
     if sim.debug_disable_phi
-        fprintf('\n\n\n%s.m: ********* phi() is short circuited skip file save  *********\n\n\n',mfilename)
+        fprintf('\n\n\t%s.m: ********* phi() is short circuited skip inputRestartFile read  *********\n\n',mfilename)
     else
         sim.inputRestartFile = myRestartFile_x0;
     end
@@ -240,35 +242,3 @@ save_timer = tic; fprintf('Saving (possibly) large workspace file... '); save(st
 fprintf('... end of %s.m ', mfilename); toc(timer_total)
 
 end
-
-%     % FIXME: Someday, when we know what inputs need to be, put all this a file
-%     time_step_hr              = 3;
-%     debug_PQ_inv              = 0;
-%     debug_disable_phi         = 0;
-%
-%     %%%%
-%     % DEBUG stuff
-% % time_step_hr       = 12; % FAST debug
-% logTracers         = 0;
-% recalculate_PQ_inv = 0
-% debug_PQ_inv       = 1
-% debug_disable_phi  = 1
-
-%     sim.verbose_debug           = verbose_debug;
-%     forwardIntegrationOnly  = forwardIntegrationOnly ;
-%     sim.inputRestartFile        = inputRestartFile;
-%     sim.start_yr                = start_yr;
-%     sim.selection               = selection;
-%     sim.captureAllSelectedTracers=captureAllSelectedTracers;
-%     sim.logTracers              = logTracers;
-%     sim.checkNeg = 0;
-%
-%
-%     sim.debug_PQ_inv            = debug_PQ_inv;
-%     sim.debug_disable_phi       = debug_disable_phi;
-%
-%
-%     % FIXME: lots of old and or leftover broken code floating around, clear tmp vars...
-%     clear inputRestartFile
-%     clear selection captureAllSelectedTracers logTracers
-
