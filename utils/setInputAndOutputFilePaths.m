@@ -85,11 +85,11 @@ else
     sim.recalculate_PQ_inv = 1;
 end
 
-sim.debug_disable_phi = 0;
-sim.debug_PQ_inv      = 0;
+sim.debug_disable_phi     = 0;
+sim.disable_Preconditioner = 0;
 if  length(args) >= 5                    % specify short_circuit phi()?
-    sim.debug_disable_phi   = args{5};
-    sim.debug_PQ_inv        = args{5};
+    sim.debug_disable_phi     = args{5};
+    sim.disable_Preconditioner = args{5};
 end
 
 if  length(args) >= 6    % log every time step?
@@ -122,7 +122,7 @@ sim.marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 
 fprintf('%s.m: logTracers is %d\n', mfilename, sim.logTracers);
 fprintf('%s.m: recalculate_PQ_inv is %d\n', mfilename, sim.recalculate_PQ_inv);
-fprintf('%s.m: debug_PQ_inv is %d\n', mfilename, sim.debug_PQ_inv);
+fprintf('%s.m: disable_Preconditioner is %d\n', mfilename, sim.disable_Preconditioner);
 fprintf('%s.m: debug_disable_phi is %d\n', mfilename, sim.debug_disable_phi);
 
 % In past I debuged MARBL Carbon isotopes. "lciso_on", and that stuff, it

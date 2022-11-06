@@ -60,7 +60,7 @@ x1 = x0 +G;                         % x1 only of selection
 
 % Precondition residual
 
-if ~sim.debug_PQ_inv
+if ~sim.disable_Preconditioner
     r = mfactor(PQ_inv, G) - G;
 else
     fprintf('\n\n\t%s.m: ********* Disabling mfactor in calc_G  *********\n\n',mfilename)
