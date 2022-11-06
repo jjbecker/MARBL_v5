@@ -80,12 +80,16 @@ bgc.tracer = nsoli2bgc(sim, bgc, x0_bgc);   % marbl format x0
 % bgc_sol_x0 = bgc;  % this has c0 for all tracer
 
 tName = tracer_names(0);    % no CISO tracers
-sol_fname = sprintf('%s/sol_%s_ierr_%d_x0', sim.outputRestartDir, string(tName(sim.selection)), ierr);
-fprintf('%s.m: Saving just x0_sol, ierr, it_hist, x_hist in %s\n', mfilename, sol_fname);
-save(sol_fname, 'x0_sol', 'ierr', 'it_hist', 'x_hist', '-v7.3','-nocompression');
-
 myRestartFile_x0 = sprintf('%s/restart_%d_%s_sol_x0.mat', sim.outputRestartDir, round(sim.start_yr), strjoin(tName(sim.selection)));
 [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile_x0);
+
+sol_fname = sprintf('%s/sol_%s_ierr_%d_x0', sim.outputRestartDir, string(tName(sim.selection)), ierr);
+fprintf('%s.m: Saving just x0_sol, ierr, it_hist, x_hist in %s\n', mfilename, sol_fname);
+if sim.debug_disable_phi
+    fprintf('\n\n\t%s.m: ********* phi() is short circuited skip sol_fname save  *********\n\n',mfilename)
+    return
+end
+save(sol_fname, 'x0_sol', 'ierr', 'it_hist', 'x_hist', '-v7.3','-nocompression');
 
 % "sol" from brsola() will be last x that was smallest --not-- last
 % one caclualated which is "restart_x0.mat"
