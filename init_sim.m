@@ -99,7 +99,7 @@ else
 end
 
 % Need a local MARBL MEX running to get array sizes, even wthn looping over marbl_main.
-% HOWEVER, if we are running in parallel we killed the local  last call here
+% HOWEVER, if running in parallel, local MARBL was killed last call here.
 % .. a real mess
 % persistent LOCAL_MARBL_IS_RUNNING
 % if isempty(LOCAL_MARBL_IS_RUNNING)
@@ -157,8 +157,8 @@ time_series = init_time_series(sim, bgc_struct);
 
 toc
 if (sim.verbose_debug) 
-    % FIXME: super useful check of the Forcing flux for Fe and so on, but
-    % super verbose for sure
+    % FIXME: super useful check of forcing flux for Fe and so on, but super
+    % verbose for sure.
     % checkRestartFile(sim, bgc, forcing)
 end
 
