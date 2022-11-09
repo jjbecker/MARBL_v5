@@ -40,15 +40,16 @@ sim = setInputAndOutputFilePaths(sim, varargin)
 
 
 % keyboard
-% sim.time_step_hr = 12;
+sim.time_step_hr = 12;
 % sim.tracer_loop = {'Fe' 'spChl'};
 % 
 % 
 % % % disable all simulation, just check logic of filenames etc
 % % sim.runInParallel = 0;
-% % sim.debug_disable_phi = 1;
-% % sim.disable_Preconditioner = 1;
-% % sim.recalculate_PQ_inv = 0;
+% sim.debug_disable_phi = 1;
+sim.disable_Preconditioner = 1;
+% sim.disabledPreconditoners = []
+sim.recalculate_PQ_inv = 0;
 % 
 % 
 % % calculate phi, but solve with G rather than r preconditioned in G()
@@ -56,19 +57,32 @@ sim = setInputAndOutputFilePaths(sim, varargin)
 % sim.disable_Preconditioner = 1;
 % sim.recalculate_PQ_inv = ~sim.debug_disable_phi && ~sim.disable_Preconditioner && 1; % tricky, many side cases...
 % 
-% sim
+sim.tracer_loop = fliplr(sim.tracer_loop);
+sim.tracer_loop = {'diatC'};
+sim
+keyboard
 
 
 tName = tracer_names(0);    % no CISO tracers
+    sim.selection = [ find( strcmp(tName,'diatC') ) ];
+    sim.selection(ismember(sim.selection, [9,11]))=[];
+    sim.selection = unique(sort(sim.selection));
+    cstr = tName(sim.selection)';
+    fprintf('%s.m: Selected tracer(s): #%d, "%s"\n', mfilename, sim.selection, string(cstr));
+
+% if numel(sim.disabledPreconditoners)
+%     ismember(tName(sim.selection), sim.disabledPreconditoners)
+% end
+% 
 if ~all(matches(sim.tracer_loop,tName))
     errStr = sim.tracer_loop(~matches(sim.tracer_loop,tName));
-    error('\n%s.m: The tracer list "sim.tracer_loop"... \n\n\t"%s"\n\n contains one or more invalid tracer names: \n\n\t"%s"', mfilename, strjoin(string(sim.tracer_loop)), strjoin(string(errStr)))
+    error('\n%s.m: Tracer list "sim.tracer_loop"... \n\n\t"%s"\n\n contains one or more invalid tracer names: \n\n\t"%s"', mfilename, strjoin(string(sim.tracer_loop)), strjoin(string(errStr)))
 end
 
 %%%%%%
 sim.grd     = load(sim.inputRestartFile,'sim').sim.grd;
 sim.domain  = load(sim.inputRestartFile,'sim').sim.domain;
-if sim.debug_disable_phi
+if 0 && sim.debug_disable_phi
     fprintf('\n\n\t%s.m: ********* phi() is short circuited skip MTM read  *********\n\n',mfilename)
     MTM = 1;
 else
@@ -82,14 +96,14 @@ sim.phi_years = 1;      % NK always uses 1 year integration
 for tracer_str = sim.tracer_loop
 
     % ALWAYS punt "ALT" methods that do NOT depend on any other tracers...
-    % remove duplicates and make sure all the choices are valid...
+    % remove duplicates and make sure all choices are valid...
     sim.selection = [ find( strcmp(tName,tracer_str) ) ];
     sim.selection(ismember(sim.selection, [9,11]))=[];
     sim.selection = unique(sort(sim.selection));
     cstr = tName(sim.selection)';
     fprintf('%s.m: Selected tracer(s): #%d, "%s"\n', mfilename, sim.selection, string(cstr));
 
-    % FIXME: The endless headache of MARBL threads! Need to kill any
+    % FIXME: endless headache of MARBL threads! Need to kill any
     % leftover MEX running on threads. This coincidentally clears persistent
     % variables in G() and phi().
     clear functions
@@ -171,7 +185,7 @@ for tracer_str = sim.tracer_loop
         fprintf('%s.m: forward integration ONLY\n',mfilename);
     else
         % Solve for selected tracer
-        if(sim.recalculate_PQ_inv)
+        if sim.recalculate_PQ_inv
             PQ_inv = calc_PQ_inv(sim, bgc, time_series, forcing, MTM);
         else
             tStart = tic;

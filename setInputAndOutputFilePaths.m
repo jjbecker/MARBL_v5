@@ -23,32 +23,75 @@ if  length(args) >= 1    % Input restart file
         error('\n"tracer_loop" input arg must be a cell array even if only 1 element, {''He''}, not a %s.', class(args{1}))
     end
 else
-    % always need a selected tracer! For plot time series, or solve
+    sim.tracer_loop = tracer_names(0);    % no CISO tracers
+
     % Most of these work very well in single tracer solution...
     % FIXME: rather than get accurate solution, loop over tracers and try to reduce G
     % to 1% of starting value, while looping over all tracers, and then
     % repeat until to get final very accurate result where G is sqrt(eps)
+
+    % always need a selected tracer! For plot time series, or solve
     % sim.tracer_loop = {'DOPr' 'DONr' 'DOCr' 'O2' 'DON' 'DOC' 'DOP' 'diatSi' 'spCaCO3' 'diazFe' };
     % sim.tracer_loop = {'DOC' 'DOP' 'spCaCO3' 'diatSi' 'diazFe' };
     % sim.tracer_loop = {'spCaCO3' 'spFe' 'diazFe' };
     % sim.tracer_loop = {'diatFe' 'spP' 'diatP' 'diazP'};
     % sim.tracer_loop = {'zooC' 'spC' 'spCaCO3' 'diatC' 'diatFe' 'diatSi' 'diazC' 'NH4' 'Fe' 'DOP' 'diatChl' 'diazChl'};
 
-    sim.tracer_loop = tracer_names(0);    % no CISO tracers
 
 end
+sim.tracer_loop = {'spCaCO3' 'spFe' 'diazFe' };
+fprintf('%s.m: *** TENATIVE *** Loop over tracers : %s\n', mfilename, strjoin(sim.tracer_loop));
 
-% ALWAYS punt "ALT" methods that do NOT depend on any other tracers...
-excluded_tracer = {'DIC_ALT_CO2' 'ALK_ALT_CO2'};
+% FIXME: these tracers do NOT work in single column with precoditioner, but
+% do not crash but preconditioner even if it is worse than just using G
 
-% FIXME: these tracers do NOT work in single column
-excluded_tracer = [excluded_tracer{:} {'spChl' 'diatChl' 'diazChl'}]
+disabledPreconditoners = { 'DIC' 'ALK' 'diatC' 'spChl' 'diatChl' 'diazChl' };
+disabledPreconditoners = { 'DIC' 'ALK' 'diatC' 'spChl' 'diazChl' };
+disabledPreconditoners = unique( disabledPreconditoners);
+sim.disabledPreconditoners = disabledPreconditoners;
 
-% remove excluded, and duplicates and make sure all the choices are valid...
-[~,exlude_idx] = ismember ( excluded_tracer, sim.tracer_loop )
-sim.tracer_loop(unique(exlude_idx)) = [];
-% DEBUG sim.tracer_loop(22) = {'foo'}; sim.tracer_loop(2) = {'ppo'};
-fprintf('\n%s.m: Loop over tracers : %s\n', mfilename, strjoin(sim.tracer_loop));
+% Tracers that we do not solve. 
+% ALWAYS punt "ALT" unused methods do NOT influence other tracers, but 
+% waste lots of run time.
+
+excluded_tracer = { 'DIC_ALT_CO2' 'ALK_ALT_CO2' };
+
+% These tracers do NOT work in single column; and cause "MARBL crash".
+% FIXME: Maybe because preconditioner for them is messed up!
+excluded_tracer = [ excluded_tracer 'spChl' 'diatChl' 'diazChl'];
+% excluded_tracer = [ excluded_tracer 'spFe' 'spCaCO3'];
+excluded_tracer = unique( excluded_tracer);
+
+% % excluded_tracer = []  % debug all this nonsense
+
+% remove excluded and make sure all choices are valid...
+
+if numel(excluded_tracer) == 0
+    ignore_or_exlude_idx = [];
+else
+    [flag, ignore_or_exlude_idx] = ismember ( excluded_tracer, sim.tracer_loop );
+    ignore_or_exlude_idx = sort(ignore_or_exlude_idx(flag>0));
+end
+if any(ignore_or_exlude_idx)
+    sim.tracer_loop([ignore_or_exlude_idx]) = [];
+end
+
+% % need flag to find tracers that are not going to be processed, but if 
+% % present would not be preconditioned
+% 
+% [flag, do_NOT_precondition_idx] = ismember ( disabledPreconditoners, sim.tracer_loop );
+% if numel(do_NOT_precondition_idx) == 0
+%     sim.do_NOT_precondition_idx = [];
+% else
+%     [~, ignore_or_exlude_idx] = ismember ( excluded_tracer, sim.tracer_loop );
+%     ignore_or_exlude_idx = sort(ignore_or_exlude_idx)
+%     sim.tracer_loop([ignore_or_exlude_idx]) = [];
+% end
+
+fprintf('%s.m: Tracers not to be preconditioned: %s\n', mfilename, strjoin(disabledPreconditoners));
+fprintf('%s.m: Tracers excluded from loop: %s\n', mfilename, strjoin(excluded_tracer));
+fprintf('%s.m: Loop over tracers : %s\n', mfilename, strjoin(sim.tracer_loop));
+
 
 if  length(args) >= 2    % Input restart file INCLUDING PATH
     sim.inputRestartFile = args{2};
@@ -85,7 +128,7 @@ else
     sim.recalculate_PQ_inv = 1;
 end
 
-sim.debug_disable_phi     = 0;
+sim.debug_disable_phi      = 0;
 sim.disable_Preconditioner = 0;
 if  length(args) >= 5                    % specify short_circuit phi()?
     sim.debug_disable_phi     = args{5};
