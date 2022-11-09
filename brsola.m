@@ -1,4 +1,4 @@
-function [sol, it_hist, ierr, x_hist] = brsola(x,f,tol, parms)
+function [sol, it_hist, ierr, x_hist] = brsola(x,f,tol, parms,f0)
 % BRSOLA  Broyden's Method solver, globally convergent
 %          solver for f(x) = 0, Armijo rule, one vector storage
 %
@@ -61,10 +61,10 @@ ierr = 0; maxit=40; maxdim=39;
 it_histx=zeros(maxit,3);
 maxarm=10;
 %
-if nargin == 4
+if nargin >= 4
     maxit=parms(1); maxdim=parms(2)-1; maxfeval=parms(3);
 end
-if nargout==4
+if nargout>=4
     x_hist=x;
 end
 rtol=tol(2); atol=tol(1); n = length(x); fnrm=1; itc=0; nbroy=0;
@@ -72,7 +72,12 @@ rtol=tol(2); atol=tol(1); n = length(x); fnrm=1; itc=0; nbroy=0;
 % evaluate f at the initial iterate
 % compute the stop tolerance
 %
-f0=feval(f,x); num_calls_f = 1;
+% if caller already knows value of f0 vector, use that, otherwise call f
+if nargin <5
+    f0=feval(f,x); num_calls_f = 1;
+else
+    num_calls_f = 0;
+end
 fc=f0;
 fnrm=norm(f0);
 it_histx(itc+1,1)=fnrm; it_histx(itc+1,2)=0; it_histx(itc+1,3)=0;

@@ -17,8 +17,8 @@ rtol = 1e-2;              % stop if norm(drift,2) < 10% of G(x0)
 % Nsoli() always evaluates value of f(x0), so 1 means wasted a call to phi,
 % t always quits AFTER that call.
 %
-% maxfeval is the absolute max number of calls to G. must be >2; need at 
-% least 1 for f0 and then 1 for a Newton;
+% maxfeval is absolute max number of calls to G. must be >2; need at least 
+% 1 for f0 and then 1 for a Newton;
 %
 % maxitl is NOT maxmium number of nonlinear iterations because of possible
 % line searches; maybe many line searches. maxit = Max number of calls to G
@@ -26,8 +26,8 @@ rtol = 1e-2;              % stop if norm(drift,2) < 10% of G(x0)
 % Must be>2 because need at least 1 for a call to get f0 and 1 for a Newton
 % 
 % COULD BE maxitl = maxit*maxit, (if steplength reductions do work on last 
-% try), and that could be a VERY long time. maxfeval bounds the total cnt 
-% of calls to G to definite value.
+% try), and that could be a VERY long time. maxfeval bounds total cnt of 
+% calls to G to definite value.
 %
 %   realistically: maxit ~ total calls to G ~ ~maxit+maxarm
 %   because line search rarely works, and search fails quickly...
@@ -36,13 +36,13 @@ rtol = 1e-2;              % stop if norm(drift,2) < 10% of G(x0)
 % size(x_hist) = [393913, maxdim];
 %
 % Given x is a large array, do NOT want large maxdim, and it could never be
-% case we need maxdim > maxfeval which is the max POSSIBLE total calls to G
+% case we need maxdim > maxfeval which is max POSSIBLE total calls to G
 %
 % first 3 of these parms are used by (modified) brsola,
 % rest are specific to nsoli
 
 maxfeval = 1+4;
-maxfeval = 1+1;
+% maxfeval = 1+1;
 
 maxit    = maxfeval;
 
@@ -56,13 +56,37 @@ maxdim   = min(maxfeval, maxdim);
 
 parms  = [maxit, maxdim, maxfeval];
 
-[x0_sol,it_hist,ierr,x_hist] = brsola(x0, @(x) calc_G(x,c0,sim,bgc,time_series,forcing,MTM,PQ_inv), [atol,rtol], parms);
-x0_sol_norm=norm(x0_sol)
-norm_x_hist = vecnorm(x_hist)
-if ierr >1
-    fprintf('\n\nn%s.m: #$@ ierr = %d\n\n', mfilename,ierr);
-%     keyboard
-end
+% NOTE: f has one input, x, and a bunch of parameters; e.g. bgc etc. If G()
+% changes parameters subsequent cals to f do NOT get new parameter value 
+% calculated in bgc;  e.g. if G() changes bgc internally bgc in calls to 
+% f() are ones here, right now, not updated ones fin G().
+
+f = @(x) calc_G(x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
+
+% if we or caller  already knows value of f(x0)=f0 vector, pass it in.
+%
+% However, if we do not include f0 on call of brsola(), brsola will
+% calculate f0 itself. 
+% 
+% This is useful  depending of if this code is being called in a loop
+% where each of 32 tracers has exactly same x0 and have exactly same f0.
+% 
+% But if we are not in a loop or debugging repeatedly using same intial 
+% condition, let brsola do call.
+
+
+% This call could take several hours or even days...
+f0=feval(f,x0);
+
+
+% This is finally call to Newton Krylov solver!
+
+% f0 = 0 .*x0;  % for debug, set f0 = f(x) = 0 to check logic...
+[x0_sol,it_hist,ierr,x_hist] = brsola(x0, f, [atol,rtol], parms, f0);
+
+% Save results, which are many and sort of tricky. Might want x0, the
+% initial condition that solves f, or one forward integral of that (x1),
+% or...
 
 % remember that "sol" of nsoli() is an x0 value !!!
 %
@@ -73,6 +97,13 @@ end
 % started, and second to last column, might be x if there was no
 % restart, or only one line search; in short if ierr = 2 x_hist is
 % hard to understand...
+
+x0_sol_norm=norm(x0_sol)
+norm_x_hist = vecnorm(x_hist)
+if ierr >1
+    fprintf('\n\nn%s.m: #$@ ierr = %d\n\n', mfilename,ierr);
+%     keyboard
+end
 
 % save complete bgc with -sol- tracers
 x0_bgc  = replaceSelectedTracers(sim, c0, x0_sol, sim.selection);
@@ -91,10 +122,16 @@ if sim.debug_disable_phi
 end
 save(sol_fname, 'x0_sol', 'ierr', 'it_hist', 'x_hist', '-v7.3','-nocompression');
 
-% "sol" from brsola() will be last x that was smallest --not-- last
-% one caclualated which is "restart_x0.mat"
+% "sol" from brsola() will be last x that had smaller norm than previous 
+% call of f(x), --not-- last one caclualated, which is "restart_x0.mat". In
+% other words, last x might be a failed line search and sol is last value
+% of x that was converging.
+% 
 %
 % confusing? YES
+
+
+
 % tracer = [7881, 60, 32]
 % x, sol = [379913]
 % c      = [379913, 32]
