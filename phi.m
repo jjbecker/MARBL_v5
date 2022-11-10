@@ -12,7 +12,7 @@ end
 tName = tracer_names(0);    % no CISO tracers
 tendStr   = strjoin(tName(sim.selection));
 phiStr = sprintf('phi( %s )', tendStr);
-persistent phiFileCnt %x0_prev
+persistent phiFileCnt
 if isempty(phiFileCnt)
     phiFileCnt = 1;
 else
