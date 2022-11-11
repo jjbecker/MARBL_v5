@@ -1,4 +1,4 @@
-function [ierr, myRestartFile_x0, x0_sol, c0, sim, bgc, time_series, forcing, MTM, PQ_inv] = marbl_solve(x0, c0, sim, bgc, time_series, forcing, MTM, PQ_inv)
+function [ierr, myRestartFile_x0, x0_sol, c0, sim, bgc, time_series, forcing, MTM, PQ_inv] = marbl_solve(x0, c0, sim, bgc, time_series, forcing, MTM, PQ_inv, f, f0)
 fprintf('%s: Parameters nsoli()... \n', mfilename)
 
 % Get initial G of all tracers to pick sensible rtol for selected tracer???
@@ -6,11 +6,8 @@ fprintf('%s: Parameters nsoli()... \n', mfilename)
 
 
 % DEBUG stops when residual < tol, perfect residual = 0? does not stop run
-atol = sqrt(eps);         % stop if norm(drift,2) < sqrt(eps) (noise)
-rtol = 1e-2;              % stop if norm(drift,2) < 10% of G(x0)
-% atol = eps;
-% rtol = 0;       % DEBUG
-% atol = 150;     %
+atol = sim.epsilon; % stop if norm(drift,2) < sqrt(eps) (noise)
+rtol = 1e-2;        % stop if norm(drift,2) < 10% of G(x0)
 
 % maxfeval or maxit == 1 is pointless.
 % 
@@ -42,7 +39,7 @@ rtol = 1e-2;              % stop if norm(drift,2) < 10% of G(x0)
 % rest are specific to nsoli
 
 maxfeval = 1+4;
-% maxfeval = 1+1;
+maxfeval = 1+1;
 
 maxit    = maxfeval;
 
@@ -61,7 +58,7 @@ parms  = [maxit, maxdim, maxfeval];
 % calculated in bgc;  e.g. if G() changes bgc internally bgc in calls to 
 % f() are ones here, right now, not updated ones fin G().
 
-f = @(x) calc_G(x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
+% % f = @(x) calc_G(x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
 
 % if we or caller  already knows value of f(x0)=f0 vector, pass it in.
 %
@@ -76,7 +73,7 @@ f = @(x) calc_G(x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
 
 
 % This call could take several hours or even days...
-f0=feval(f,x0);
+% f0=feval(f,x0);
 
 
 % This is finally call to Newton Krylov solver!

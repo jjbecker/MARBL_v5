@@ -39,36 +39,32 @@ sim.verbose_debug = 1;
 sim = setInputAndOutputFilePaths(sim, varargin)
 
 
+% FIXME: hack in some stuff for debug
 % keyboard
-sim.time_step_hr = 12;
-% sim.tracer_loop = {'Fe' 'spChl'};
-% 
-% 
+% sim.time_step_hr = 12;
+
 % % % disable all simulation, just check logic of filenames etc
 % % sim.runInParallel = 0;
-% sim.debug_disable_phi = 1;
-sim.disable_Preconditioner = 1;
-% sim.disabledPreconditoners = []
-sim.recalculate_PQ_inv = 0;
-% 
-% 
-% % calculate phi, but solve with G rather than r preconditioned in G()
-% sim.runInParallel = 1;
-% sim.disable_Preconditioner = 1;
-% sim.recalculate_PQ_inv = ~sim.debug_disable_phi && ~sim.disable_Preconditioner && 1; % tricky, many side cases...
-% 
-sim.tracer_loop = fliplr(sim.tracer_loop);
-sim.tracer_loop = {'diatC'};
+% % sim.debug_disable_phi = 1;
+
+% % sim.disable_ALL_Preconditioner = 1;
+% % sim.disabledPreconditoners = []
+
+% % sim.recalculate_PQ_inv = 1;
+
+% sim.tracer_loop = {'diatC'};
+% sim.tracer_loop = fliplr(sim.tracer_loop);
+% sim.tracer_loop = sim.tracer_loop(find( strcmp(sim.tracer_loop,'diatChl')):end );
 sim
 keyboard
 
 
 tName = tracer_names(0);    % no CISO tracers
-    sim.selection = [ find( strcmp(tName,'diatC') ) ];
-    sim.selection(ismember(sim.selection, [9,11]))=[];
-    sim.selection = unique(sort(sim.selection));
-    cstr = tName(sim.selection)';
-    fprintf('%s.m: Selected tracer(s): #%d, "%s"\n', mfilename, sim.selection, string(cstr));
+% %     sim.selection = [ find( strcmp(tName,'diatC') ) ];
+% %     sim.selection(ismember(sim.selection, [9,11]))=[];
+% %     sim.selection = unique(sort(sim.selection));
+% %     cstr = tName(sim.selection)';
+% %     fprintf('%s.m: Selected tracer(s): #%d, "%s"\n', mfilename, sim.selection, string(cstr));
 
 % if numel(sim.disabledPreconditoners)
 %     ismember(tName(sim.selection), sim.disabledPreconditoners)
@@ -185,11 +181,11 @@ for tracer_str = sim.tracer_loop
         fprintf('%s.m: forward integration ONLY\n',mfilename);
     else
         % Solve for selected tracer
-        if sim.recalculate_PQ_inv
+        if sim.recalculate_PQ_inv && ~(numel(sim.disabledPreconditoners)>0 && ismember(tName(sim.selection), sim.disabledPreconditoners))
             PQ_inv = calc_PQ_inv(sim, bgc, time_series, forcing, MTM);
         else
             tStart = tic;
-            if sim.disable_Preconditioner
+            if sim.disable_ALL_Preconditioner || (numel(sim.disabledPreconditoners)>0 && ismember(tName(sim.selection), sim.disabledPreconditoners))
                 fprintf('\n\n\t%s.m: ********* Replace preconditioner with 1 *********\n\n',mfilename)
                 PQ_inv = 1
             else
@@ -200,9 +196,12 @@ for tracer_str = sim.tracer_loop
         end % calculate or load PQ_inv
 
 
+        f = @(x) calc_G(x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
+        f0=feval(f,x0);
+
 
         [ierr, myRestartFile_x0, x0_sol, c0, sim, bgc, time_series, forcing, MTM, PQ_inv] = ...
-            marbl_solve(x0, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
+            marbl_solve(x0, c0, sim, bgc, time_series, forcing, MTM, PQ_inv, f, f0);
 
 
 
@@ -272,4 +271,5 @@ elapsedTime_all_loops_all_tracers = toc(timer_total);
 disp(' ');
 fprintf('\n%s.m: Finished outer solution loops over %d tracers\n', mfilename, numel(sim.tracer_loop));
 disp(['Runtime: ', num2str(elapsedTime_all_loops_all_tracers, '%1.0f'),' (s) or ', num2str(elapsedTime_all_loops_all_tracers/60, '%1.1f'), ' (m)'])
+fprintf('%s.m: Finished at %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 end

@@ -2,95 +2,77 @@ function sim = setInputAndOutputFilePaths(sim, args) % tracer_loop inputRestartF
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
-% % args = varargin{1};
+% Some tracers are known NOT work in single column with precoditioner, but
+% do not crash MARBL. Use 'G()' rather than 'r(G()' as 'f()' in nsoli()
 
-% disp(['Number of provided inputs: ' num2str(length(args))])
-% disp(['Number of requested outputs: ' num2str(nargout)])
-% disp("Total number of input arguments: " + length(args))
-% formatSpec = "Size of varargin cell array: %dx%d";
-% str = compose(formatSpec,size(args));
-% disp(str)
-% celldisp(args)
+disabledPreconditoners = { 'DIC' 'ALK' 'diatC' 'spChl' 'diatChl' 'diazChl'};
+disabledPreconditoners = unique( disabledPreconditoners);
+sim.disabledPreconditoners = disabledPreconditoners;
+fprintf('%s.m: Tracers not to be preconditioned: %s\n', mfilename, strjoin(disabledPreconditoners));
 
-% Return request data % for k = 1:nargout
-%     varargout{k} = k;
-% end
 
-if  length(args) >= 1    % Input restart file
+% Validate list of tracers to be solved; if one was input. If a list was
+% not input, create a default one.
+
+if  length(args) >= 1    % there is a list of tracers to be checked
     if iscell(args{1})
         sim.tracer_loop = args{1};
     else
         error('\n"tracer_loop" input arg must be a cell array even if only 1 element, {''He''}, not a %s.', class(args{1}))
     end
-else
+else                    % no list was input
+
+    fprintf('%s.m: Creating a default ist of tracers to loop over\n', mfilename);
     sim.tracer_loop = tracer_names(0);    % no CISO tracers
 
     % Most of these work very well in single tracer solution...
-    % FIXME: rather than get accurate solution, loop over tracers and try to reduce G
-    % to 1% of starting value, while looping over all tracers, and then
-    % repeat until to get final very accurate result where G is sqrt(eps)
-
-    % always need a selected tracer! For plot time series, or solve
+    % FIXME: rather than get accurate solution, loop over all tracers and
+    % try to reduce G to 1% of starting value, while looping over all
+    % tracers, and then repeat until to get final very accurate result
+    % where G is sqrt(eps).
+    %
+    % Always need a selected tracer! For plot time series, or solve!
     % sim.tracer_loop = {'DOPr' 'DONr' 'DOCr' 'O2' 'DON' 'DOC' 'DOP' 'diatSi' 'spCaCO3' 'diazFe' };
     % sim.tracer_loop = {'DOC' 'DOP' 'spCaCO3' 'diatSi' 'diazFe' };
     % sim.tracer_loop = {'spCaCO3' 'spFe' 'diazFe' };
     % sim.tracer_loop = {'diatFe' 'spP' 'diatP' 'diazP'};
     % sim.tracer_loop = {'zooC' 'spC' 'spCaCO3' 'diatC' 'diatFe' 'diatSi' 'diazC' 'NH4' 'Fe' 'DOP' 'diatChl' 'diazChl'};
-
-
 end
-sim.tracer_loop = {'spCaCO3' 'spFe' 'diazFe' };
-fprintf('%s.m: *** TENATIVE *** Loop over tracers : %s\n', mfilename, strjoin(sim.tracer_loop));
 
-% FIXME: these tracers do NOT work in single column with precoditioner, but
-% do not crash but preconditioner even if it is worse than just using G
+% sim.tracer_loop = {'spCaCO3' 'spFe' 'diazFe' };
+fprintf('%s.m: *** TENATIVE *** List of tracers to loop over : %s\n', mfilename, strjoin(sim.tracer_loop));
 
-disabledPreconditoners = { 'DIC' 'ALK' 'diatC' 'spChl' 'diatChl' 'diazChl' };
-disabledPreconditoners = { 'DIC' 'ALK' 'diatC' 'spChl' 'diazChl' };
-disabledPreconditoners = unique( disabledPreconditoners);
-sim.disabledPreconditoners = disabledPreconditoners;
 
-% Tracers that we do not solve. 
-% ALWAYS punt "ALT" unused methods do NOT influence other tracers, but 
+% Tracers that we do not even try to solve.
+%
+% ALWAYS punt "ALT" unused methods do NOT influence other tracers, but
 % waste lots of run time.
 
 excluded_tracer = { 'DIC_ALT_CO2' 'ALK_ALT_CO2' };
 
 % These tracers do NOT work in single column; and cause "MARBL crash".
 % FIXME: Maybe because preconditioner for them is messed up!
-excluded_tracer = [ excluded_tracer 'spChl' 'diatChl' 'diazChl'];
-% excluded_tracer = [ excluded_tracer 'spFe' 'spCaCO3'];
-excluded_tracer = unique( excluded_tracer);
 
-% % excluded_tracer = []  % debug all this nonsense
+excluded_tracer = [ excluded_tracer ];
+excluded_tracer = unique( excluded_tracer );
 
 % remove excluded and make sure all choices are valid...
+% ...a nightmare of dealing with empty arrays and so on.
+%
+% boils down to finding idx into list of tracers
 
-if numel(excluded_tracer) == 0
-    ignore_or_exlude_idx = [];
+if numel(excluded_tracer) == 0  % Nothing to exclude, move on!
+    idx = [];
 else
-    [flag, ignore_or_exlude_idx] = ismember ( excluded_tracer, sim.tracer_loop );
-    ignore_or_exlude_idx = sort(ignore_or_exlude_idx(flag>0));
-end
-if any(ignore_or_exlude_idx)
-    sim.tracer_loop([ignore_or_exlude_idx]) = [];
+    [flag, idx] = ismember ( excluded_tracer, sim.tracer_loop );
+    idx = sort(idx(flag>0));
 end
 
-% % need flag to find tracers that are not going to be processed, but if 
-% % present would not be preconditioned
-% 
-% [flag, do_NOT_precondition_idx] = ismember ( disabledPreconditoners, sim.tracer_loop );
-% if numel(do_NOT_precondition_idx) == 0
-%     sim.do_NOT_precondition_idx = [];
-% else
-%     [~, ignore_or_exlude_idx] = ismember ( excluded_tracer, sim.tracer_loop );
-%     ignore_or_exlude_idx = sort(ignore_or_exlude_idx)
-%     sim.tracer_loop([ignore_or_exlude_idx]) = [];
-% end
-
-fprintf('%s.m: Tracers not to be preconditioned: %s\n', mfilename, strjoin(disabledPreconditoners));
-fprintf('%s.m: Tracers excluded from loop: %s\n', mfilename, strjoin(excluded_tracer));
-fprintf('%s.m: Loop over tracers : %s\n', mfilename, strjoin(sim.tracer_loop));
+if any(idx)
+    sim.tracer_loop([idx]) = [];
+end
+fprintf('%s.m: Tracers EXCLUDED from run: %s\n', mfilename, strjoin(excluded_tracer));
+fprintf('%s.m: *** Final *** List of tracers to loop over : %s\n', mfilename, strjoin(sim.tracer_loop));
 
 
 if  length(args) >= 2    % Input restart file INCLUDING PATH
@@ -110,17 +92,17 @@ else
 
     sim.inputRestartFile = strcat(myDataDir(), inputRestartFileStem);
 end
-fprintf('%s.m: FIXME Loop over tracers starts with year %d of offline restart file: "%s"\n', mfilename, sim.start_yr, sim.inputRestartFile);
+fprintf('%s.m: Input offline restart file: "%s"\n', mfilename, sim.inputRestartFile);
 if ~isfile(sim.inputRestartFile)
     error("missing file or typo in name of inputRestartFile")
 end
+fprintf('%s.m: FIXME Output solution files will be given an arbitrary year of %d\n', mfilename, sim.start_yr);
 
 if  length(args) >= 3    % Input time step in hours
     sim.time_step_hr = args{3};
 else
     sim.time_step_hr = 3;
 end
-fprintf('%s.m: time_step_hr is %d hr\n', mfilename, sim.time_step_hr);
 
 if  length(args) >= 4    % recalculate_PQ_inv?
     sim.recalculate_PQ_inv = args{4};
@@ -128,11 +110,12 @@ else
     sim.recalculate_PQ_inv = 1;
 end
 
-sim.debug_disable_phi      = 0;
-sim.disable_Preconditioner = 0;
-if  length(args) >= 5                    % specify short_circuit phi()?
-    sim.debug_disable_phi     = args{5};
-    sim.disable_Preconditioner = args{5};
+sim.debug_disable_phi               = 0;
+sim.disable_ALL_Preconditioner      = 0;
+% specify short_circuit phi()?
+if  length(args) >= 5 
+    sim.debug_disable_phi           = args{5};
+    sim.disable_ALL_Preconditioner  = args{5};
 end
 
 if  length(args) >= 6    % log every time step?
@@ -163,16 +146,17 @@ end
 sim.marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 
 
+fprintf('%s.m: time_step_hr is %d hr\n', mfilename, sim.time_step_hr);
 fprintf('%s.m: logTracers is %d\n', mfilename, sim.logTracers);
 fprintf('%s.m: recalculate_PQ_inv is %d\n', mfilename, sim.recalculate_PQ_inv);
-fprintf('%s.m: disable_Preconditioner is %d\n', mfilename, sim.disable_Preconditioner);
+fprintf('%s.m:  disable_ALL_Preconditioner is %d\n', mfilename, sim.disable_ALL_Preconditioner);
 fprintf('%s.m: debug_disable_phi is %d\n', mfilename, sim.debug_disable_phi);
 
 % In past I debuged MARBL Carbon isotopes. "lciso_on", and that stuff, it
 % probably still works but they makes everything bigger and mch slower.
 
 sim.lciso_on = 0;   % run with Carbon Isotopes ??
-sim.epsilon = -sqrt(eps);
+sim.epsilon = sqrt(eps);
 sim.logDiags = and (0, sim.logTracers) ; % Usually no diags..
 sim.captureAllSelectedTracers = 0;
 
