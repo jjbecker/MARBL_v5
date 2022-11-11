@@ -12,7 +12,7 @@ function [ surface, interior ] = MARBL_loop_iteration(dt, n, col_num, surface, i
 %
 % Code should be
 %
-%      interior.tracer = max ( sim.epsilon, interior.tracer);
+%      interior.tracer = max ( -sim.epsilon, interior.tracer);
 %
 % but no globals allowed in parallel code. So it's hard coded...
 % 

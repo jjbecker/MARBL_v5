@@ -20,7 +20,7 @@ for fld=1:size(nameUnits')
     % FIXME: find "bad points" but what does "bad" mean?
 
     negLimit = 0;
-    negLimit = sim.epsilon;
+    negLimit = -sim.epsilon;
     negLimit = -10 *sqrt(eps);
     negLimit = -1e-6;
 
