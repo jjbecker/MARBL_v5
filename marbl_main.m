@@ -30,9 +30,9 @@ diary off; diary off; diary on; diary off; diary on; diary on; % FIXME: diary be
 
 % Setup big picture parts of a simulation and/or NK solution.
 
-forwardIntegrationOnly    = 0;      % 1 -> no NK just fwd integration
-num_relax_iterations      = 0;      % 0 means no relax steps, just use NK x1_sol
-num_forward_years         = 0;      % if fwd only, num fwd, else this inum fwd after relax step
+sim.forwardIntegrationOnly    = 0;      % 1 -> no NK just fwd integration
+sim.num_relax_iterations      = 0;      % 0 means no relax steps, just use NK x1_sol
+sim.num_forward_years         = 0;      % if fwd only, num fwd, else this inum fwd after relax step
 
 sim.runInParallel = 1;      % parallel is hard to debug, but 2x faster
 sim.verbose_debug = 1;
@@ -41,7 +41,7 @@ sim = setInputAndOutputFilePaths(sim, varargin)
 
 % FIXME: hack in some stuff for debug
 % keyboard
-% sim.time_step_hr = 12;
+sim.time_step_hr = 12;
 
 % % % disable all simulation, just check logic of filenames etc
 % % sim.runInParallel = 0;
@@ -177,7 +177,7 @@ for tracer_str = sim.tracer_loop
     x0 = x0(:);                 % unitless
 
 
-    if( forwardIntegrationOnly )
+    if( sim.forwardIntegrationOnly )
         fprintf('%s.m: forward integration ONLY\n',mfilename);
     else
         % Solve for selected tracer
@@ -190,7 +190,7 @@ for tracer_str = sim.tracer_loop
                 PQ_inv = 1
             else
                 fprintf('\n%s.m: Loading ~30 GB(!) mfactored preconditioner PQ_inv from %s solution...\n', mfilename, strcat(string(tName(sim.selection))))
-                load (strcat(myDataDir(),'sol/',strjoin(tName(sim.selection)),'_QJ'), 'PQ_inv')
+                PQ_inv = load (strcat(myDataDir(),'sol/',strjoin(tName(sim.selection)),'_QJ'), 'PQ_inv')
             end
             fprintf('%s.m: %1.0f (s) to init sim and load PQinv \n',mfilename, toc(tStart));
         end % calculate or load PQ_inv
@@ -208,9 +208,9 @@ for tracer_str = sim.tracer_loop
         % FIXME: use x0 or x1 of solution?
         x = x0_sol;
 
-        if num_relax_iterations > 0
+        if sim.num_relax_iterations > 0
             [x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv, myRestartFile_relaxed] = ...
-                marbl_relax(num_relax_iterations, x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
+                marbl_relax(x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
         end % relax step
 
     end % Solve for selected tracer
@@ -218,9 +218,9 @@ for tracer_str = sim.tracer_loop
     % Next! allow ALL tracers, not just selection, to "relax' to solution.
     %    do pure forward integration for a while...
 
-    for fwd_itc = 1:num_forward_years
+    for fwd_itc = 1:sim.num_forward_years
 
-        fprintf("\n%s.m: starting forward integrate year #%d of %d\n", mfilename, fwd_itc, num_forward_years)
+        fprintf("\n%s.m: starting forward integrate year #%d of %d\n", mfilename, fwd_itc, sim.num_forward_years)
 
         [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
 
