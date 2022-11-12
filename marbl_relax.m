@@ -1,4 +1,4 @@
-function [x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv, myRestartFile_relaxed] = marbl_relax(num_relax_iterations, x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv)
+function [x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv, myRestartFile_relaxed] = marbl_relax(x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 fprintf('\n%s.m: Now we "relax" or forward integtration single variable solution a few iterations: %s\n',mfilename,datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
@@ -8,15 +8,15 @@ fprintf('%s.m: %d time steps, each time step is %1.1f (h), simulating %1.1f year
 % FIXME: keep history of relax steps???
 x_histx = x;
 r_hist = zeros(size(x));
-it_histx = zeros(num_relax_iterations,1);
+it_histx = zeros(sim.num_forward_years,1);
 
 % % remember! First relax iteration of x0_sol" is same as x1 of sol, so in
-% % that case, to be useful, num_relax_iterations >= 2.
-% But if using x1_sol num_relax_iterations >= 1 is ok.
+% % that case, to be useful, sim.num_forward_years >= 2.
+% But if using x1_sol sim.num_forward_years >= 1 is ok.
 
-for itc = 1:num_relax_iterations
+for itc = 1:sim.num_forward_years
 
-    fprintf("\n%s.m: starting relaxation year #%d of %d\n", mfilename, itc, num_relax_iterations)
+    fprintf("\n%s.m: starting relaxation year #%d of %d\n", mfilename, itc, sim.num_forward_years)
 
     % Note x = x1, not "x0" which is normal thing for sol iterations
     % Note c0 is correct
