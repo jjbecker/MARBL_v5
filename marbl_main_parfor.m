@@ -44,7 +44,7 @@ sim = setInputAndOutputFilePaths(sim, varargin)
 sim.time_step_hr = 12;
 
 % % % disable all simulation, just check logic of filenames etc
-% % sim.runInParallel = 0;
+sim.runInParallel = 0;
 % % sim.debug_disable_phi = 1;
 
 % % sim.disable_ALL_Preconditioner = 1;
@@ -91,10 +91,15 @@ sim.phi_years = 1;      % NK always uses 1 year integration
 
 % for tracer_str = sim.tracer_loop
 num_str = numel(sim.tracer_loop);
-parfor par_idx = 1:num_str,2
+
+delete(gcp('nocreate'))
+numCores = feature('numcores');
+% numCores = 2;
+p = parpool(numCores);
+parfor par_idx = 1:num_str, numCores
     tmp_sim = sim;
     tracer_str = tmp_sim.tracer_loop (par_idx);
-    parfor_inner(tmp_sim, MTM, tracer_str )
+    parfor_inner(tmp_sim, MTM, tracer_str );
 end % of loop over tracers
 fprintf('...end of loop over tracers : '); toc(timer_total)
 
