@@ -41,7 +41,7 @@ sim = setInputAndOutputFilePaths(sim, varargin)
 
 % FIXME: hack in some stuff for debug
 % keyboard
-sim.time_step_hr = 12;
+% sim.time_step_hr = 12;
 
 % % % disable all simulation, just check logic of filenames etc
 sim.runInParallel = 0;
@@ -94,14 +94,16 @@ num_str = numel(sim.tracer_loop);
 
 delete(gcp('nocreate'))
 numCores = feature('numcores');
-% numCores = 2;
+numCores = 16;
 p = parpool(numCores);
 parfor par_idx = 1:num_str, numCores
     tmp_sim = sim;
     tracer_str = tmp_sim.tracer_loop (par_idx);
     parfor_inner(tmp_sim, MTM, tracer_str );
 end % of loop over tracers
+delete(gcp('nocreate'))
 fprintf('...end of loop over tracers : '); toc(timer_total)
+fprintf('Shutting down the parpool...\n')
 
 
 % FIXME: need to save workspace?!
