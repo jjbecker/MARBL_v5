@@ -37,11 +37,12 @@ sim.num_forward_years         = 0;      % if fwd only, num fwd, else this inum f
 sim.runInParallel = 1;      % parallel is hard to debug, but 2x faster
 sim.verbose_debug = 1;
 sim = setInputAndOutputFilePaths(sim, varargin)
+sim.tracer_loop = {'DOPr' 'DONr' 'DOCr' 'O2'};
 
 
 % FIXME: hack in some stuff for debug
 % keyboard
-% sim.time_step_hr = 12;
+sim.time_step_hr = 12;
 
 % % % disable all simulation, just check logic of filenames etc
 sim.runInParallel = 0;
@@ -93,14 +94,15 @@ sim.phi_years = 1;      % NK always uses 1 year integration
 num_str = numel(sim.tracer_loop);
 
 delete(gcp('nocreate'))
-numCores = feature('numcores');
-numCores = 16;
+numCores = round(feature('numcores')/4);
+% numCores = 16;
 p = parpool(numCores);
-parfor par_idx = 1:num_str, numCores
-    tmp_sim = sim;
-    tracer_str = tmp_sim.tracer_loop (par_idx);
-    parfor_inner(tmp_sim, MTM, tracer_str );
-end % of loop over tracers
+% parfor par_idx = 1:num_str, numCores
+% % for par_idx = 1:num_str
+%     tmp_sim = sim;
+%     tracer_str = tmp_sim.tracer_loop (par_idx);
+%     parfor_inner(tmp_sim, MTM, tracer_str );
+% end % of loop over tracers
 delete(gcp('nocreate'))
 fprintf('...end of loop over tracers : '); toc(timer_total)
 fprintf('Shutting down the parpool...\n')
@@ -116,7 +118,7 @@ save_timer = tic; fprintf('Saving (possibly) large workspace file... '); save(st
 fprintf('... end of %s.m ', mfilename);
 elapsedTime_all_loops_all_tracers = toc(timer_total);
 disp(' ');
-fprintf('\n%s.m: Finished outer solution loops over %d tracers\n', mfilename, numel(sim.tracer_loop));
+fprintf('\n%s.m: Finished outer solution loops over %d tracers at %s\n', mfilename, numel(sim.tracer_loop),datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 disp(['Runtime: ', num2str(elapsedTime_all_loops_all_tracers, '%1.0f'),' (s) or ', num2str(elapsedTime_all_loops_all_tracers/60, '%1.1f'), ' (m)'])
 fprintf('%s.m: Finished at %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 end
