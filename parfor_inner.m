@@ -157,7 +157,7 @@ sim.runInParallel = 0;      % parallel is hard to debug, but 2x faster
 
     elapsedTime_all_loc = toc(timer_PQ_init_solve_relax_fwd);
     disp(' ');
-    disp([mfilename,' finished ', strjoin(tName(sim.selection))])
+    disp([mfilename,'.m: finished ', strjoin(tName(sim.selection))])
     disp(['Runtime: ', num2str(elapsedTime_all_loc, '%1.0f'),' (s) or ', num2str(elapsedTime_all_loc/60, '%1.1f'), ' (m)'])
     %     disp(['Runtime per location per iteration: ', num2str(elapsedTime_all_loc/sim.num_time_steps/sim.domain.num_wet_loc*1000, '%1.2f'), ' (ms) MARBL, advection, diffusion, mfactor()'])
     %     disp(['Runtime all location per iteration: ', num2str(elapsedTime_all_loc/sim.num_time_steps, '%1.2f'),                    ' (s)  MARBL, advection, diffusion, mfactor()'])
