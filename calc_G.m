@@ -71,7 +71,7 @@ if sim.disable_ALL_Preconditioner || (numel(sim.disabledPreconditoners)>0 && ism
     fprintf('\n\n\t%s.m: ********* Disabling mfactor in calc_G  *********\n\n',mfilename)
     r = G;
 else
-    r = G -mfactor(PQ_inv, G);
+    r = mfactor(PQ_inv, G) -G;
 end    
 
 if (sim.verbose_debug)
