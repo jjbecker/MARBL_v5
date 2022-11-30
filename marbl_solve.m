@@ -39,7 +39,7 @@ rtol = 1e-2;        % stop if norm(drift,2) < 10% of G(x0)
 % rest are specific to nsoli
 
 maxfeval = 1+4;
-maxfeval = 1+1;
+maxfeval = 1+10;
 
 maxit    = maxfeval;
 
@@ -98,7 +98,7 @@ parms  = [maxit, maxdim, maxfeval];
 x0_sol_norm=norm(x0_sol)
 norm_x_hist = vecnorm(x_hist)
 if ierr >1
-    fprintf('\n\nn%s.m: #$@ ierr = %d\n\n', mfilename,ierr);
+    fprintf('\n\n%s.m: **** ierr = %d****\n\n', mfilename,ierr);
 %     keyboard
 end
 
