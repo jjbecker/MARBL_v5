@@ -94,16 +94,20 @@ sim.phi_years = 1;      % NK always uses 1 year integration
 num_str = numel(sim.tracer_loop);
 
 delete(gcp('nocreate'))
-numCores = round(feature('numcores')/4);
-% numCores = 16;
+numCores = max(round(feature('numcores')/2), 6) % Never more than 6
+numCores = min(num_str, numCores)               % Never more than numTracer
 p = parpool(numCores);
-% parfor par_idx = 1:num_str, numCores
-% % for par_idx = 1:num_str
-%     tmp_sim = sim;
-%     tracer_str = tmp_sim.tracer_loop (par_idx);
-%     parfor_inner(tmp_sim, MTM, tracer_str );
-% end % of loop over tracers
+ticBytes(gcp);
+
+parfor (par_idx = 1:num_str, numCores)          % PARENTHESIS are CRUCIAL
+    tmp_sim = sim;
+    tracer_str = tmp_sim.tracer_loop (par_idx);
+    parfor_inner(tmp_sim, MTM, tracer_str );
+end % of loop over tracers
+
+ticBytes(gcp);
 delete(gcp('nocreate'))
+
 fprintf('...end of loop over tracers : '); toc(timer_total)
 fprintf('Shutting down the parpool...\n')
 
