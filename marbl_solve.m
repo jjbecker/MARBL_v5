@@ -1,4 +1,5 @@
-function [ierr, myRestartFile_x0, x0_sol, c0, sim, bgc, time_series, forcing, MTM, PQ_inv] = marbl_solve(x0, c0, sim, bgc, time_series, forcing, MTM, PQ_inv, f, f0)
+function [ierr, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, c0, sim, bgc, f, f0)
+% function [ierr, myRestartFile_x0, x0_sol, c0, sim, bgc, time_series, forcing, MTM, PQ_inv] = marbl_solve(x0, c0, sim, bgc, time_series, forcing, MTM, PQ_inv, f, f0)
 fprintf('%s: Parameters nsoli()... \n', mfilename)
 
 % Get initial G of all tracers to pick sensible rtol for selected tracer???
@@ -56,9 +57,8 @@ parms  = [maxit, maxdim, maxfeval];
 % NOTE: f has one input, x, and a bunch of parameters; e.g. bgc etc. If G()
 % changes parameters subsequent cals to f do NOT get new parameter value 
 % calculated in bgc;  e.g. if G() changes bgc internally bgc in calls to 
-% f() are ones here, right now, not updated ones fin G().
+% f() are ones here, right now, not updated ones in G().
 
-% % f = @(x) calc_G(x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
 
 % if we or caller  already knows value of f(x0)=f0 vector, pass it in.
 %
@@ -95,7 +95,7 @@ parms  = [maxit, maxdim, maxfeval];
 % restart, or only one line search; in short if ierr = 2 x_hist is
 % hard to understand...
 
-x0_sol_norm=norm(x0_sol)
+x0_sol_norm = norm(x0_sol)
 norm_x_hist = vecnorm(x_hist)
 if ierr >1
     fprintf('\n\n%s.m: **** ierr = %d****\n\n', mfilename,ierr);

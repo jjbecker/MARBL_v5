@@ -89,6 +89,7 @@ sim = setPeek(sim);
 
 sim.phi_years = 1;      % NK always uses 1 year integration
 
+sim.tracer_loop = {'DOPr' 'DONr' 'DOCr' 'O2'};  % FIXME: DEBUG
 for tracer_str = sim.tracer_loop
 
     % ALWAYS punt "ALT" methods that do NOT depend on any other tracers...
@@ -200,8 +201,7 @@ for tracer_str = sim.tracer_loop
         f0=feval(f,x0);
 
 
-        [ierr, myRestartFile_x0, x0_sol, c0, sim, bgc, time_series, forcing, MTM, PQ_inv] = ...
-            marbl_solve(x0, c0, sim, bgc, time_series, forcing, MTM, PQ_inv, f, f0);
+        [ierr, myRestartFile_x0, x0_sol, c0, sim, bgc, time_series] = marbl_solve(x0, c0, sim, bgc, f, f0);
 
 
 
@@ -209,7 +209,7 @@ for tracer_str = sim.tracer_loop
         x = x0_sol;
 
         if sim.num_relax_iterations > 0
-            [x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv, myRestartFile_relaxed] = ...
+            [~, ~, sim, bgc, time_series, forcing, MTM, ~, ~] = ...
                 marbl_relax(x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
         end % relax step
 
