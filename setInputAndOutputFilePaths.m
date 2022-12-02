@@ -23,8 +23,8 @@ if  length(args) >= 1    % there is a list of tracers to be checked
 else                    % no list was input
 
     fprintf('%s.m: Creating a default ist of tracers to loop over\n', mfilename);
-    sim.tracer_loop = tracer_names(0);    % no CISO tracers
-
+    tName = tracer_names(0);    % no CISO tracers
+    sim.tracer_loop = tName;
     % Most of these work very well in single tracer solution...
     % FIXME: rather than get accurate solution, loop over all tracers and
     % try to reduce G to 1% of starting value, while looping over all
@@ -48,32 +48,31 @@ fprintf('%s.m: *** TENATIVE *** List of tracers to loop over : %s\n', mfilename,
 % ALWAYS punt "ALT" unused methods do NOT influence other tracers, but
 % waste lots of run time.
 
-excluded_tracer = { 'DIC_ALT_CO2' 'ALK_ALT_CO2' };
+sim.excluded_tracer = { 'DIC_ALT_CO2' 'ALK_ALT_CO2' };
 
 % These tracers do NOT work in single column; and cause "MARBL crash".
 % FIXME: Maybe because preconditioner for them is messed up!
 
-excluded_tracer = [ excluded_tracer ];
-excluded_tracer = unique( excluded_tracer );
+sim.excluded_tracer = [ sim.excluded_tracer ];          % FIXME???
+sim.excluded_tracer = unique( sim.excluded_tracer );
 
 % remove excluded and make sure all choices are valid...
 % ...a nightmare of dealing with empty arrays and so on.
 %
 % boils down to finding idx into list of tracers
 
-if numel(excluded_tracer) == 0  % Nothing to exclude, move on!
+if numel(sim.excluded_tracer) == 0  % Nothing to exclude, move on!
     idx = [];
 else
-    [flag, idx] = ismember ( excluded_tracer, sim.tracer_loop );
+    [flag, idx] = ismember ( sim.excluded_tracer, sim.tracer_loop );
     idx = sort(idx(flag>0));
 end
 
 if any(idx)
     sim.tracer_loop([idx]) = [];
 end
-fprintf('%s.m: Tracers EXCLUDED from run: %s\n', mfilename, strjoin(excluded_tracer));
+fprintf('%s.m: Tracers EXCLUDED from run: %s\n', mfilename, strjoin(sim.excluded_tracer));
 fprintf('%s.m: *** Final *** List of tracers to loop over : %s\n', mfilename, strjoin(sim.tracer_loop));
-
 
 if  length(args) >= 2    % Input restart file INCLUDING PATH
     sim.inputRestartFile = args{2};
@@ -159,5 +158,29 @@ sim.lciso_on = 0;   % run with Carbon Isotopes ??
 sim.epsilon = sqrt(eps);
 sim.logDiags = and (0, sim.logTracers) ; % Usually no diags..
 sim.captureAllSelectedTracers = 0;
+
+
+% % % disable all simulation, just check logic of filenames etc
+% % sim.debug_disable_phi = 1;
+% % sim.disable_ALL_Preconditioner = 1;
+% % sim.disabledPreconditoners = []
+
+
+% sim.tracer_loop = {'diatC'};
+% sim.tracer_loop = fliplr(sim.tracer_loop);
+% sim.tracer_loop = sim.tracer_loop(find( strcmp(sim.tracer_loop,'diatChl')):end );
+sim.tracer_loop = {'DOPr' 'DONr' 'DOCr' 'O2'};
+sim.tracer_loop = {'DOPr' 'DONr' 'DOCr'};
+
+tName = tracer_names(0);    % no CISO tracers
+
+if ~all(matches(sim.tracer_loop,tName))
+    errStr = sim.tracer_loop(~matches(sim.tracer_loop,tName));
+    error('\n%s.m: Tracer list "sim.tracer_loop"... \n\n\t"%s"\n\n contains one or more invalid tracer names: \n\n\t"%s"', mfilename, strjoin(string(sim.tracer_loop)), strjoin(string(errStr)))
+end
+
+for idx = 1: numel(sim.tracer_loop)
+    sim.tracer_loop_idx(idx) = find( strcmp(tName,sim.tracer_loop(idx)) );
+end
 
 end
