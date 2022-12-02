@@ -1,5 +1,4 @@
-function [ierr, x0_sol] = marbl_main(varargin) % tracer_loop, inputRestartFile, time_step_hr, logTracers, recalculate_PQ_inv, short_circuit
-% function varargout = redplot(varargin) [varargout{1:nargout}] = plot(varargin{:},'Color',[1,0,0]); end
+% function [singleColTracerError, singleColTracerSolution] = marbl_main_parfor(varargin) % tracer_loop, inputRestartFile, time_step_hr, logTracers, recalculate_PQ_inv, short_circuit
 
 % "main" of cyclostationary transport version of MARBL,
 % Try to solve MARBL using "Newton Like" methods from Kelley
@@ -30,86 +29,94 @@ diary off; diary off; diary on; diary off; diary on; diary on; % FIXME: diary be
 
 % Setup big picture parts of a simulation and/or NK solution.
 
+sim.runInParallel = 0;      % parfor can't use spmd inside, at least I can not make that work                       
+sim.verbose_debug = 1;
 sim.forwardIntegrationOnly    = 0;      % 1 -> no NK just fwd integration
 sim.num_relax_iterations      = 0;      % 0 means no relax steps, just use NK x1_sol
 sim.num_forward_years         = 0;      % if fwd only, num fwd, else this inum fwd after relax step
 
-sim.runInParallel = 1;      % parallel is hard to debug, but 2x faster
-sim.verbose_debug = 1;
-sim = setInputAndOutputFilePaths(sim, varargin)
-sim.tracer_loop = {'DOPr' 'DONr' 'DOCr' 'O2'};
+% setup file paths and selected tracers
 
+% sim = setInputAndOutputFilePaths(sim, varargin)
+sim = setInputAndOutputFilePaths(sim,[])
 
 % FIXME: hack in some stuff for debug
-% keyboard
+
+sim.tracer_loop = {'DOPr' 'DONr' 'Fe'};
 sim.time_step_hr = 12;
 
-% % % disable all simulation, just check logic of filenames etc
-sim.runInParallel = 0;
-% % sim.debug_disable_phi = 1;
+sim.phi_years     = 1;      % NK always uses 1 year integration
 
-% % sim.disable_ALL_Preconditioner = 1;
-% % sim.disabledPreconditoners = []
-
-% % sim.recalculate_PQ_inv = 1;
-
-% sim.tracer_loop = {'diatC'};
-% sim.tracer_loop = fliplr(sim.tracer_loop);
-% sim.tracer_loop = sim.tracer_loop(find( strcmp(sim.tracer_loop,'diatChl')):end );
 sim
 % keyboard
 
-
-tName = tracer_names(0);    % no CISO tracers
-% %     sim.selection = [ find( strcmp(tName,'diatC') ) ];
-% %     sim.selection(ismember(sim.selection, [9,11]))=[];
-% %     sim.selection = unique(sort(sim.selection));
-% %     cstr = tName(sim.selection)';
-% %     fprintf('%s.m: Selected tracer(s): #%d, "%s"\n', mfilename, sim.selection, string(cstr));
-
-% if numel(sim.disabledPreconditoners)
-%     ismember(tName(sim.selection), sim.disabledPreconditoners)
-% end
-% 
-if ~all(matches(sim.tracer_loop,tName))
-    errStr = sim.tracer_loop(~matches(sim.tracer_loop,tName));
-    error('\n%s.m: Tracer list "sim.tracer_loop"... \n\n\t"%s"\n\n contains one or more invalid tracer names: \n\n\t"%s"', mfilename, strjoin(string(sim.tracer_loop)), strjoin(string(errStr)))
-end
-
 %%%%%%
-sim.grd     = load(sim.inputRestartFile,'sim').sim.grd;
-sim.domain  = load(sim.inputRestartFile,'sim').sim.domain;
 if 0 && sim.debug_disable_phi
     fprintf('\n\n\t%s.m: ********* phi() is short circuited skip MTM read  *********\n\n',mfilename)
     MTM = 1;
 else
-    MTM = load(sim.inputRestartFile,'MTM').MTM;
+    load(sim.inputRestartFile,'tracer','state','MTM');
+    % MTM        = load(sim.inputRestartFile,'MTM').MTM;
+    bgc.tracer = tracer;    clear tracer;
+    bgc.state  = state;     clear state;
 end
-
+% FIXME: do we?
+% We need the initial tracers for the restart file[sim, 
+%%%%% Need moles for calc_global_moles_and_means() for bgc2nsoli()
+sim.grd     = load(sim.inputRestartFile,'sim').sim.grd;
+sim.domain  = load(sim.inputRestartFile,'sim').sim.domain;
+[sim, ~] = calculate_depth_map_and_volumes(sim);
 sim = setPeek(sim);
+sim = calc_global_moles_and_means(bgc, sim);
 
-sim.phi_years = 1;      % NK always uses 1 year integration
+c0 = bgc2nsoli(sim, bgc.tracer);    % nsoli format; unitless; aka scaled FP
+sz = [ numel(sim.domain.iwet_JJ) , size(bgc.tracer,3) ];
+% c  = reshape(c0, sz);
+% x0_bgc  = replaceSelectedTracers(sim, c0, x0_sol, sim.selection);
 
-% for tracer_str = sim.tracer_loop
-num_str = numel(sim.tracer_loop);
+%%%%%%% These are the output result from the "parfor slice variable", sized to accept all possible tracers
+num_tr = numel(sim.tracer_loop);
+singleColTracerError    = zeros([1, size(bgc.tracer,3)]);
+singleColTracerSolution = zeros([size(sim.domain.iwet_FP,1), size(bgc.tracer,3)]);
 
+%%%%%%
 delete(gcp('nocreate'))
 numCores = max(round(feature('numcores')/2), 6) % Never more than 6
-numCores = min(num_str, numCores)               % Never more than numTracer
+numCores = min(num_tr, numCores)                % Never more than numTracer
+if isunix && ismac
+    numCores = min(2, numCores)     % hack for limited RAM on laptop
+end
 p = parpool(numCores);
+if p.NumWorkers ~= numCores
+    error("Could not allocate desired number of cores")
+end
 ticBytes(gcp);
 
-parfor (par_idx = 1:num_str, numCores)          % PARENTHESIS are CRUCIAL
-    tmp_sim = sim;
-    tracer_str = tmp_sim.tracer_loop (par_idx);
-    parfor_inner(tmp_sim, MTM, tracer_str );
+
+myFilename = mfilename;
+% parfor (par_idx = 1:num_tr, numCores)     % PARENTHESIS are CRUCIAL
+sim.recalculate_PQ_inv = 0;
+parfor (par_idx = 1:num_tr,numCores)              % PARENTHESIS are CRUCIAL
+
+    tmp_sim = sim;      % 'tmp_sim'  may be extraneous; parfor crazy!
+
+    tracer_cell = tmp_sim.tracer_loop     (par_idx);
+    tracer_col  = tmp_sim.tracer_loop_idx (par_idx);
+    fprintf('%s.m: Starting tracer #%d (%s)\n', myFilename, tracer_col, string(tracer_cell))
+
+%     [tmp_sim, tmp_bgc, tmp_ierr, tmp_x] = parfor_inner(tmp_sim, MTM, tracer_cell );
+        [~, ~, ierr, x] = parfor_inner(tmp_sim, MTM, tracer_cell );
+%         singleColTracerError   (:, tracer_col) = ierr;
+%         singleColTracerSolution(:, tracer_col) = x;
 end % of loop over tracers
 
-ticBytes(gcp);
+tocBytes(gcp)
 delete(gcp('nocreate'))
 
 fprintf('...end of loop over tracers : '); toc(timer_total)
 fprintf('Shutting down the parpool...\n')
+
+bgc.tracer = nsoli2bgc(sim, bgc, x0_bgc);   % marbl format x0
 
 
 % FIXME: need to save workspace?!
@@ -125,4 +132,5 @@ disp(' ');
 fprintf('\n%s.m: Finished outer solution loops over %d tracers at %s\n', mfilename, numel(sim.tracer_loop),datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 disp(['Runtime: ', num2str(elapsedTime_all_loops_all_tracers, '%1.0f'),' (s) or ', num2str(elapsedTime_all_loops_all_tracers/60, '%1.1f'), ' (m)'])
 fprintf('%s.m: Finished at %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
-end
+
+% end % of function
