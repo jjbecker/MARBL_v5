@@ -38,17 +38,14 @@ sim.num_forward_years         = 0;      % if fwd only, num fwd, else this inum f
 % setup file paths and selected tracers
 
 % sim = setInputAndOutputFilePaths(sim, varargin)
-sim = setInputAndOutputFilePaths(sim,[])
+sim = setInputAndOutputFilePaths(sim,[]);
 
 % FIXME: hack in some stuff for debug
 
 sim.tracer_loop = {'DOPr' 'DONr' 'Fe'};
-sim.time_step_hr = 12;
+% sim.time_step_hr = 12;
 
 sim.phi_years     = 1;      % NK always uses 1 year integration
-
-sim
-% keyboard
 
 %%%%%%
 if 0 && sim.debug_disable_phi
@@ -93,9 +90,11 @@ end
 ticBytes(gcp);
 
 
-myFilename = mfilename;
-% parfor (par_idx = 1:num_tr, numCores)     % PARENTHESIS are CRUCIAL
-sim.recalculate_PQ_inv = 0;
+% myFilename = mfilename;     % mfilename does NOT work in a parfor
+
+% sim.recalculate_PQ_inv = 0;
+sim
+% keyboard
 parfor (par_idx = 1:num_tr,numCores)              % PARENTHESIS are CRUCIAL
 
     tmp_sim = sim;      % 'tmp_sim'  may be extraneous; parfor crazy!
