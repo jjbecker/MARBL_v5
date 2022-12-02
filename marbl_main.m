@@ -56,6 +56,8 @@ sim.time_step_hr = 12;
 % sim.tracer_loop = fliplr(sim.tracer_loop);
 % sim.tracer_loop = sim.tracer_loop(find( strcmp(sim.tracer_loop,'diatChl')):end );
 sim
+
+sim.recalculate_PQ_inv = 0;
 keyboard
 
 
@@ -167,7 +169,6 @@ for tracer_str = sim.tracer_loop
     % c      = [379913, 32]
     % c0     = 12157216]
 
-    moles_0 = global_moles(bgc.tracer, sim)';
     sz = [ numel(sim.domain.iwet_JJ) , size(bgc.tracer,3) ];
     c0 = bgc2nsoli(sim, bgc.tracer);    % nsoli format; unitless; aka scaled FP
     c  = reshape(c0, sz);
