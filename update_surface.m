@@ -1,4 +1,4 @@
-function [surface] = update_surface (dt, surface, interior, skip )
+function [surface] = update_surface (surface, interior, skip )
 
 % use midpoint of time step to update surface?
 % 

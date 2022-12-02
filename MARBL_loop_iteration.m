@@ -41,15 +41,15 @@ if (n == 1  && col_num == 1)
     ignore = 1;
     % FIXME: use these throw away states and diags????
     %     interior = update_interior ( interior, ignore );
-    %     surface  = update_surface  ( dt, surface, interior, ignore );
-    update_interior (     interior, ignore );   % does NOT change tracers
-    update_surface  ( dt, surface,  interior, ignore ); % "" no change
+    %     surface  = update_surface  ( surface, interior, ignore );
+    update_interior ( interior, ignore );   % does NOT change tracers
+    update_surface  ( surface,  interior, ignore ); % "" no change
 end
 ignore = 0;
 
 % neither update NOT changes tracers
-interior = update_interior(               interior, ignore );
-surface  = update_surface ( dt, surface,  interior, ignore );
+interior = update_interior(           interior, ignore );
+surface  = update_surface ( surface,  interior, ignore );
 
 interior.state   (:,1) = surface.state;
 interior.tendency(:,1) = interior.tendency(:,1) +surface.tendency;
