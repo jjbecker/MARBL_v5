@@ -86,9 +86,6 @@ if 0 && sim.debug_disable_phi
 else
     MTM = load(sim.inputRestartFile,'MTM').MTM;
 end
-
-sim = setPeek(sim);
-
 sim.phi_years = 1;      % NK always uses 1 year integration
 
 sim.tracer_loop = {'DOPr' 'DONr' 'DOCr' 'O2'};  % FIXME: DEBUG
@@ -127,6 +124,7 @@ for tracer_str = sim.tracer_loop
 
     %%%%%%
     [sim, bgc, ~, time_series, forcing] = init_sim(sim);
+    sim = setPeek(sim);
 
     % DEBUG: run on a few locations, rather global, MUCH faster debug something
     % sim.domain.num_wet_loc = 1; % comment out too run entire world

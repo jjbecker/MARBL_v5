@@ -13,8 +13,8 @@ function [sim] = setPeek(sim)
 if (or (sim.logDiags, sim.logTracers))
     disp('Setting up to log tracers and possibly MARBL diags...')
     % need grid dimensions for many things. Starting with possible log files...
-    [~, sim.domain.wet_loc, sim.domain.iwet_FP, ~, sim.domain.bottom_lvl, ~]...
-        = createIwetEtc(sim.domain.M3d);
+%     [~, sim.domain.wet_loc, sim.domain.iwet_FP, ~, sim.domain.bottom_lvl, ~]...
+%         = createIwetEtc(sim.domain.M3d);
 
     % Possibly Record everything at a single location, water level. But which?
     % FIXME: need a clean way to convert (lat,lon) to (iLat,iLon), but in the
