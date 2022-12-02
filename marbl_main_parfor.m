@@ -43,7 +43,7 @@ sim = setInputAndOutputFilePaths(sim,[]);
 % FIXME: hack in some stuff for debug
 
 sim.tracer_loop = {'DOPr' 'DONr' 'Fe'};
-% sim.time_step_hr = 12;
+% sim.time_step_hr = 3;
 
 sim.phi_years     = 1;      % NK always uses 1 year integration
 
@@ -90,11 +90,10 @@ end
 ticBytes(gcp);
 
 
-% myFilename = mfilename;     % mfilename does NOT work in a parfor
-
 % sim.recalculate_PQ_inv = 0;
 sim
 % keyboard
+myFilename = 'marbl_main_parfor';     % mfilename does NOT work in a parfor
 parfor (par_idx = 1:num_tr,numCores)              % PARENTHESIS are CRUCIAL
 
     tmp_sim = sim;      % 'tmp_sim'  may be extraneous; parfor crazy!
