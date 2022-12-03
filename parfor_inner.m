@@ -114,8 +114,6 @@ else
     f0=feval(f,x0);
 
 
-%     [ierr, myRestartFile_x0, x0_sol, c0, sim, bgc, time_series] = marbl_solve(x0, c0, sim, bgc, f, f0);
-
     [ierr, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, c0, sim, bgc, f, f0)
 
 
