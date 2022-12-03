@@ -94,8 +94,8 @@ ticBytes(gcp);
 sim
 % keyboard
 myFilename = 'marbl_main_parfor';     % mfilename does NOT work in a parfor
-% parfor (par_idx = 1:num_tr,numCores)              % PARENTHESIS are CRUCIAL
-for par_idx = 1:num_tr
+parfor (par_idx = 1:num_tr,numCores)              % PARENTHESIS are CRUCIAL
+% for par_idx = 1:num_tr
 
     tmp_sim = sim;      % 'tmp_sim'  may be extraneous; parfor crazy!
 
