@@ -79,6 +79,13 @@ parms  = [maxit, maxdim, maxfeval];
 % This is finally call to Newton Krylov solver!
 
 % f0 = 0 .*x0;  % for debug, set f0 = f(x) = 0 to check logic...
+x0_norm = norm(x0)
+f0_norm = norm(f0)
+
+tName = tracer_names(0);    % no CISO tracers
+tendStr   = strjoin(tName(sim.selection));
+fprintf('%s.m: (%s) ###### norm(x0) = %g, norm(f0) = %g\n', mfilename, tendStr, x0_norm, norm(f0));
+string(tName(sim.selection))
 [x0_sol,it_hist,ierr,x_hist] = brsola(x0, f, [atol,rtol], parms, f0);
 
 % Save results, which are many and sort of tricky. Might want x0, the
@@ -107,7 +114,6 @@ x0_bgc  = replaceSelectedTracers(sim, c0, x0_sol, sim.selection);
 bgc.tracer = nsoli2bgc(sim, bgc, x0_bgc);   % marbl format x0
 % bgc_sol_x0 = bgc;  % this has c0 for all tracer
 
-tName = tracer_names(0);    % no CISO tracers
 myRestartFile_x0 = sprintf('%s/restart_%d_%s_sol_x0.mat', sim.outputRestartDir, round(sim.start_yr), strjoin(tName(sim.selection)));
 [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile_x0);
 
