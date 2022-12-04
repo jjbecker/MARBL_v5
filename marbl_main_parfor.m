@@ -43,7 +43,7 @@ sim = setInputAndOutputFilePaths(sim,[]);
 % FIXME: hack in some stuff for debug
 
 sim.tracer_loop = {'DOPr' 'DONr' 'Fe'};
-sim.time_step_hr = 12;
+% sim.time_step_hr = 12;
 
 sim.phi_years     = 1;      % NK always uses 1 year integration
 
@@ -52,6 +52,7 @@ if 0 && sim.debug_disable_phi
     fprintf('\n\n\t%s.m: ********* phi() is short circuited skip MTM read  *********\n\n',mfilename)
     MTM = 1;
 else
+    fprintf('%s.m: Loading the transports and tracers from restart file...\n', mfilename);
     load(sim.inputRestartFile,'tracer','state','MTM');
     % MTM        = load(sim.inputRestartFile,'MTM').MTM;
     bgc.tracer = tracer;    clear tracer;
@@ -90,7 +91,9 @@ end
 ticBytes(gcp);
 
 
-% sim.recalculate_PQ_inv = 0;
+sim.recalculate_PQ_inv         = 0;
+sim.debug_disable_phi          = 1;
+sim.disable_ALL_Preconditioner = 1;
 sim
 % keyboard
 myFilename = 'marbl_main_parfor';     % mfilename does NOT work in a parfor
@@ -115,7 +118,7 @@ delete(gcp('nocreate'))
 fprintf('...end of loop over tracers : '); toc(timer_total)
 fprintf('Shutting down the parpool...\n')
 
-bgc.tracer = nsoli2bgc(sim, bgc, x0_bgc);   % marbl format x0
+% bgc.tracer = nsoli2bgc(sim, bgc, x0_bgc);   % marbl format x0
 
 
 % FIXME: need to save workspace?!
