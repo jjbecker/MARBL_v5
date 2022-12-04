@@ -171,6 +171,7 @@ sim.captureAllSelectedTracers = 0;
 % sim.tracer_loop = sim.tracer_loop(find( strcmp(sim.tracer_loop,'diatChl')):end );
 sim.tracer_loop = {'DOPr' 'DONr' 'DOCr' 'O2'};
 sim.tracer_loop = {'DOPr' 'DONr' 'DOCr'};
+sim.tracer_loop = {'DOPr' 'DONr' 'Fe'};
 
 tName = tracer_names(0);    % no CISO tracers
 

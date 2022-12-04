@@ -42,7 +42,6 @@ sim = setInputAndOutputFilePaths(sim,[]);
 
 % FIXME: hack in some stuff for debug
 
-sim.tracer_loop = {'DOPr' 'DONr' 'Fe'};
 % sim.time_step_hr = 12;
 
 sim.phi_years     = 1;      % NK always uses 1 year integration
