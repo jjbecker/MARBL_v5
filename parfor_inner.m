@@ -165,6 +165,8 @@ disp(' ');
 
 if sim.debug_disable_phi
     fprintf('\n\n\t%s.m: ********* phi() is short circuited skip inputRestartFile read  *********\n\n',mfilename)
+    ierr
+    ierr = randi([1000 2000])
 else
     sim.inputRestartFile = myRestartFile_x0;
 end
