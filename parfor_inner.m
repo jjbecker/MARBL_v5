@@ -1,4 +1,4 @@
-function [sim,bgc,ierr,x] = parfor_inner(sim, MTM, tracer_str)
+function [ sim, bgc, ierr, x ] = parfor_inner(sim, MTM, tracer_str)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %     tracer_str = sim.tracer_loop(par_idx)
@@ -116,9 +116,7 @@ else
 
     [ierr, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, c0, sim, bgc, f, f0);
 
-
-    % FIXME: use x0 or x1 of solution?
-    x = x0_sol;
+    x = x0_sol;     % FIXME: use x0 or x1 of marbl_solve?
 
     if sim.num_relax_iterations > 0
         keyboard
