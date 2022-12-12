@@ -83,6 +83,7 @@ else
     % sim.start_yr = 4101;  inputRestartFileStem = 'Data/InputFromAnn/restart4101.mat';
     % sim.start_yr =   0;   inputRestartFileStem = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
     sim.start_yr = 260;   inputRestartFileStem = 'Data_GP/restart_260_integrate_from_0.mat';
+    % sim.start_yr = 260;   inputRestartFileStem = 'Data/restart_0_1_output//restart_260_integrate_from_0_single_col_DOPr_DONr_Fe.mat';
     % sim.start_yr = 260;   inputRestartFileStem = 'restart_260_integrate_from_0.mat';
     % sim.start_yr = 1323;  inputRestartFileStem = 'restart_0_1_output/restart_1323_DOP_sol_x1.mat';
     % sim.start_yr = 260;  inputRestartFileStem = 'restart_0_1_output/restart_260_diazFe_sol_x0.mat';
@@ -172,7 +173,7 @@ sim.captureAllSelectedTracers = 0;
 sim.tracer_loop = {'DOPr' 'DONr' 'DOCr' 'O2'};
 sim.tracer_loop = {'DOPr' 'DONr' 'DOCr'};
 sim.tracer_loop = {'DOPr' 'DONr' 'Fe'};
-
+sim.disabledPreconditoners(end+1) = {'Fe'};
 tName = tracer_names(0);    % no CISO tracers
 
 if ~all(matches(sim.tracer_loop,tName))
