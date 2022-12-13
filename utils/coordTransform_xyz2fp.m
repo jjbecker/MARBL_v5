@@ -60,7 +60,7 @@ idx_xyz = iCol + prod(sz)*(iLvl-1); % linear index of xyz in all of M3d
 % This is tricky bit use sim.domain.iwet_FP,idx_xyz) to convert to 
 % index in wet part of M3d. 
 % 
-% There are several clever ways to do this. "ismemeber" is fastest
+% There are several clever ways to do this. "ismember" is fastest
 
 xyz_is_wet = ismember(sim.domain.iwet_FP,idx_xyz); % This sorts idx_xyz
 idx_fp = find(xyz_is_wet);
