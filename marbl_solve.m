@@ -8,18 +8,39 @@ function [ierr, fnrm, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, 
 atol = sim.epsilon; % stop if norm(drift,2) < sqrt(eps) (noise)
 rtol = 1e-2;        % stop if norm(drift,2) < 10% of G(x0)
 
-% maxfeval or maxit == 1 is pointless.
+% maxfeval or maxit == 1 is pointless, if we do not input f(x0).
 % 
 % Nsoli() always evaluates value of f(x0), so 1 means wasted a call to phi,
-% t always quits AFTER that call.
+% t always quits AFTER that call, unless we pass in f(x0).
 %
-% maxfeval is absolute max number of calls to G. must be >2; need at least 
-% 1 for f0 and then 1 for a Newton;
+% % However! When setting limits used to test convergence (atol and rtol)
+% it is crucial to remember that these tests are done on (probably 
+% preconditioned) "f(x)" not "x"!!! 
+% 
+% So it is extrememtly likely "f(x0)" is needed before we ever get here to 
+% set useful values for atol and rtol. Since it takes an hour or 3 or 24 to
+% calculate f(x0) it is very inefficient, but clearer code, to just pass in
+% x0 to nsoli() even if f(x0) is already know because we might know that 
+% nsoli() is going to evaluate f(x0 a 1,000 times so you cares if nsoli() 
+% calculates f(x0) an extra time? 
+% 
+% But additional complication is that for some scheme that call nsoli(), 
+% might only need a few iterations of f(x); probably to have practical run
+% times. 
+% 
+% IN addition, it can be case that for a vector valued search, we 
+% always start with same x0 even if we are solving only for certain 
+% components of vector so calculating f(x0) repeatedly is a real waste 
+% of time.
+% 
+% In all of these cases we want to set a small limit for numbers of calls 
+% to f(x); like 5, and it is very valuable to hand in f(x0) along with x0.
 %
 % maxitl is NOT maxmium number of nonlinear iterations because of possible
-% line searches; maybe many line searches. maxit = Max number of calls to G
-% or phi() IF AND ONLY IF G always decreases. 
-% Must be>2 because need at least 1 for a call to get f0 and 1 for a Newton
+% line searches; maybe many line searches. maxitl = Max number of G() or 
+% phi() IF AND ONLY IF G always decreases. Must be>2 because need at least 
+% 1 for a call to get f0 and 1 for a Newton, if we are calculating f(x0) in
+% nsoli().
 % 
 % COULD BE maxitl = maxit*maxit, (if steplength reductions do work on last 
 % try), and that could be a VERY long time. maxfeval bounds total cnt of 
@@ -37,9 +58,10 @@ rtol = 1e-2;        % stop if norm(drift,2) < 10% of G(x0)
 % first 3 of these parms are used by (modified) brsola,
 % rest are specific to nsoli
 
-maxfeval = 1+2;
-maxfeval = 1+1;
-% maxfeval = 1+10;
+maxfeval = 3;               % assumes we input f(x0)
+maxfeval = 2;               % assumes we input f(x0)
+% maxfeval = 10;            % assumes we input f(x0)
+% maxfeval = 1+maxfeval;    % assumes we -DO NOT- input f(x0)
 
 maxit    = maxfeval;
 
