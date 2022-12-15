@@ -1,4 +1,5 @@
-function sim = setInputAndOutputFilePaths(sim, args) % tracer_loop inputRestartFile time_step_hr recalculate_PQ_inv "short_circuit G() and phi()" logTracers
+function sim = setInputAndOutputFilePaths(args) % tracer_loop inputRestartFile time_step_hr recalculate_PQ_inv "short_circuit G() and phi()" logTracers
+% function sim = setInputAndOutputFilePaths(sim, args) % tracer_loop inputRestartFile time_step_hr recalculate_PQ_inv "short_circuit G() and phi()" logTracers
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -6,6 +7,9 @@ function sim = setInputAndOutputFilePaths(sim, args) % tracer_loop inputRestartF
 % do not crash MARBL. Use 'G()' rather than 'r(G()' as 'f()' in nsoli()
 
 disabledPreconditoners = { 'DIC' 'ALK' 'diatC' 'spChl' 'diatChl' 'diazChl'};
+% FIXME; Fe might ot might not precondition correctly
+disabledPreconditoners(end+1) = {'Fe'};   
+
 disabledPreconditoners = unique( disabledPreconditoners);
 sim.disabledPreconditoners = disabledPreconditoners;
 fprintf('%s.m: Tracers not to be preconditioned: %s\n', mfilename, strjoin(disabledPreconditoners));
@@ -174,7 +178,6 @@ sim.captureAllSelectedTracers = 0;
 % sim.tracer_loop = {'DOPr' 'DONr' 'DOCr' 'O2'};
 % sim.tracer_loop = {'DOPr' 'DONr' 'DOCr'};
 % sim.tracer_loop = {'DOPr' 'DONr' 'Fe' 'O2'};
-% sim.disabledPreconditoners(end+1) = {'Fe'};
 % sim.recalculate_PQ_inv = 0;
 tName = tracer_names(0);    % no CISO tracers
 
@@ -186,5 +189,19 @@ end
 for idx = 1: numel(sim.tracer_loop)
     sim.tracer_loop_idx(idx) = find( strcmp(tName,sim.tracer_loop(idx)) );
 end
+
+sim.runInParallel = 0;      % parfor can't use spmd inside, at least I can not make that work                       
+sim.verbose_debug = 1;
+sim.forwardIntegrationOnly    = 0;      % 1 -> no NK just fwd integration
+sim.num_relax_iterations      = 0;      % 0 means no relax steps, just use NK x1_sol
+sim.num_forward_years         = 0;      % if fwd only, num fwd, else this inum fwd after relax step
+
+sim.phi_years     = 1;      % NK always uses 1 year integration
+
+sim.grd         = load(sim.inputRestartFile,'sim').sim.grd;
+sim.domain      = load(sim.inputRestartFile,'sim').sim.domain;
+[sim, ~]        = calculate_depth_map_and_volumes(sim);
+
+sim  = setPeek(sim);
 
 end
