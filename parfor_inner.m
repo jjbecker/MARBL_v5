@@ -1,4 +1,4 @@
-function [ sim, bgc, ierr, x ] = parfor_inner(sim, MTM, tracer_str)
+function [ sim, bgc, ierr, x , fnrm] = parfor_inner(sim, MTM, tracer_str)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %     tracer_str = sim.tracer_loop(par_idx)
@@ -104,7 +104,7 @@ else
             PQ_inv = 1
         else
             fprintf('\n%s.m: Loading ~30 GB(!) mfactored preconditioner PQ_inv from %s solution...\n', mfilename, strcat(string(tName(sim.selection))))
-            PQ_inv = load (strcat(myDataDir(),'sol/',strjoin(tName(sim.selection)),'_QJ'), 'PQ_inv')
+            load (strcat(myDataDir(),'sol/',strjoin(tName(sim.selection)),'_QJ'), 'PQ_inv');
         end
         fprintf('%s.m: %1.0f (s) to init sim and load PQinv \n',mfilename, toc(tStart));
     end % calculate or load PQ_inv
@@ -114,12 +114,12 @@ else
     f0=feval(f,x0);
 
 
-    [ierr, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, c0, sim, bgc, f, f0);
+    [ierr, fnrm, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, c0, sim, bgc, f, f0);
 
     x = x0_sol;     % FIXME: use x0 or x1 of marbl_solve?
 
     if sim.num_relax_iterations > 0
-        keyboard
+%         keyboard
         [x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv, myRestartFile_relaxed] = ...
             marbl_relax(x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
     end % relax step

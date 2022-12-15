@@ -1,6 +1,4 @@
-function [ierr, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, c0, sim, bgc, f, f0)
-% function [ierr, myRestartFile_x0, x0_sol, c0, sim, bgc, time_series, forcing, MTM, PQ_inv] = marbl_solve(x0, c0, sim, bgc, time_series, forcing, MTM, PQ_inv, f, f0)
-fprintf('%s: Parameters nsoli()... \n', mfilename)
+function [ierr, fnrm, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, c0, sim, bgc, f, f0)
 
 % Get initial G of all tracers to pick sensible rtol for selected tracer???
 % [r0,G0,x1] = calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
@@ -39,8 +37,9 @@ rtol = 1e-2;        % stop if norm(drift,2) < 10% of G(x0)
 % first 3 of these parms are used by (modified) brsola,
 % rest are specific to nsoli
 
-maxfeval = 1+4;
-maxfeval = 1+10;
+maxfeval = 1+2;
+maxfeval = 1+1;
+% maxfeval = 1+10;
 
 maxit    = maxfeval;
 
@@ -78,15 +77,15 @@ parms  = [maxit, maxdim, maxfeval];
 
 % This is finally call to Newton Krylov solver!
 
-% f0 = 0 .*x0;  % for debug, set f0 = f(x) = 0 to check logic...
-x0_norm = norm(x0)
-f0_norm = norm(f0)
-
 tName = tracer_names(0);    % no CISO tracers
 tendStr   = strjoin(tName(sim.selection));
-fprintf('%s.m: (%s) ###### norm(x0) = %g, norm(f0) = %g\n', mfilename, tendStr, x0_norm, norm(f0));
+fprintf('%s.m: (%s) ###### norm(x0) = %g, norm(f0) = %g\n', mfilename, tendStr, norm(x0), norm(f0));
 string(tName(sim.selection))
+
 [x0_sol,it_hist,ierr,x_hist] = brsola(x0, f, [atol,rtol], parms, f0);
+
+fnrm = it_hist(end,1);
+fprintf('%s.m: fnrm = %g\n', fnrm)
 
 % Save results, which are many and sort of tricky. Might want x0, the
 % initial condition that solves f, or one forward integral of that (x1),
@@ -112,7 +111,6 @@ end
 % save complete bgc with -sol- tracers
 x0_bgc  = replaceSelectedTracers(sim, c0, x0_sol, sim.selection);
 bgc.tracer = nsoli2bgc(sim, bgc, x0_bgc);   % marbl format x0
-% bgc_sol_x0 = bgc;  % this has c0 for all tracer
 
 myRestartFile_x0 = sprintf('%s/restart_%d_%s_sol_x0.mat', sim.outputRestartDir, round(sim.start_yr), strjoin(tName(sim.selection)));
 [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile_x0);
