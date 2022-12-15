@@ -1,62 +1,35 @@
-% function [singleColTracerError, singleColTracerSolution] = marbl_main_parfor(varargin) % tracer_loop, inputRestartFile, time_step_hr, logTracers, recalculate_PQ_inv, short_circuit
-
-% "main" of cyclostationary transport version of MARBL,
-% Try to solve MARBL using "Newton Like" methods from Kelley
-%
-%        https://ctk.math.ncsu.edu/newtony.html
-%
-%   matlab -nodisplay -nodesktop -nosplash -noFigureWindows -logfile batch.txt < marbl_nsoli.m &
-%
 % MARBL code being used is https://github.com/marbl-ecosys/MARBL
+% function [singleColTracerError, singleColTracerSolution] = marbl_main_parfor(varargin) % tracer_loop, inputRestartFile, time_step_hr, logTracers, recalculate_PQ_inv, short_circuit
+% https://ctk.math.ncsu.edu/newtony.html
+% matlab -nodisplay -nodesktop -nosplash -noFigureWindows -logfile batch.txt < marbl_nsoli.m &
 
+dbstop if error
+format short g;
+% fmt = format
+
+% Clean up for threads, more complex and much slower than expected.
+% killAndCleanThreads();    % Leftover threads and dumps cause a lot of issues
 clear functions globals     % Need this to clear "persistent" variables in "G()", "time_step()" and "calculate_forcing()"
 clearvars -except varargin;
 
 timer_total = tic;
 fprintf('%s.m: Start at %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 
-dbstop if error
-format short g
-
 addpath('MEX', genpath('utils'), genpath('plotting'));    % dname = sprintf('%s/../',myDataDir()); addpath(dname);
-
-% Clean up for threads, more complex and much slower than expected.
-% killAndCleanThreads();  % Leftover threads and dumps cause a lot of issues
-
 diary off; diary off; diary on; diary off; diary on; diary on; % FIXME: diary behavior is such that if renamed it's still active diary!!
 
-%%%%%%
-
+%%%
 % Setup big picture parts of a simulation and/or NK solution.
-
-sim.runInParallel = 0;      % parfor can't use spmd inside, at least I can not make that work                       
-sim.verbose_debug = 1;
-sim.forwardIntegrationOnly    = 0;      % 1 -> no NK just fwd integration
-sim.num_relax_iterations      = 0;      % 0 means no relax steps, just use NK x1_sol
-sim.num_forward_years         = 0;      % if fwd only, num fwd, else this inum fwd after relax step
-
-% setup file paths and selected tracers
-
-% sim = setInputAndOutputFilePaths(sim, varargin)
-sim = setInputAndOutputFilePaths(sim,[]);
-sim.phi_years     = 1;      % NK always uses 1 year integration
-
+% sim = setInputAndOutputFilePaths(varargin)
+sim = setInputAndOutputFilePaths([]);
 
 % FIXME: hack in some stuff for debug
-
 sim.time_step_hr = 12;
 % sim.recalculate_PQ_inv         = 0;
 % sim.debug_disable_phi          = 1;
 % sim.disable_ALL_Preconditioner = 1;
 
-
-%%%%%%
-sim.grd         = load(sim.inputRestartFile,'sim').sim.grd;
-sim.domain      = load(sim.inputRestartFile,'sim').sim.domain;
-[sim, ~]        = calculate_depth_map_and_volumes(sim);
-
-sim  = setPeek(sim);
-
+%%%
 if 0 && sim.debug_disable_phi
     fprintf('\n\n\t%s.m: ********* phi() is short circuited skip MTM read  *********\n\n',mfilename)
     MTM = 1;
@@ -67,117 +40,132 @@ else
     bgc.tracer = tracer;    clear tracer;
     bgc.state  = state;     clear state;
 end
-num_tr_selected = numel(sim.tracer_loop);
+% num_tr_selected = numel(sim.tracer_loop);
 sz_bgc          = [ numel(sim.domain.iwet_JJ) , size(bgc.tracer,3) ];
 
-%%%%% 
+%%%
 % Need moles for calc_global_moles_and_means() for bgc2nsoli()
-% We need initial tracers for restart file[sim, 
-% FIXME: do we?
+% We need initial tracers for restart file[sim,
+% FIXME: or do we?
 sim = calc_global_moles_and_means(bgc, sim);
-c0  = bgc2nsoli(sim, bgc.tracer);    % nsoli format; unitless; aka scaled FP
-c   = reshape(c0, sz_bgc);
+c0_nsoli = bgc2nsoli(sim, bgc.tracer);    % nsoli format; unitless; aka scaled FP
+% c0 = reshape(c0_nsoli, sz_bgc);
 
-%%%%%%
+%%%
 delete(gcp('nocreate'))
-numCores = max(round(feature('numcores')/2), 6) % Never more than 6
-numCores = min(num_tr_selected, numCores)                % Never more than numTracer
+
+numCores = numel(sim.tracer_loop)                       % Never more than numTracer
+numCores = min(round(feature('numcores')/2), numCores)  % Never more than 1/2 nodes
 if isunix && ismac
-    numCores = min(2, numCores)     % hack for limited RAM on laptop
+    numCores = min(2, numCores)             % limited RAM on laptop...
+else
+    numCores = min(numCores, 8)                           % be a good citizen on GP
 end
+
 p = parpool(numCores);
 if p.NumWorkers ~= numCores
     error("Could not allocate desired number of cores")
 end
 ticBytes(gcp);
 
-
-sim
-keyboard
-myFilename = 'marbl_main_parfor';     % mfilename does NOT work in a parfor
-%%%%%%% 
-% These are output result from "parfor slice variable", sized to accept all
-% possible tracers.
-
-singleColTracerError = zeros([1, size(bgc.tracer,3)]);
-% singleColTracerSolution = 0 *c;
-% FIXME: these temps DO work in loop below but end up inscrambled order...
-tmp_xsol = zeros([size(sim.domain.iwet_FP,1), size(bgc.tracer,3)]);
-tmp_ierr = zeros([1, size(bgc.tracer,3)]);
-
 %%%
+sim
+% keyboard
 
-parforIdxRange = 1:num_tr_selected;
+% These are output result from parfor "slice variable", sized to accept all possible tracers, in random order.
 
-% par_idx is simply "order of execution" -NOT- tracer number
-% so we nee3d tracerRange which is tracer number.
-% 
+tmp_xsol = zeros([size(sim.domain.iwet_JJ,1), size(bgc.tracer,3)]);
+tmp_ierr = zeros([1, size(bgc.tracer,3)]);
+tmp_fnrm = zeros([1, size(bgc.tracer,3)]);
+
 % have to be SOOOOOO careful to avoid brodcasting huge struct. Using
 % sim.tracer_loop will be a wasted copy of a huge sim struct.
 tracerRange = sim.tracer_loop_idx;
 tracer_cell = sim.tracer_loop;
+parforIdxRange = 1:numel(sim.tracer_loop);
 
-% for par_idx = 1:3  % just for DEBUG
+myFilename = 'marbl_main_parfor';     % mfilename does NOT work in a parfor
+% par_idx is simply "order of execution" -NOT- tracer number
+% Need tracerRange which is tracer number "decoder"
+% for par_idx = 1:1  % DEBUG
 parfor (par_idx = parforIdxRange,numCores)  % PARENTHESIS are CRUCIAL
 
     % Also crucial: par_idx order randomly selected from range!
 
     % DEBUG have to be SOOOOOO careful to avoid brodcasting huge struct
-    % tmp_sim = sim; %% NOT an issue since we have send whold sim anyway? 
+    % tmp_sim = sim; %% NOT an issue since we have send whold sim anyway?
     fprintf('%s.m: Starting tracer parfor idx %d which is for tracer %s (#%d)\n', myFilename, ...
         par_idx, string(tracer_cell(par_idx)), tracerRange (par_idx))
 
     % Works, but lots of code to catch two array, but easy to read...
-    
-    [~, ~, ierr, xsol] = parfor_inner(sim, MTM, string(tracer_cell(par_idx)));
-    
+
+    [~, ~, ierr, xsol, fnrm] = parfor_inner(sim, MTM, string(tracer_cell(par_idx)));
+
     tmp_ierr (:, par_idx) = ierr;
     tmp_xsol (:, par_idx) = xsol;
+    tmp_fnrm (:, par_idx) = fnrm;
 
-    % Works, but hard to read...
-    %
-    % [~, ~, tmp_ierr(:,par_idx), tmp_xsol(:,par_idx)] = ...
-    %     parfor_inner(sim, MTM, string(tracer_cell(par_idx)));
-    % 
-    %
-    % FIXME: does NOT work, something about slicing. Most likely can only 
+    % FIXME: does NOT work, something about slicing. Most likely can only
     % use parfor index, not one computed from it
     %
     % tracer_num  = tracerRange (par_idx);
     % singleColTracerError   (:, tracer_num) = ierr;
     % singleColTracerSolution(:, tracer_num) = x;
-    
+
 end % of loop over tracers
 
 fprintf('...end of loop over tracers : '); toc(timer_total)
 fprintf('Shutting down parpool...\n')
-
 tocBytes(gcp)
 delete(gcp('nocreate'))
 
 %%%
+% Unscramble results captured in random order by parfor loop. No need
+% for a for loop, use array index on slices. Then replace initial values in
+% restart file with single column solution.
 
-% Now unscramble results captured in random order by parfor loop. No need
-% for a for loop, use array index on slices.
+
+% results in correct order
+singleColTracerError = zeros([1, size(bgc.tracer,3)]); 
+singleColTracerNorm  = zeros([1, size(bgc.tracer,3)]);
+% singleColTracerSolution = 0 *c0;
+
+tracerRange = sim.tracer_loop_idx (parforIdxRange)
+singleColTracerError (:, tracerRange) = tmp_ierr (:, parforIdxRange);
+singleColTracerNorm  (:, tracerRange) = tmp_fnrm (:, parforIdxRange);
+% tmp_c_sol          (:, tracerRange) = tmp_xsol (:, parforIdxRange);
 
 tracerRange = sim.tracer_loop_idx (parforIdxRange);
 
-singleColTracerError   (:, tracerRange) = tmp_ierr (:, parforIdxRange);
-% singleColTracerSolution(:, tracerRange) = tmp_xsol (:, parforIdxRange);
-c(:, tracerRange)                       = tmp_xsol (:, parforIdxRange); 
+ierrLimit = 1;
 
-% Just replaced initial values in restart with single column solution. Now
-% just need to create a restart file with this result.
+bad_par_idx = parforIdxRange( tmp_ierr >  ierrLimit )
+badTracers  = sim.tracer_loop_idx ( bad_par_idx )
 
-keyboard
+good_par_idx = parforIdxRange;
+good_par_idx( bad_par_idx ) = []
+goodTracers  = sim.tracer_loop_idx ( good_par_idx )
+
+c_sol = reshape(c0_nsoli, sz_bgc);
+c_sol (:, goodTracers) = tmp_xsol (:, good_par_idx);
+
+tmp = reshape(c0_nsoli, sz_bgc);
+for idx = parforIdxRange
+    col = sim.tracer_loop_idx (idx);
+    xnrm = norm(tmp(:,col)-c_sol(:,col));
+    fprintf('%s.m: (%s)\tierr = %d fnrm(r) = %-#13.7g norm(sol-x0) = %-#10.7g\n', myFilename, string(tracer_cell(idx)), ...
+        singleColTracerError(col), singleColTracerNorm(col), xnrm)
+end
+% still need to create a restart file with this result.
+% keyboard
 [~,oldName,~] = fileparts(sim.inputRestartFile)
 newRestartFileName = sprintf('%s/%s_single_col_%s.mat', sim.outputRestartDir, oldName, strjoin(tracer_cell,'_'))
-[sim, bgc] = saveRestartFiles(sim, bgc, c, newRestartFileName);
 
-%%%%% whew. 
+tracer = nsoli2bgc(sim, bgc, c_sol);
+[sim, bgc] = saveRestartFiles(sim, bgc, tracer, newRestartFileName);
 
-% FIXME: need to save workspace?!
-    logDir = strcat(sim.outputRestartDir,'/Logs/');
+%%% whew.
+logDir = strcat(sim.outputRestartDir,'/Logs/');
 if ~exist(logDir, 'dir')
     mkdir(logDir)
 end
