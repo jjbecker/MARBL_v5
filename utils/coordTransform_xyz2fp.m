@@ -62,7 +62,7 @@ idx_xyz = iCol + prod(sz)*(iLvl-1); % linear index of xyz in all of M3d
 % 
 % There are several clever ways to do this. "ismember" is fastest
 
-xyz_is_wet = ismember(sim.domain.iwet_FP,idx_xyz); % This sorts idx_xyz
+xyz_is_wet = ismember(sim.domain.iwet_FP,idx_xyz); % This sorts idx_xyz union intersection
 idx_fp = find(xyz_is_wet);
 % tmp = 1:numel(xyz_is_wet);
 % tmp2= tmp (xyz_is_wet);
