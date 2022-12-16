@@ -18,7 +18,9 @@ else
     fprintf('norm(x0         ) = %-#15.7g\n', norm(x0         ));
     dx0 = x0 -x0_prev;
     fprintf('norm(x0 -x0_prev) = %-#15.7g\n', norm(dx0) );
-    figure (503); plot(dx0)    ; title('dx0'); xlabel('idx FP'); ylabel(strjoin(tName(sim.selection)));
+    if (sim.verbose_debug)
+        figure (503); plot(dx0)    ; title('dx0'); xlabel('idx FP'); ylabel(strjoin(tName(sim.selection)));
+    end
 end
 Npt = -gFileCnt;
 
