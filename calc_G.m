@@ -72,30 +72,30 @@ if sim.disable_ALL_Preconditioner || (numel(sim.disabledPreconditoners)>0 && ism
     r = G;
 else
     r = mfactor(PQ_inv, G) -G;
-end    
+end
+
+disp('  ')
+fprintf('%s.m: Npt = %d %s max(x0)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), max(x0));
+fprintf('%s.m: Npt = %d %s min(x0)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), min(x0));
+fprintf('%s.m: Npt = %d %s mean(x0) = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), mean(x0));
+fprintf('%s.m: Npt = %d %s std(x0)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), std(x0));
+disp('  ')
+fprintf('%s.m: Npt = %d %s max(G)   = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), max(G));
+fprintf('%s.m: Npt = %d %s min(G)   = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), min(G));
+fprintf('%s.m: Npt = %d %s mean(G)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), mean(G));
+fprintf('%s.m: Npt = %d %s std(G)   = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), std(G));
+disp('  ')
+fprintf('%s.m: Npt = %d %s median(G)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), median(G));
+fprintf('%s.m: Npt = %d %s madMed(G)= %1.7g\n',  mfilename, Npt, strjoin(tName(sim.selection)), max((G)));
+fprintf('%s.m: Npt = %d %s madAvg(G)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), mad(G,1));
+disp('  ')
+% % DEBUG
+tmp = replaceSelectedTracers(sim, c0, G, sim.selection);
+res_moles = global_moles(nsoli2bgc(sim, bgc, tmp), sim);
+res_moles = res_moles(sim.selection);
+fprintf('%s.m: Npt = %d %s moles/y = %1.7g\n',   mfilename, Npt, gStr, res_moles);
 
 if (sim.verbose_debug)
-    disp('  ')
-    fprintf('%s.m: Npt = %d %s max(x0)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), max(x0));
-    fprintf('%s.m: Npt = %d %s min(x0)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), min(x0));
-    fprintf('%s.m: Npt = %d %s mean(x0) = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), mean(x0));
-    fprintf('%s.m: Npt = %d %s std(x0)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), std(x0));
-    disp('  ')
-    fprintf('%s.m: Npt = %d %s max(G)   = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), max(G));
-    fprintf('%s.m: Npt = %d %s min(G)   = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), min(G));
-    fprintf('%s.m: Npt = %d %s mean(G)  = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), mean(G));
-    fprintf('%s.m: Npt = %d %s std(G)   = %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), std(G));
-    disp('  ')
-    fprintf('%s.m: Npt = %d %s median(G)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), median(G));
-    fprintf('%s.m: Npt = %d %s madMed(G)= %1.7g\n',  mfilename, Npt, strjoin(tName(sim.selection)), max((G)));
-    fprintf('%s.m: Npt = %d %s madAvg(G)= %1.10g\n', mfilename, Npt, strjoin(tName(sim.selection)), mad(G,1));
-    disp('  ')
-    % % DEBUG
-    tmp = replaceSelectedTracers(sim, c0, G, sim.selection);
-    res_moles = global_moles(nsoli2bgc(sim, bgc, tmp), sim);
-    res_moles = res_moles(sim.selection);
-    fprintf('%s.m: Npt = %d %s moles/y = %1.7g\n',   mfilename, Npt, gStr, res_moles);
-
     figure (900); scatter(x0,r); title(strjoin(["scatter( r(",gStr,"), ",strjoin(tName(sim.selection)),")"]));    xlabel(strjoin(tName(sim.selection)));  ylabel(strjoin(["r(",gStr,")"]))
     figure (901); plot(r);       title(strjoin(["r(",gStr,")"]));          xlabel('idx FP');   ylabel(strjoin(["r(",gStr,")"]))
     figure (902); qqplot(r);     title(strjoin(["qqplot( r(",gStr,"))"]))
