@@ -24,13 +24,15 @@ diary off; diary off; diary on; diary off; diary on; diary on; % FIXME: diary be
 % sim = setInputAndOutputFilePaths(varargin)
 % 
 tmpTracer_loop  = {'DOP' 'DOC'};
-tmpTime_step_hr = 12;
-tmpInputFile    = strcat(myDataDir(), 'Data_GP/restart_260_integrate_from_0.mat'); disp(tmpInputFile);
+tmpTracer_loop  = tracer_names(0);
+tmpTime_step_hr = 3;
+% tmpInputFile    = strcat(myDataDir(), 'Data_GP/restart_260_integrate_from_0.mat'); disp(tmpInputFile);
+tmpInputFile    = strcat(myDataDir(), 'restart_260_integrate_from_0.mat'); disp(tmpInputFile);
 % sim = setInputAndOutputFilePaths({tmpTracer_loop, tmpInputFile, tmpTime_step_hr});
 
 % sim = setInputAndOutputFilePaths({{'DOP' 'DOC'}, tmpInputFile, 12});
 
-tmpRecalculate_PQ_inv   = 0;
+tmpRecalculate_PQ_inv   = 1;
 tmpDebug_disable_phi    = 0;
 tmpLogTracer            = 0;
 % Order of args IMPORTANT !!!
@@ -61,8 +63,8 @@ sim = calc_global_moles_and_means(bgc, sim);
 % Never use more than numTracer or more than 1/2 nodes processors
 numCores = min(round(feature('numcores')/2), numel(sim.tracer_loop)) 
 if isunix && ismac, numCores = min(2, numCores) % limited RAM on laptop...
-else numCores = min(numCores, 8) 
-end  % be a good citizen on GP
+else numCores = min(numCores, 10)               % be a good citizen on GP
+end
 
 delete(gcp('nocreate'))
 p = parpool(numCores);
