@@ -98,7 +98,8 @@ else
 end
 if any(idx)
     fprintf('%s.m: Tracers ALWAYS EXCLUDED from run: %s\n', mfilename, strjoin(sim.excluded_tracer));
-    error(sprintf('\n%s.m: illegal INPUT Tracers: %s\n', mfilename, strjoin(sim.tracer_loop(idx))));
+%     error(sprintf('\n%s.m: illegal INPUT Tracers: %s\n', mfilename, strjoin(sim.tracer_loop(idx))));
+    fprintf('\n%s.m: Removing illegal INPUT Tracers: %s\n', mfilename, strjoin(sim.tracer_loop(idx)));
     sim.tracer_loop([idx]) = [];
 end
 fprintf('%s.m: *** Final *** List of tracers to loop over : %s\n', mfilename, strjoin(sim.tracer_loop));
