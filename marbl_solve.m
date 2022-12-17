@@ -5,8 +5,8 @@ function [ierr, fnrm, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, 
 
 
 % DEBUG stops when residual < tol, perfect residual = 0? does not stop run
-atol = sim.epsilon; % stop if norm(drift,2) < sqrt(eps) (noise)
-rtol = 1e-2;        % stop if norm(drift,2) < 10% of G(x0)
+atol = sim.epsilon;     % stop if norm(drift,2) < sqrt(eps) (noise)
+rtol = sim.rtol;        % stop if norm(drift,2) < 10% of G(x0)
 
 % maxfeval or maxit == 1 is pointless, if we do not input f(x0).
 % 
@@ -58,22 +58,17 @@ rtol = 1e-2;        % stop if norm(drift,2) < 10% of G(x0)
 % first 3 of these parms are used by (modified) brsola,
 % rest are specific to nsoli
 
-maxfeval = 3;               % assumes we input f(x0)
-maxfeval = 2;               % assumes we input f(x0)
-% maxfeval = 10;            % assumes we input f(x0)
-% maxfeval = 1+maxfeval;    % assumes we -DO NOT- input f(x0)
-
-maxit    = maxfeval;
+maxit    = sim.maxfeval;
 
 maxdim   = 40;            % default is 40 in brsola()
-maxdim   = min(maxfeval, maxdim);
+maxdim   = min(sim.maxfeval, maxdim);
 
 % used only by nsoli()
 % etamax = 0.9;           % maximum error tol for residual in inner iteration, default = 0.9
 % lmeth  = 2;             % Nsoli() method 2 = GMRES(m), not used by brsola().
 % restart_limit = 10;     % max number of restarts for GMRES if lmeth = 2, default = 20;
 
-parms  = [maxit, maxdim, maxfeval];
+parms  = [maxit, maxdim, sim.maxfeval];
 
 % NOTE: f has one input, x, and a bunch of parameters; e.g. bgc etc. If G()
 % changes parameters subsequent cals to f do NOT get new parameter value 
@@ -101,8 +96,7 @@ parms  = [maxit, maxdim, maxfeval];
 
 tName = tracer_names(0);    % no CISO tracers
 tendStr   = strjoin(tName(sim.selection));
-fprintf('%s.m: (%s) ###### norm(x0) = %g, norm(f0) = %g\n', mfilename, tendStr, norm(x0), norm(f0));
-string(tName(sim.selection))
+fprintf('%s.m: (%s) ###### norm(x0) = %g, norm(r(x0)) = %g\n', mfilename, tendStr, norm(x0), norm(f0));
 
 [x0_sol,it_hist,ierr,x_hist] = brsola(x0, f, [atol,rtol], parms, f0);
 
