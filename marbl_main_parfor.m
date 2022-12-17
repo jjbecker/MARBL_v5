@@ -60,8 +60,8 @@ end
 sim = calc_global_moles_and_means(bgc, sim);
 
 %%%
-% Never use more than numTracer or more than 1/2 nodes processors
-numCores = min(round(feature('numcores')/2), numel(sim.tracer_loop)) 
+% Never use more than numTracer 
+numCores = min(round(feature('numcores')), numel(sim.tracer_loop)) 
 if isunix && ismac, numCores = min(2, numCores) % limited RAM on laptop...
 else numCores = min(numCores, 10)               % be a good citizen on GP
 end
