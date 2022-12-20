@@ -7,11 +7,11 @@ tName = tracer_names(0);    % no CISO tracers
 
 % ALWAYS punt "ALT" methods that do NOT depend on any other tracers...
 % remove duplicates and make sure all choices are valid...
-sim.selection = [ find( strcmp(tName,tracer_str) ) ];
-sim.selection(ismember(sim.selection, [9,11]))=[];
-sim.selection = unique(sort(sim.selection));
-cstr = tName(sim.selection)';
-fprintf('%s.m: Selected tracer(s): #%d, "%s"\n', mfilename, sim.selection, string(cstr));
+% sim.selection = [ find( strcmp(tName,tracer_str) ) ];
+% sim.selection(ismember(sim.selection, [9,11]))=[];
+% sim.selection = unique(sort(sim.selection));
+sim.selection = unique(sort(find( strcmp(tName,tracer_str) )));
+fprintf('%s.m: Selected tracer(s): #%d, "%s"\n', mfilename, sim.selection, string(tName(sim.selection)'));
 
 % FIXME: endless headache of MARBL threads! Need to kill any
 % leftover MEX running on threads. This coincidentally clears persistent
@@ -39,13 +39,6 @@ end
 %%%%%%
 sim.runInParallel = 0;      % parfor can't use spmd inside, at least I can not make that work
 [sim, bgc, ~, time_series, forcing] = init_sim(sim);
-
-% DEBUG: run on a few locations, rather global, MUCH faster debug something
-% sim.domain.num_wet_loc = 1; % comment out too run entire world
-
-% scale units to unity, using values of global mean of initial
-% need a column vector
-
 sim = calc_global_moles_and_means(bgc, sim);
 
 
@@ -93,33 +86,20 @@ x0 = x0(:);                 % unitless
 
 if( sim.forwardIntegrationOnly )
     fprintf('%s.m: forward integration ONLY\n',mfilename);
-else
-    % Solve for selected tracer
-    if sim.recalculate_PQ_inv && ~(numel(sim.disabledPreconditoners)>0 && ismember(tName(sim.selection), sim.disabledPreconditoners))
-        PQ_inv = calc_PQ_inv(sim, bgc, time_series, forcing, MTM);
-    else
-        tStart = tic;
-        if sim.disable_ALL_Preconditioner || (numel(sim.disabledPreconditoners)>0 && ismember(tName(sim.selection), sim.disabledPreconditoners))
-            fprintf('\n\n\t%s.m: ********* Replace preconditioner with 1 *********\n\n',mfilename)
-            PQ_inv = 1
-        else
-            fprintf('\n%s.m: Loading ~30 GB(!) mfactored preconditioner PQ_inv from %s solution...\n', mfilename, strcat(string(tName(sim.selection))))
-            load (strcat(myDataDir(),'sol/',strjoin(tName(sim.selection)),'_QJ'), 'PQ_inv');
-        end
-        fprintf('%s.m: %1.0f (s) to init sim and load PQinv \n',mfilename, toc(tStart));
-    end % calculate or load PQ_inv
 
+else % Solve for selected tracer
+
+    PQ_inv = calc_PQ_inv(sim, bgc, time_series, forcing, MTM);
 
     f = @(x) calc_G(x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
     f0=feval(f,x0);
-
 
     [ierr, fnrm, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, c0, sim, bgc, f, f0);
 
     x = x0_sol;     % FIXME: use x0 or x1 of marbl_solve?
 
     if sim.num_relax_iterations > 0
-%         keyboard
+        % keyboard
         [x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv, myRestartFile_relaxed] = ...
             marbl_relax(x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
     end % relax step
@@ -144,13 +124,12 @@ for fwd_itc = 1:sim.num_forward_years
     end
 end % fwd loop
 
-% this is my final answer!
+%%%
 % always save my final answer
 myRestartFile_fwd = sprintf('%s/restart_%d_%s_fwd_x1.mat', sim.outputRestartDir, round(sim.start_yr),strjoin(tName(sim.selection)));
 [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile_fwd);
 
-
-
+%%%
 elapsedTime_all_loc = toc(timer_PQ_init_solve_relax_fwd);
 disp(' ');
 disp([mfilename,'.m: finished ', strjoin(tName(sim.selection))])
@@ -161,6 +140,7 @@ disp(['Runtime: ', num2str(elapsedTime_all_loc, '%1.0f'),' (s) or ', num2str(ela
 disp(['Simulation speed: ', num2str(sim.tot_t/elapsedTime_all_loc/sim.const.days_y, '%1.1f'), ' (sim y/d) aka (SYPD)'])
 disp(' ');
 
+%%
 if sim.debug_disable_phi
     fprintf('\n\n\t%s.m: ********* phi() is short circuited skip inputRestartFile read  *********\n\n',mfilename)
     ierr

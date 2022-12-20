@@ -181,21 +181,7 @@ for tracer_str = sim.tracer_loop
         fprintf('%s.m: forward integration ONLY\n',mfilename);
     else
         % Solve for selected tracer
-        if sim.recalculate_PQ_inv && ~(numel(sim.disabledPreconditoners)>0 && ismember(tName(sim.selection), sim.disabledPreconditoners))
-            PQ_inv = calc_PQ_inv(sim, bgc, time_series, forcing, MTM);
-        else
-            tStart = tic;
-            if sim.disable_ALL_Preconditioner || (numel(sim.disabledPreconditoners)>0 && ismember(tName(sim.selection), sim.disabledPreconditoners))
-                fprintf('\n\n\t%s.m: ********* Replace preconditioner with 1 *********\n\n',mfilename)
-                PQ_inv = 1
-            else
-                fprintf('\n%s.m: Loading ~30 GB(!) mfactored preconditioner PQ_inv from %s solution...\n', mfilename, strcat(string(tName(sim.selection))))
-                PQ_inv = load (strcat(myDataDir(),'sol/',strjoin(tName(sim.selection)),'_QJ'), 'PQ_inv')
-            end
-            fprintf('%s.m: %1.0f (s) to init sim and load PQinv \n',mfilename, toc(tStart));
-        end % calculate or load PQ_inv
-
-
+        PQ_inv = calc_PQ_inv(sim, bgc, time_series, forcing, MTM);
         f = @(x) calc_G(x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
         f0=feval(f,x0);
 
