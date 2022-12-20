@@ -120,7 +120,7 @@ else
     %     [outputArg1,outputArg2] = setInputAndOutputFilePaths(inputArg1,inputArg2);
     % sim.start_yr = 4101;  inputRestartFileStem = 'Data/InputFromAnn/restart4101.mat';
     % sim.start_yr =   0;   inputRestartFileStem = 'Data/passive_restart_init.mat'; % from netCDF 5/25/22
-    sim.start_yr = 260;   inputRestartFileStem = 'Data_GP/restart_260_integrate_from_0.mat';
+    % sim.start_yr = 260;   inputRestartFileStem = 'Data_GP/restart_260_integrate_from_0.mat';
     % sim.start_yr = 260;   inputRestartFileStem = 'restart_0_1_output//restart_260_integrate_from_0_single_col_DOPr_DONr_Fe.mat';
     % sim.start_yr = 260;   inputRestartFileStem = 'restart_0_1_output//restart_260_integrate_from_0_single_col_DOPr_DONr_Fe_single_col_DOPr_DONr_Fe.mat'
     % sim.start_yr = 260;   inputRestartFileStem = 'restart_0_1_output//restart_260_integrate_from_0_single_col_DOPr_DONr_Fe_single_col_DOPr_DONr_Fe_single_col_DOPr_DONr_Fe.mat';
