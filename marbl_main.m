@@ -254,7 +254,7 @@ save_timer = tic; fprintf('Saving (possibly) large workspace file... '); save(st
 fprintf('... end of %s.m ', mfilename);
 elapsedTime_all_loops_all_tracers = toc(timer_total);
 disp(' ');
-fprintf('\n%s.m: Finished outer solution loops over %d tracers\n', mfilename, numel(sim.tracer_loop));
+fprintf('\n%s.m: Finished all loops over %d tracers\n', mfilename, numel(sim.tracer_loop));
 disp(['Runtime: ', num2str(elapsedTime_all_loops_all_tracers, '%1.0f'),' (s) or ', num2str(elapsedTime_all_loops_all_tracers/60, '%1.1f'), ' (m)'])
 fprintf('%s.m: Finished at %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 end
