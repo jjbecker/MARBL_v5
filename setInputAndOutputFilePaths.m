@@ -98,7 +98,7 @@ else
 end
 if any(idx)
     fprintf('%s.m: Tracers ALWAYS EXCLUDED from run: %s\n', mfilename, strjoin(sim.excluded_tracer));
-%     error(sprintf('\n%s.m: illegal INPUT Tracers: %s\n', mfilename, strjoin(sim.tracer_loop(idx))));
+    %     error(sprintf('\n%s.m: illegal INPUT Tracers: %s\n', mfilename, strjoin(sim.tracer_loop(idx))));
     fprintf('\n%s.m: Removing illegal INPUT Tracers: %s\n', mfilename, strjoin(sim.tracer_loop(idx)));
     sim.tracer_loop([idx]) = [];
 end
@@ -109,8 +109,8 @@ if  length(args) >= 2    % Input restart file INCLUDING PATH
     if ischar(args{2})
         sim.inputRestartFile = args{2};
         % FIXME: what is start_yr? it's not in saved file, but it is in fname
-        start_yr = 666
-        start_yr = 260;
+        %         start_yr = 260;
+        start_yr = 666;
         sim.start_yr = start_yr;
         fprintf('%s.m: FIXME Output solution files will be given an arbitrary year of %d\n', mfilename, sim.start_yr);
     else
@@ -215,7 +215,7 @@ sim.marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 sim.lciso_on = 0;   % run with Carbon Isotopes ??
 sim.epsilon = sqrt(eps);
 sim.logDiags = and (0, sim.logTracers) ; % Usually no diags..
-sim.captureAllSelectedTracers = 0;
+sim.captureAllSelectedTracers = 0;  % log a years worth of tendency for preconditioer experiments
 
 sim.runInParallel           = 0;    % parfor can't use spmd inside, at least I can not make that work
 sim.verbose_debug           = 0;
