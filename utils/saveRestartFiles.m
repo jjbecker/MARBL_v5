@@ -5,7 +5,8 @@ function [sim, bgc] = saveRestartFiles(sim, bgc, tracer, newRestartFileName)
 
 fprintf('%s.m: Saving "%s"...\n', mfilename, newRestartFileName);
 if sim.debug_disable_phi
-    fprintf('\n\n\t%s.m: ********* phi() is short circuited skip inputRestartFile save  *********\n\n',mfilename)
+    fprintf('\n\n\t%s.m: ********* phi() is short circuited. just touch file  *********\n\n',mfilename);
+    system(sprintf('touch %s', newRestartFileName));
     return
 end
 
