@@ -116,18 +116,18 @@ for fwd_itc = 1:sim.num_forward_years
     [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
 
     sim.start_yr  = sim.start_yr+1;
-    if mod(round(sim.start_yr), sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
-
-        myRestartFile_fwd = sprintf('%s/restart_%d_%s_fwd_x1.mat', sim.outputRestartDir, round(sim.start_yr),strjoin(tName(sim.selection)));
-        [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile_fwd);
-
-    end
+%     if mod(round(sim.start_yr), sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
+% 
+%         myRestartFile_fwd = sprintf('%s/restart_%d_%s_fwd_x1.mat', sim.outputRestartDir, round(sim.start_yr),strjoin(tName(sim.selection)));
+%         [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile_fwd);
+% 
+%     end
 end % fwd loop
 
 %%%
 % always save my final answer
-myRestartFile_fwd = sprintf('%s/restart_%d_%s_fwd_x1.mat', sim.outputRestartDir, round(sim.start_yr),strjoin(tName(sim.selection)));
-[sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile_fwd);
+% myRestartFile_fwd = sprintf('%s/restart_%d_%s_fwd_x1.mat', sim.outputRestartDir, round(sim.start_yr),strjoin(tName(sim.selection)));
+% [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile_fwd);
 
 %%%
 elapsedTime_all_loc = toc(timer_PQ_init_solve_relax_fwd);
