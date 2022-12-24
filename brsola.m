@@ -57,7 +57,7 @@ debug=1;
 %
 % initialize it_hist, ierr, x_hist, and set the iteration parameters
 %
-ierr = 0; maxit=40; maxdim=39;  
+ierr = 0; maxit=40; maxdim=39;
 it_histx=zeros(maxit,3);
 maxarm=10;
 %
@@ -91,6 +91,7 @@ outstat(itc+1, :) = [itc fnrm 0 0]
 if fnrm < stop_tol
     sol=x;
     it_hist=it_histx(1:itc+1,:);    % itc is 0!
+    fprintf('%s.m: outstat\n',mfilename)
     disp(outstat); return
 end
 %
@@ -171,6 +172,7 @@ while(itc < maxit && num_calls_f < maxfeval)
         if nargout == 4
             x_hist=[x_hist,x];
         end
+        fprintf('%s.m: outstat\n',mfilename)
         disp(outstat); return;
     end
     %
@@ -182,6 +184,7 @@ while(itc < maxit && num_calls_f < maxfeval)
         outstat(itc+1, :) = [itc fnrm iarm rat];
         it_hist=it_histx(1:itc+1,:)
         %        it_hist(itc+1)=fnrm;
+        fprintf('%s.m: outstat\n',mfilename)
         disp(outstat); return
     end
     %
@@ -200,6 +203,7 @@ while(itc < maxit && num_calls_f < maxfeval)
     rat=fnrm/fnrmo;
     outstat(itc+1, :) = [itc fnrm iarm rat];
     if debug==1
+        fprintf('%s.m: outstat\n',mfilename)
         disp(outstat)
     end
     %
@@ -254,7 +258,8 @@ if nargout == 4
     x_hist=[x_hist,x];
 end
 ierr=1;
-if debug>1
+if debug==1
+    fprintf('%s.m: outstat\n',mfilename)
     disp(outstat)
 end
 %
