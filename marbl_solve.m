@@ -101,7 +101,7 @@ fprintf('%s.m: (%s) ###### norm(x0) = %g, norm(r(x0)) = %g\n', mfilename, tendSt
 [x0_sol,it_hist,ierr,x_hist] = brsola(x0, f, [atol,rtol], parms, f0);
 
 fnrm = it_hist(end,1);
-fprintf('%s.m: fnrm = %g\n', fnrm)
+fprintf('%s.m: fnrm = %g\n', mfilename, fnrm)
 
 % Save results, which are many and sort of tricky. Might want x0, the
 % initial condition that solves f, or one forward integral of that (x1),
