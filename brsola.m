@@ -74,10 +74,9 @@ rtol=tol(2); atol=tol(1); n = length(x); fnrm=1; itc=0; nbroy=0;
 %
 % if caller already knows value of f0 vector, use that, otherwise call f
 if nargin <5
-    f0=feval(f,x); num_calls_f = 1;
-else
-    num_calls_f = 0;
+    f0=feval(f,x);
 end
+num_calls_f = 0;
 fc=f0;
 fnrm=norm(f0);
 it_histx(itc+1,1)=fnrm; it_histx(itc+1,2)=0; it_histx(itc+1,3)=0;
