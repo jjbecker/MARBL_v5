@@ -13,11 +13,9 @@ tName = tracer_names(0);    % no CISO tracers
 sim.selection = unique(sort(find( strcmp(tName,tracer_str) )));
 fprintf('%s.m: Selected tracer(s): #%d, "%s"\n', mfilename, sim.selection, string(tName(sim.selection)'));
 
-% FIXME: endless headache of MARBL threads! Need to kill any
-% leftover MEX running on threads. This coincidentally clears persistent
-% variables in G() and phi().
+% FIXME: endless headache of MARBL threads! Kill any leftover MEX running. 
 clear functions
-clear calc_G phi       % clear debugging counters usedin G() and phi()
+clear calc_G calculate_forcing phi time_step_ann % clear "persistent" vars
 
 
 
@@ -92,9 +90,10 @@ else % Solve for selected tracer
     PQ_inv = calc_PQ_inv(sim, bgc, time_series, forcing, MTM);
 
     f = @(x) calc_G(x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
-    f0=feval(f,x0);
+    [ierr, fnrm, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, c0, sim, bgc, f);
+%     f0=feval(f,x0);
+%     [ierr, fnrm, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, c0, sim, bgc, f, f0);
 
-    [ierr, fnrm, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, c0, sim, bgc, f, f0);
 
     x = x0_sol;     % FIXME: use x0 or x1 of marbl_solve?
 
@@ -133,7 +132,7 @@ end % fwd loop
 elapsedTime_all_loc = toc(timer_PQ_init_solve_relax_fwd);
 disp(' ');
 disp([mfilename,'.m: finished ', strjoin(tName(sim.selection))])
-disp(['Runtime: ', num2str(elapsedTime_all_loc, '%1.0f'),' (s) or ', num2str(elapsedTime_all_loc/60, '%1.1f'), ' (m)'])
+disp([mfilename,'.m: Runtime ', num2str(elapsedTime_all_loc, '%1.0f'),' (s) or ', num2str(elapsedTime_all_loc/60, '%1.1f'), ' (m)'])
 %     disp(['Runtime per location per iteration: ', num2str(elapsedTime_all_loc/sim.num_time_steps/sim.domain.num_wet_loc*1000, '%1.2f'), ' (ms) MARBL, advection, diffusion, mfactor()'])
 %     disp(['Runtime all location per iteration: ', num2str(elapsedTime_all_loc/sim.num_time_steps, '%1.2f'),                    ' (s)  MARBL, advection, diffusion, mfactor()'])
 %     disp(['Runtime all location per sim year : ', num2str(elapsedTime_all_loc/60/1440/sim.tot_t*sim.const.sec_y, '%1.2f'), ' (d/y_sim)'])
