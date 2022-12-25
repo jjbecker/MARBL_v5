@@ -1,4 +1,4 @@
-function [ierr, fnrm, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, c0, sim, bgc, f, f0)
+function [ierr, fnrm, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, c0, sim, bgc, f)
 
 % Get initial G of all tracers to pick sensible rtol for selected tracer???
 % [r0,G0,x1] = calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
@@ -96,9 +96,11 @@ parms  = [maxit, maxdim, sim.maxfeval];
 
 tName = tracer_names(0);    % no CISO tracers
 tendStr   = strjoin(tName(sim.selection));
-fprintf('%s.m: (%s) ###### norm(x0) = %g, norm(r(x0)) = %g\n', mfilename, tendStr, norm(x0), norm(f0));
+% fprintf('%s.m: (%s) ###### norm(x0) = %g, norm(r(x0)) = %g\n', mfilename, tendStr, norm(x0), norm(f0));
+fprintf('%s.m: (%s) ###### norm(x0) = %g, norm(r(x0)) = %g\n', mfilename, tendStr, norm(x0));
 
-[x0_sol,it_hist,ierr,x_hist] = brsola(x0, f, [atol,rtol], parms, f0);
+% [x0_sol,it_hist,ierr,x_hist] = brsola(x0, f, [atol,rtol], parms, f0);
+[x0_sol,it_hist,ierr,x_hist] = brsola(x0, f, [atol,rtol], parms);
 
 fnrm = it_hist(end,1);
 fprintf('%s.m: fnrm = %g\n', mfilename, fnrm)
