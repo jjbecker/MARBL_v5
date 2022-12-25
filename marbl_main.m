@@ -10,7 +10,7 @@ function [ierr, x0_sol] = marbl_main(varargin) % tracer_loop, inputRestartFile, 
 %
 % MARBL code being used is https://github.com/marbl-ecosys/MARBL
 
-clear functions globals     % Need this to clear "persistent" variables in "G()", "time_step()" and "calculate_forcing()"
+clear functions globals
 clearvars -except varargin;
 
 timer_total = tic;
@@ -99,12 +99,9 @@ for tracer_str = sim.tracer_loop
     cstr = tName(sim.selection)';
     fprintf('%s.m: Selected tracer(s): #%d, "%s"\n', mfilename, sim.selection, string(cstr));
 
-    % FIXME: endless headache of MARBL threads! Need to kill any
-    % leftover MEX running on threads. This coincidentally clears persistent
-    % variables in G() and phi().
+    % FIXME: endless headache of MARBL threads! Kill any leftover MEX running. 
     clear functions
-    clear calc_G phi       % clear debugging counters usedin G() and phi()
-
+    clear calc_G calculate_forcing phi time_step_ann % clear "persistent" vars
 
 
     fprintf('%s.m: Reading (Matlab) OFFLINE sim restart file with tracers and transports: %s\n', mfilename, sim.inputRestartFile);
