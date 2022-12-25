@@ -4,18 +4,18 @@ function [sim, bgc, time_series, n] = time_step_ann (sim, bgc, time_series, n, f
 
 %%
 
-persistent tracerCapture tendencyCapture
-if (sim.captureAllSelectedTracers == 1)
-    if isempty(tendencyCapture)
-        tmp = packMarbl( bgc.tracer, sim.domain.iwet_JJ );
-        tmp = tmp(:,sim.selection);
-        myCaptureSz = [size(tmp(:),1), sim.num_time_steps];
-        tracerCapture = zeros(myCaptureSz);
-        fprintf('\n%s.m: HUGE tendency log created: %g bytes\n\n',mfilename, getMemSize(tracerCapture));
-        tendencyCapture = zeros(myCaptureSz);
-        fprintf('\n%s.m: HUGE tracer log created: %g bytes\n\n',mfilename, getMemSize(tendencyCapture));
-    end
-end
+% persistent tracerCapture tendencyCapture
+% if (sim.captureAllSelectedTracers == 1)
+%     if isempty(tendencyCapture)
+%         tmp = packMarbl( bgc.tracer, sim.domain.iwet_JJ );
+%         tmp = tmp(:,sim.selection);
+%         myCaptureSz = [size(tmp(:),1), sim.num_time_steps];
+%         tracerCapture = zeros(myCaptureSz);
+%         fprintf('\n%s.m: HUGE tendency log created: %g bytes\n\n',mfilename, getMemSize(tracerCapture));
+%         tendencyCapture = zeros(myCaptureSz);
+%         fprintf('\n%s.m: HUGE tracer log created: %g bytes\n\n',mfilename, getMemSize(tendencyCapture));
+%     end
+% end
 
 %%
 dt               = sim.dt;
@@ -109,15 +109,15 @@ for it = 1:steps_per_period
         break
     end
 
-    if (sim.captureAllSelectedTracers == 1)
-
-        tmp = packMarbl( bgc.tracer, sim.domain.iwet_JJ );
-        tracerCapture  (:,n) = tmp(:,sim.selection);
-
-        tmp = packMarbl( bgc.tendency, sim.domain.iwet_JJ );
-        tendencyCapture(:,n) = tmp(:,sim.selection);
-
-    end
+%     if (sim.captureAllSelectedTracers == 1)
+% 
+%         tmp = packMarbl( bgc.tracer, sim.domain.iwet_JJ );
+%         tracerCapture  (:,n) = tmp(:,sim.selection);
+% 
+%         tmp = packMarbl( bgc.tendency, sim.domain.iwet_JJ );
+%         tendencyCapture(:,n) = tmp(:,sim.selection);
+% 
+%     end
     % add river flux, as a tendency, to MARBL tendency
 
     bgc.tendency(:,1,:) = bgc.tendency(:,1,:) +river_tendency; % S = MARBL +river
@@ -201,22 +201,22 @@ end
 % %     disp(['Volume Integral: ',mfilename,' end of Month #',num2str(myMonth),' = ',num2str(time_series.moles(:, n)',12)])
 % end
 
-if (sim.captureAllSelectedTracers == 1 && myMonth == 12)
-
-    myFileName = sprintf('%s/all_tracers_all_times.mat', sim.outputRestartDir);
-    fprintf('%s.m: Saving "%s"...\n', mfilename, myFileName);
-    tracer = tracerCapture;
-    % tmp_time_series = squeeze(time_series.tracer(sim.time_series_lvl,7,:));
-    % tmp = unpackMarbl(tracerCapture,sim.domain.iwet_JJ,[7881,60,730]);
-    % tmp_log = squeeze(tmp(sim.time_series_loc, sim.time_series_lvl,:));
-    % tst = [tmp_time_series tmp_log];
-    save( myFileName, 'tracer' ,'-v7.3','-nocompression');
-
-    myFileName = sprintf('%s/all_tendency_all_times.mat', sim.outputRestartDir);
-    fprintf('%s.m: Saving "%s"...\n', mfilename, myFileName);
-    tendency = tendencyCapture;
-    save( myFileName, 'tendency' ,'-v7.3','-nocompression');
-
-end
+% if (sim.captureAllSelectedTracers == 1 && myMonth == 12)
+% 
+%     myFileName = sprintf('%s/all_tracers_all_times.mat', sim.outputRestartDir);
+%     fprintf('%s.m: Saving "%s"...\n', mfilename, myFileName);
+%     tracer = tracerCapture;
+%     % tmp_time_series = squeeze(time_series.tracer(sim.time_series_lvl,7,:));
+%     % tmp = unpackMarbl(tracerCapture,sim.domain.iwet_JJ,[7881,60,730]);
+%     % tmp_log = squeeze(tmp(sim.time_series_loc, sim.time_series_lvl,:));
+%     % tst = [tmp_time_series tmp_log];
+%     save( myFileName, 'tracer' ,'-v7.3','-nocompression');
+% 
+%     myFileName = sprintf('%s/all_tendency_all_times.mat', sim.outputRestartDir);
+%     fprintf('%s.m: Saving "%s"...\n', mfilename, myFileName);
+%     tendency = tendencyCapture;
+%     save( myFileName, 'tendency' ,'-v7.3','-nocompression');
+% 
+% end
 
 end % integration function
