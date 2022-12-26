@@ -97,7 +97,7 @@ parms  = [maxit, maxdim, sim.maxfeval];
 tName = tracer_names(0);    % no CISO tracers
 tendStr   = strjoin(tName(sim.selection));
 % fprintf('%s.m: (%s) ###### norm(x0) = %g, norm(r(x0)) = %g\n', mfilename, tendStr, norm(x0), norm(f0));
-fprintf('%s.m: (%s) ###### norm(x0) = %g, norm(r(x0)) = %g\n', mfilename, tendStr, norm(x0));
+fprintf('%s.m: (%s) ###### norm(x0) = %g\n', mfilename, tendStr, norm(x0));
 
 % [x0_sol,it_hist,ierr,x_hist] = brsola(x0, f, [atol,rtol], parms, f0);
 [x0_sol,it_hist,ierr,x_hist] = brsola(x0, f, [atol,rtol], parms);

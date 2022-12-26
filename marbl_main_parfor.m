@@ -5,7 +5,7 @@
 %
 % Clean up for threads, more complex and much slower than expected.
 % killAndCleanThreads();    % Leftover threads and dumps cause a lot of issues
-clear functions globals     % Need this to clear "persistent" variables in "G()", "time_step()" and "calculate_forcing()"
+clear functions globals     % clear "persistent" vars
 clearvars -except varargin;
 
 format short g;
@@ -24,14 +24,15 @@ diary off; diary off; diary on; diary off; diary on; diary on; % FIXME: diary be
 clear newRestartFileName
 for outerLoop_idx = 1:6
 
+    clear calc_G calculate_forcing phi time_step_ann % clear "persistent" vars
     %%%
     % Setup big picture parts of a simulation.
     % sim = setInputAndOutputFilePaths([]);
     % sim = setInputAndOutputFilePaths(varargin)
 
     % tmpTracer_loop  = {'DOP' 'DOC'};
-    % tmpTracer_loop  = {'spFe' 'NH4'};
-    tmpTracer_loop  = tracer_names(0);
+    tmpTracer_loop  = {'spFe' 'NH4'};
+%     tmpTracer_loop  = tracer_names(0);
     tmpTime_step_hr = 3;
 
     tmpRecalculate_PQ_inv   = 1;    % default = 1
@@ -79,7 +80,8 @@ for outerLoop_idx = 1:6
         numMatlab = numCores;
     else
         numCores = min(numCores, 10);  % be a good citizen on GP
-        numMatlab= 2* numCores;
+        numMatlab= 2* numCores; % FIXME: does NOT work, only numCores
+        numMatlab = numCores;
     end
 
     fprintf('%s.m: Start %d cores to run a total of %d Matlabs at %s\n', mfilename, numCores, numMatlab, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
@@ -111,7 +113,7 @@ for outerLoop_idx = 1:6
     % f0 = calc_f0(sim, bgc, MTM, string(tracer_cell(par_idx)));
 
     fprintf('%s.m: "parfor" starting <=%d Matlab workers on %d cores\n', myFilename, numMatlab, numCores)
-    % for par_idx = 1:1  % DEBUG
+    % for par_idx = parforIdxRange  % DEBUG
     parfor (par_idx = parforIdxRange, numMatlab)  % PARENTHESIS are CRUCIAL
 
         % par_idx is (usually) randomly selected order from range!
@@ -129,6 +131,10 @@ for outerLoop_idx = 1:6
         tmp_xsol (:, par_idx) = sol;
         tmp_fnrm (:, par_idx) = fnrm;
 
+% elapsedTimeSave = tic; 
+% fprintf('%s.m: Finish integration of %s years: %s\n',mfilename,num2str(1+years_gone_by,2),datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
+%         fprintf('%s.m: Finished tracer parfor idx %d which is for tracer %s (#%d): %s\n', myFilename, ...
+%             par_idx, string(tracer_cell(par_idx)), tracerRange (par_idx),datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')))
         fprintf('%s.m: Finished tracer parfor idx %d which is for tracer %s (#%d)\n', myFilename, ...
             par_idx, string(tracer_cell(par_idx)), tracerRange (par_idx))
 
@@ -158,11 +164,11 @@ for outerLoop_idx = 1:6
     elapsedTimeAllLoopsAllTracers = toc(elapsedTimeTotal);
     disp(' ');
     fprintf('\n%s.m: Finished %d outer solution loops over %d tracers with as many as %d solution loops at %s\n', mfilename, outerLoop_idx, numel(sim.tracer_loop), sim.maxfeval, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
-    disp(['Runtime: ', num2str(elapsedTimeAllLoopsAllTracers, '%1.0f'),' (s) or ', num2str(elapsedTimeAllLoopsAllTracers/60, '%1.1f'), ' (m)'])
+    disp([mfilename,'.m: Runtime: ', num2str(elapsedTimeAllLoopsAllTracers, '%1.0f'),' (s) or ', num2str(elapsedTimeAllLoopsAllTracers/60, '%1.1f'), ' (m)'])
 
 end % of outerLoop_idx loop
 disp(' ');
-disp(['Runtime: ', num2str(elapsedTimeAllLoopsAllTracers, '%1.0f'),' (s) or ', num2str(elapsedTimeAllLoopsAllTracers/60, '%1.1f'), ' (m)'])
+disp([mfilename,'.m: Runtime: ', num2str(elapsedTimeAllLoopsAllTracers, '%1.0f'),' (s) or ', num2str(elapsedTimeAllLoopsAllTracers/60, '%1.1f'), ' (m)'])
 fprintf('%s.m: COMPLETELY Finished at %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 
 
