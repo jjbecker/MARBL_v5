@@ -1,6 +1,7 @@
-function time_series = init_time_series(sim, bgc_x0, bgc_struct)
+function time_series = init_time_series(sim, bgc_struct)
 
-% time_series.dt = sim.dt;
+% bgc is initialized but we don't need it. bgc_struct is easier to use...
+
 nElem = sim.num_time_steps +1;  % Need initial condition too
 
 time_series.tracer_name         = bgc_struct.name.tracer;

@@ -99,7 +99,7 @@ bgc.river_flux  = makeLinearGrid(sim.domain.wet_loc, bgc_struct.size.grd, bgc_st
 % bgc.tracer(:)   = max(1e-15, bgc.tracer(:));
 
 sim.bgc_struct_base = bgc_struct;
-time_series = init_time_series(sim, bgc, bgc_struct);
+time_series = init_time_series(sim, bgc_struct);
 
 toc
 if (sim.verbose_debug) 
