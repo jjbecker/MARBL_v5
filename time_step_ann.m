@@ -89,7 +89,6 @@ for it = 1:steps_per_period
     n = n+1;
     [~,bgc] = calculate_forcing(sim, bgc, n);
 
-    % FIXME     k = 4; if (it <= 2), k = it+1; end
     k = 4; if (it <= 2), k = it+1; end
 
     % calculate tendency

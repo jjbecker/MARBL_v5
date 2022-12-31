@@ -31,19 +31,19 @@ for outerLoop_idx = 1:6
     % sim = setInputAndOutputFilePaths(varargin)
 
     % tmpTracer_loop  = {'DOP' 'DOC'};
-    tmpTracer_loop  = {'spFe' 'NH4'};
+    tmpTracer_loop  = {'diazChl' };
 %     tmpTracer_loop  = tracer_names(0);
     tmpTime_step_hr = 3;
 
     tmpRecalculate_PQ_inv   = 1;    % default = 1
     tmpDebug_disable_phi    = 0;    % default = 0
-    tmpLogTracer            = 0;    % default = 0
+    tmpLogTracer            = 1;    % default = 0
 
     % read an initial condition file.
     % assume for simplicity it is (probably) first pass...
     tmpInputFile = strcat(myDataDir(), 'restart_260_integrate_from_0.mat');
     % tmpInputFile = strcat(myDataDir(), 'restart_0_1_output/restart_260_integrate_from_0_DOP_DOC.mat');
-    % tmpInputFile = strcat(myDataDir(), 'outerLoop_1.mat');
+    tmpInputFile = strcat(myDataDir(), 'outerLoop_4.mat');
     %
     % outer loop #2 or greater?
     if exist('newRestartFileName','var')
@@ -113,8 +113,8 @@ for outerLoop_idx = 1:6
     % f0 = calc_f0(sim, bgc, MTM, string(tracer_cell(par_idx)));
 
     fprintf('%s.m: "parfor" starting <=%d Matlab workers on %d cores\n', myFilename, numMatlab, numCores)
-    % for par_idx = parforIdxRange  % DEBUG
-    parfor (par_idx = parforIdxRange, numMatlab)  % PARENTHESIS are CRUCIAL
+    for par_idx = parforIdxRange  % DEBUG
+    % parfor (par_idx = parforIdxRange, numMatlab)  % PARENTHESIS are CRUCIAL
 
         % par_idx is (usually) randomly selected order from range!
         % par_idx is simply "order of execution" -NOT- tracer number

@@ -22,6 +22,7 @@ tName = tracer_names(0);    % no CISO tracers
 % do not crash MARBL. Use 'G()' rather than 'r(G()' as 'f()' in nsoli()
 
 disabledPreconditoners = { 'DIC' 'ALK' 'diatC' 'spChl' 'diatChl' 'diazChl'};
+% disabledPreconditoners = { 'DIC' 'ALK' 'diatC' 'spChl' 'diatChl' };
 % FIXME; Fe might ot might not precondition correctly
 disabledPreconditoners(end+1) = {'Fe'};
 
@@ -215,7 +216,7 @@ sim.marbl_file = 'Data/marbl_in'; % MARBL chemistry and other constants.
 sim.lciso_on = 0;   % run with Carbon Isotopes ??
 sim.epsilon = sqrt(eps);
 sim.logDiags = and (0, sim.logTracers) ; % Usually no diags..
-sim.captureAllSelectedTracers = 0;  % log a years worth of tendency for preconditioer experiments
+% sim.captureAllSelectedTracers = 0;  % log a years worth of tendency for preconditioer experiments
 
 sim.runInParallel           = 0;    % parfor can't use spmd inside, at least I can not make that work
 sim.verbose_debug           = 0;

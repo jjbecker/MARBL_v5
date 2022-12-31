@@ -72,6 +72,7 @@ x1 = x0 +G;                         % x1 only of selection
 if sim.disable_ALL_Preconditioner || (numel(sim.disabledPreconditoners)>0 && ismember(tName(sim.selection), sim.disabledPreconditoners))
     fprintf('\n\n\t%s.m: ********* Disabling mfactor in calc_G  *********\n\n',mfilename)
     r = G;
+    r = 100* G;
 else
     r = mfactor(PQ_inv, G) -G;
 end
