@@ -22,7 +22,7 @@ tName = tracer_names(0);    % no CISO tracers
 % do not crash MARBL. Use 'G()' rather than 'r(G()' as 'f()' in nsoli()
 
 disabledPreconditoners = { 'DIC' 'ALK' 'diatC' 'spChl' 'diatChl' 'diazChl'};
-% FIXME; Fe might ot might not precondition correctly
+% FIXME; Fe might not precondition correctly
 disabledPreconditoners(end+1) = {'Fe'};
 
 disabledPreconditoners = unique( disabledPreconditoners);
