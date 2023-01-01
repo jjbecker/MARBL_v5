@@ -8,15 +8,15 @@ fprintf('%s.m: %d time steps, each time step is %1.1f (h), simulating %1.1f year
 % FIXME: keep history of relax steps???
 x_histx = x;
 r_hist = zeros(size(x));
-it_histx = zeros(sim.num_forward_years,1);
+it_histx = zeros(sim.num_relax_iterations,1);
 
 % % remember! First relax iteration of x0_sol" is same as x1 of sol, so in
-% % that case, to be useful, sim.num_forward_years >= 2.
-% But if using x1_sol sim.num_forward_years >= 1 is ok.
+% % that case, to be useful, sim.num_relax_iterations >= 2.
+% But if using x1_sol sim.num_relax_iterations >= 1 is ok.
 
-for itc = 1:sim.num_forward_years
+for itc = 1:sim.num_relax_iterations
 
-    fprintf("\n%s.m: starting relaxation year #%d of %d\n", mfilename, itc, sim.num_forward_years)
+    fprintf("\n%s.m: starting relaxation year #%d of %d\n", mfilename, itc, sim.num_relax_iterations)
 
     % Note x = x1, not "x0" which is normal thing for sol iterations
     % Note c0 is correct
