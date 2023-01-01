@@ -18,6 +18,10 @@ for i=1:size(y_array,2)
     ylabel (idx(i)+". "+name(i), 'Interpreter', 'none')
     if (depthNotTime)
         view([90 90]);
+    else
+        hold on
+        plot([t_or_z(1) t_or_z(end)],[y_array(1,i) y_array(end,i)])
+        hold off
     end
 end
 linkaxes(ax,'x')
