@@ -11,7 +11,6 @@ surfaceDiagName  = sim.bgc_struct_base.name.surf_diag;
 
 
 dt      = sim.dt;
-% tot_t   = dt*sim.num_time_steps;
 tot_t   = dt*n;
 my_time = tot_t;
 
@@ -20,14 +19,14 @@ my_time = tot_t;
 
 dx = sim.const.sec_d/dt;
 
-t = (0:n-1) /dx;
+t = (0:n) /dx;  % include initial tracer at 0 and updated tracers at n, so n+1 total points.
 
 % surface tracers
 
 fig = 1;
 idx = 1:size(nameUnits');        % plot -ALL- tracers???
 myTitle = sprintf('Surface Tracers v. Time (d) @row %d', row);
-myData = squeeze(time_series.tracer(1,:,1:n))';
+myData = squeeze(time_series.tracer(1,:,1:n+1))';
 fig = plot_log(fig, myTitle, t, myData, nameUnits(idx), idx, false);
 
 % surface diags
@@ -36,7 +35,7 @@ idx = 1:size(surfaceDiagName');
 myTitle = sprintf('Surface Diags v. Time (d) @row %d', row);
 
 if (sim.logDiags)
-    myData = time_series.surf_diag(:,1:n)';        % plot -ALL- diags???
+    myData = time_series.surf_diag(:,1:n+1)';        % plot -ALL- diags???
     fig = plot_log(fig, myTitle, t, myData, surfaceDiagName(idx), idx, false);
 end
 
@@ -45,13 +44,15 @@ end
 plot_layer = min(size(sim.domain.zt,2), lvl);
 
 idx = 1:size(nameUnits');
-fig = plot_interior_tracers(fig, tot_t, plot_layer, idx, sim, time_series,n);
+fig = plot_interior_tracers(fig, tot_t, plot_layer, idx, sim, time_series,n+1); % include initial tracer at 0 and updated tracers at n, so n+1 total points.
 
 % Plot surface observations
 
 myTitle = 'SFO v. Time(d)';
 idx = 1:4;
-myData = time_series.sfo(idx,1:n)';
+% TRICKY: we have last value of tracers but not SFO
+t = (0:n-1) /dx;
+myData = time_series.sfo(idx,1:n)';  
 myName = sim.bgc_struct_base.name.sfo()';
 fig = plot_log(fig, myTitle, t, myData, myName,idx, false);
 
@@ -69,16 +70,18 @@ if (sim.logDiags)
     fig = plot_interior_diags(fig, my_time, plot_layer, idx, myTitle, sim, time_series,n);
 end
 
-% fig = 7;
+% fig = 5;
 idx = 1:size(nameUnits');        % plot -ALL- tracers???
 myTitle = sprintf('***MOLES*** Global Volume Integrated Tracers(mole) v. Time (d)');
-myData = squeeze(time_series.moles(:,1:n))';
+t = (0:n) /dx; % include initial tracer at 0 and updated tracers at n, so n+1 total points.
+myData = squeeze(time_series.moles(:,1:n+1))'; % include initial tracer at 0 and updated tracers at n, so n+1 total points.
 fig = plot_log(fig, myTitle, t, myData, globalUnits(idx), idx, false);
 
-% fig = 8;
+% fig = 6;
 idx = 1:size(nameUnits');        % plot -ALL- tracers???
 myTitle = sprintf('Global Volume Integrated(MARBL+River Tendency) ./Tracer *1y v. Time (d)');
-% myData = squeeze(time_series.Dmoles(:,1:n));
+% TRICKY: we have last value of tracers but not SFO
+t = (0:n-1) /dx;
 myData = sim.const.sec_y *(squeeze(time_series.Dmoles(:,1:n)) ./ squeeze(eps+time_series.moles(:,1:n)))';
 fig = plot_log(fig, myTitle, t, myData, globalUnits(idx), idx, false);
 
