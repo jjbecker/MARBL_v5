@@ -157,7 +157,7 @@ for it = 1:steps_per_period
             %             bgc.accumulate = bgc.accumulate + ( S ./C_3 ); % FIXME: time stepped tracer or input tracer
     end
 
-    if sim.logTracers && ( n+1 == size(time_series.moles,2))
+    if sim.logTracers && ( n+1 == size(time_series.moles,2))    % capture value expected at start of next year.
 
         time_series.tracer(:, :, n+1) = squeeze(bgc.tracer(sim.time_series_loc,:,:));
 
