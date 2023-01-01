@@ -19,14 +19,19 @@ my_time = tot_t;
 
 dx = sim.const.sec_d/dt;
 
-t = (0:n) /dx;  % include initial tracer at 0 and updated tracers at n, so n+1 total points.
+% initial tracer at 0 and updated tracers at n. n+1 points after phi
+n_tracer = n;
+if n >= sim.num_time_steps
+    n_tracer = n+1;
+end
+t = (0:n_tracer-1) /dx;
 
 % surface tracers
 
 fig = 1;
 idx = 1:size(nameUnits');        % plot -ALL- tracers???
 myTitle = sprintf('Surface Tracers v. Time (d) @row %d', row);
-myData = squeeze(time_series.tracer(1,:,1:n+1))';
+myData = squeeze(time_series.tracer(1,:,1:n_tracer))';
 fig = plot_log(fig, myTitle, t, myData, nameUnits(idx), idx, false);
 
 % surface diags
@@ -35,7 +40,8 @@ idx = 1:size(surfaceDiagName');
 myTitle = sprintf('Surface Diags v. Time (d) @row %d', row);
 
 if (sim.logDiags)
-    myData = time_series.surf_diag(:,1:n+1)';        % plot -ALL- diags???
+    t = (0:n-1) /dx;    % only get diag in call to MARBL_loop
+    myData = time_series.surf_diag(:,1:n)';        % plot -ALL- diags???
     fig = plot_log(fig, myTitle, t, myData, surfaceDiagName(idx), idx, false);
 end
 
@@ -44,7 +50,7 @@ end
 plot_layer = min(size(sim.domain.zt,2), lvl);
 
 idx = 1:size(nameUnits');
-fig = plot_interior_tracers(fig, tot_t, plot_layer, idx, sim, time_series,n+1); % include initial tracer at 0 and updated tracers at n, so n+1 total points.
+fig = plot_interior_tracers(fig, tot_t, plot_layer, idx, sim, time_series,n_tracer); % include initial tracer at 0 and updated tracers at n, so n+1 total points.
 
 % Plot surface observations
 
@@ -73,8 +79,9 @@ end
 % fig = 5;
 idx = 1:size(nameUnits');        % plot -ALL- tracers???
 myTitle = sprintf('***MOLES*** Global Volume Integrated Tracers(mole) v. Time (d)');
-t = (0:n) /dx; % include initial tracer at 0 and updated tracers at n, so n+1 total points.
-myData = squeeze(time_series.moles(:,1:n+1))'; % include initial tracer at 0 and updated tracers at n, so n+1 total points.
+% include initial tracer at 0 and updated tracers at n, so n+1 total points.
+t = (0:n_tracer-1) /dx;
+myData = squeeze(time_series.moles(:,1:n_tracer))'; % include initial tracer at 0 and updated tracers at n, so n+1 total points.
 fig = plot_log(fig, myTitle, t, myData, globalUnits(idx), idx, false);
 
 % fig = 6;
