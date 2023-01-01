@@ -127,8 +127,13 @@ for it = 1:steps_per_period
 
     %     toc
     %%
-    % Capture time series of global volume integral of tracers and tendency
-    % as part of unpack
+    % Captured initial value of tracers and tendency in MARBL_LOOP
+    % Capture integrated values here
+    if sim.logTracers
+        time_series.moles (:, n) = global_moles(bgc.tracer          , sim);
+        time_series.Dmoles(:, n) = 1E-3 *sum( S .* sim.domain.dVt_FP);
+    end
+
     switch (it)
         case 1
             w1 = C_1;
@@ -136,9 +141,6 @@ for it = 1:steps_per_period
             C_2 = mfactor(FLHS,RHS);
             bgc.tracer = unpackMarbl( C_2, sim.domain.iwet_JJ, size(bgc.tracer));
             %             bgc.accumulate = bgc.accumulate + ( S ./C_1 ); % FIXME: time stepped tracer or input tracer
-            if (sim.logTracers)
-                time_series.moles(:, n) = 1E-3 *sum( C_2 .* sim.domain.dVt_FP);
-            end
 
         case 2
             w1 = (1/2).*(3*C_2 - C_1 );
@@ -146,9 +148,6 @@ for it = 1:steps_per_period
             C_3 = mfactor(FLHS,RHS);
             bgc.tracer = unpackMarbl( C_3, sim.domain.iwet_JJ, size(bgc.tracer));
             %             bgc.accumulate = bgc.accumulate + ( S ./C_2 ); % FIXME: time stepped tracer or input tracer
-            if (sim.logTracers)
-                time_series.moles(:, n) = 1E-3 *sum( C_3 .* sim.domain.dVt_FP);
-            end
 
         otherwise
             w1 = ( (1/12).*( 23*C_3 - 16*C_2 + 5*C_1));
@@ -156,14 +155,22 @@ for it = 1:steps_per_period
             C_4 = mfactor(FLHS,RHS);
             bgc.tracer = unpackMarbl( C_4, sim.domain.iwet_JJ,size(bgc.tracer));
             %             bgc.accumulate = bgc.accumulate + ( S ./C_3 ); % FIXME: time stepped tracer or input tracer
-            if (sim.logTracers)
-                time_series.moles(:, n) = 1E-3 *sum( C_4 .* sim.domain.dVt_FP);
-            end
     end
 
-    if (sim.logTracers)
-        time_series.moles (:, n) = global_moles(bgc.tracer          , sim);
-        time_series.Dmoles(:, n) = 1E-3 *sum( S .* sim.domain.dVt_FP);
+    if sim.logTracers && ( n+1 == size(time_series.moles,2))
+
+        time_series.tracer(:, :, n+1) = squeeze(bgc.tracer(sim.time_series_loc,:,:));
+
+        time_series.moles (:, n+1)    = global_moles(bgc.tracer , sim);
+
+        % FIXME: need to call MARBL_loop to get SFO and tendency and diags EXPECTED at n+1
+        % time_series.sfo           (:, n+1)    = 0; its already zero
+        %         if (sim.logDiags)
+        %             time_series.diag      (:, :, n+1) = interior.diag';
+        %             time_series.surf_diag (:, n+1)    = surface.diag';
+        %         end
+        %         time_series.Dmoles(:, n) = 1E-3 *sum( S .* sim.domain.dVt_FP);
+
     end
 
     % Update temps storing previous time steps
