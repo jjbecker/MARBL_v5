@@ -130,7 +130,7 @@ ax(1) = nexttile(tl);
             histType = 'cumcount';
             debugStr = sprintf('%s<%s "%s" vs Depth (m)', ...
                 nameUnits{fld}, num2str(negLimit,2),histType);
-            histogram(depth,'Normalization',histType);
+            histogram(depth,'Normalization',histType); grid on
             title(debugStr, 'Interpreter', 'none'); % get ride of subscripts
 
             %             pause(1)

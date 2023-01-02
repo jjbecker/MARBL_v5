@@ -33,7 +33,7 @@ fprintf(        '%s.m: Year %d                        %s\n',callersName,current_
 
 % selection = [ ...
 %     find( strcmp(tName,'SiO3') ) ];     % #3
-figure (700); scatter(x0(:,selection),tmpG); title(strjoin(["scatter(",gStr,", ",strjoin(tName(selection)),")"]));    xlabel(strjoin(tName(selection)));   ylabel(gStr)
-figure (701); plot(tmpG);       title(strjoin(["plot(",gStr,")"]));         xlabel('idx FP');                        ylabel(gStr)
-figure (702); qqplot(tmpG);     title(strjoin(["qqplot(",gStr,")"]))
-figure (601); histogram(tmpG);  title(strjoin(["histogram(",gStr,")"]));    xlabel(gStr);                            ylabel('Count')
+figure (700); scatter(x0(:,selection),tmpG); title(strjoin(["scatter(",gStr,", ",strjoin(tName(selection)),")"]));    xlabel(strjoin(tName(selection)));   ylabel(gStr); grid on
+figure (701); plot(tmpG);       title(strjoin(["plot(",gStr,")"]));         xlabel('idx FP');                        ylabel(gStr); grid on
+figure (702); qqplot(tmpG);     title(strjoin(["qqplot(",gStr,")"])); grid on
+figure (601); histogram(tmpG);  title(strjoin(["histogram(",gStr,")"]));    xlabel(gStr);                            ylabel('Count'); grid on

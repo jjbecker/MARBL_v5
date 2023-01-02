@@ -23,6 +23,7 @@ for i=1:size(y_array,2)
         plot([t_or_z(1) t_or_z(end)],[y_array(1,i) y_array(end,i)])
         hold off
     end
+    grid on
 end
 linkaxes(ax,'x')
 

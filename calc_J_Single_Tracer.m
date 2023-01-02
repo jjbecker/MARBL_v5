@@ -220,12 +220,12 @@ fprintf('%s.m: nnz(J)/numel(x0(:) = %1.2f\n', mfilename, nnz(J)/numel(x0(:)));
 
 if sim.verbose_debug
     logJ=log10(abs(nonzeros(J(:))));
-    figure(400+sim.selection); histogram(logJ); title(sprintf("hist( log10( abs( J( %s ))))",tStr), 'Interpreter', 'none');
+    figure(400+sim.selection); histogram(logJ); title(sprintf("hist( log10( abs( J( %s ))))",tStr), 'Interpreter', 'none'); grid on
 
     % logJT=log10(sim.T *abs(nonzeros(J(:))));
-    % figure(500+sim.selection); histogram(logJT); title(sprintf("hist( log10( abs( sim.T *J( %s ))))",tStr), 'Interpreter', 'none');
+    % figure(500+sim.selection); histogram(logJT); title(sprintf("hist( log10( abs( sim.T *J( %s ))))",tStr), 'Interpreter', 'none'); grid on
 
-    figure(600+sim.selection); spy(J); title(sprintf('Partial of d(%s)/dt wrt to %s everywhere',tStr,tStr)); xlabel('FP index)'); ylabel('FP index)')
+    figure(600+sim.selection); spy(J); title(sprintf('Partial of d(%s)/dt wrt to %s everywhere',tStr,tStr)); xlabel('FP index)'); ylabel('FP index)'); grid on
 end
 
 fprintf('End of %s.m: %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));

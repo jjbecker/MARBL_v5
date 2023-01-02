@@ -19,7 +19,7 @@ else
     dx0 = x0 -x0_prev;
     fprintf('norm(x0 -x0_prev) = %-#15.7g\n', norm(dx0) );
     if (sim.verbose_debug)
-        figure (503); plot(dx0)    ; title('dx0'); xlabel('idx FP'); ylabel(strjoin(tName(sim.selection)));
+        figure (503); plot(dx0)    ; title('dx0'); xlabel('idx FP'); ylabel(strjoin(tName(sim.selection))); grid on
     end
 end
 Npt = -gFileCnt;
@@ -98,10 +98,10 @@ res_moles = res_moles(sim.selection);
 fprintf('%s.m: Npt = %d %s moles/y = %1.7g\n',   mfilename, Npt, gStr, res_moles);
 
 if (sim.verbose_debug)
-    figure (900); scatter(x0,r); title(strjoin(["scatter( r(",gStr,"), ",strjoin(tName(sim.selection)),")"]));    xlabel(strjoin(tName(sim.selection)));  ylabel(strjoin(["r(",gStr,")"]))
-    figure (901); plot(r);       title(strjoin(["r(",gStr,")"]));          xlabel('idx FP');   ylabel(strjoin(["r(",gStr,")"]))
-    figure (902); qqplot(r);     title(strjoin(["qqplot( r(",gStr,"))"]))
-    figure (602); histogram(r);  title(strjoin(["histogram( r(",gStr,"))"]));     xlabel(strjoin(["r(",gStr,")"]));   ylabel('Count')
+    figure (900); scatter(x0,r); title(strjoin(["scatter( r(",gStr,"), ",strjoin(tName(sim.selection)),")"]));    xlabel(strjoin(tName(sim.selection)));  ylabel(strjoin(["r(",gStr,")"])); grid on
+    figure (901); plot(r);       title(strjoin(["r(",gStr,")"]));          xlabel('idx FP');   ylabel(strjoin(["r(",gStr,")"])); grid on
+    figure (902); qqplot(r);     title(strjoin(["qqplot( r(",gStr,"))"])); grid on
+    figure (602); histogram(r);  title(strjoin(["histogram( r(",gStr,"))"]));     xlabel(strjoin(["r(",gStr,")"]));   ylabel('Count'); grid on
 
     myRng = 1:20;
     [maxR,idxMaxR]     = sort(   (G),"descend",'MissingPlacement','last');
