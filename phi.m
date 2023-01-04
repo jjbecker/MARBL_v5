@@ -27,7 +27,8 @@ timer_total = tic;
 
 total_months = 12* round(sim.num_time_steps *sim.dt /sim.const.sec_y);
 if (total_months ~= 12)
-    keyboard
+    % keyboard
+    fprintf('\n%s.m: Length of simulation is >1 year...\n\n', mfilename)
 end
 fprintf('\n%s.m: Start  integration of %s years: ',mfilename, int2str(total_months/12))
 fprintf('%s\n', datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')))
