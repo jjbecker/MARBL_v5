@@ -22,7 +22,9 @@ diary off; diary off; diary on; diary off; diary on; diary on; % FIXME: diary be
 %%%
 % if outer loop is running use previous result...
 clear newRestartFileName
-for outerLoop_idx = 1:6
+numOuterLoops = 6;
+% numOuterLoops = 1;
+for outerLoop_idx = 1:numOuterLoops
 
     clear calc_G calculate_forcing phi time_step_ann % clear "persistent" vars
     %%%
@@ -34,6 +36,7 @@ for outerLoop_idx = 1:6
     tmpTracer_loop  = {'diazChl' };
 %     tmpTracer_loop  = tracer_names(0);
     tmpTime_step_hr = 3;
+    tmpTime_step_hr = 12;
 
     tmpRecalculate_PQ_inv   = 1;    % default = 1
     tmpDebug_disable_phi    = 0;    % default = 0
@@ -43,7 +46,7 @@ for outerLoop_idx = 1:6
     % assume for simplicity it is (probably) first pass...
     tmpInputFile = strcat(myDataDir(), 'restart_260_integrate_from_0.mat');
     % tmpInputFile = strcat(myDataDir(), 'restart_0_1_output/restart_260_integrate_from_0_DOP_DOC.mat');
-    tmpInputFile = strcat(myDataDir(), 'outerLoop_4.mat');
+    tmpInputFile = strcat(myDataDir(), 'outerLoop_6.mat');
     %
     % outer loop #2 or greater?
     if exist('newRestartFileName','var')
