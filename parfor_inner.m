@@ -27,7 +27,7 @@ end
 % remember brsola() "sol" is x0 value. x1 value is NOT last col of
 % x_hist; it is sol !!!
 % First relax iteration of x0 gives same x1 as sol run.
-% To be useful num_relax_iterations >= 2 if using x0_sol, but OK for x1_sol
+% To be useful num_single_tracer_relax_iters >= 2 if using x0_sol, but OK for x1_sol
 %%%%%% End of "inputs"
 
 % Stuff below is not a simulation input. It is code to setup grids, etc a
@@ -50,13 +50,6 @@ fprintf('\n%s.m: Start Newton (Broyden Method) solver: %s\n',mfilename,datestr(d
 timer_PQ_init_solve_relax_fwd = tic;
 fprintf('%s.m: Solving for tracer: %s\n', mfilename, string(tracer_str));
 
-
-% NK always using 1 year integration
-
-if sim.phi_years ~= 1
-    disp('ERROR: NK requires sim.phi_years = 1')
-    keyboard
-end
 
 %%%%
 % % DEBUG: add a known spike to see if it gets removed by Nsoli()spike_size = 1234.567;
@@ -83,21 +76,34 @@ x0 = x0(:);                 % unitless
 
 
 if( sim.forwardIntegrationOnly )
+
     fprintf('%s.m: forward integration ONLY\n',mfilename);
+    if sim.debug_disable_phi
+        fprintf('\n\n\t%s.m: ********* phi() is short circuited: set x = 0*x0 *********\n\n',mfilename)
+        x = 0 *c(:,1);
+        fnrm = 0;
+    end
 
 else % Solve for selected tracer
+
+    % NK always using 1 year integration
+
+    if sim.phi_years ~= 1
+        disp('ERROR: NK requires sim.phi_years = 1')
+        keyboard
+    end
 
     PQ_inv = calc_PQ_inv(sim, bgc, time_series, forcing, MTM);
 
     f = @(x) calc_G(x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
     [ierr, fnrm, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, c0, sim, bgc, f);
-%     f0=feval(f,x0);
-%     [ierr, fnrm, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, c0, sim, bgc, f, f0);
+    %     f0=feval(f,x0);
+    %     [ierr, fnrm, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, c0, sim, bgc, f, f0);
 
 
     x = x0_sol;     % FIXME: use x0 or x1 of marbl_solve?
 
-    if sim.num_relax_iterations > 0
+    if sim.num_single_tracer_relax_iters > 0
         % keyboard
         [x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv, myRestartFile_relaxed] = ...
             marbl_relax(x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
@@ -108,9 +114,9 @@ end % Solve for selected tracer
 % Next! allow ALL tracers, not just selection, to "relax' to solution.
 %    do pure forward integration for a while...
 
-for fwd_itc = 1:sim.num_forward_years
+for fwd_itc = 1:sim.num_forward_iters
 
-    fprintf("\n%s.m: starting forward integrate year #%d of %d\n", mfilename, fwd_itc, sim.num_forward_years)
+    fprintf("\n%s.m: starting forward interation #%d of %d\n", mfilename, fwd_itc, sim.num_forward_iters)
 
     [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
 
