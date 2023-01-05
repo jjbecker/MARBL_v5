@@ -31,8 +31,8 @@ diary off; diary off; diary on; diary off; diary on; diary on; % FIXME: diary be
 % Setup big picture parts of a simulation and/or NK solution.
 
 sim.forwardIntegrationOnly    = 0;      % 1 -> no NK just fwd integration
-sim.num_relax_iterations      = 0;      % 0 means no relax steps, just use NK x1_sol
-sim.num_forward_years         = 0;      % if fwd only, num fwd, else this inum fwd after relax step
+sim.num_single_tracer_relax_iters = 0;      % 0 means no relax steps, just use NK x1_sol
+sim.num_forward_iters         = 0;      % if fwd only, num fwd, else this inum fwd after relax step
 
 sim.runInParallel = 1;      % parallel is hard to debug, but 2x faster
 sim.verbose_debug = 1;
@@ -112,7 +112,7 @@ for tracer_str = sim.tracer_loop
     % remember brsola() "sol" is x0 value. x1 value is NOT last col of
     % x_hist; it is sol !!!
     % First relax iteration of x0 gives same x1 as sol run.
-    % To be useful num_relax_iterations >= 2 if using x0_sol, but OK for x1_sol
+    % To be useful num_single_tracer_relax_iters >= 2 if using x0_sol, but OK for x1_sol
     %%%%%% End of "inputs"
 
     % Stuff below is not a simulation input. It is code to setup grids, etc a
@@ -190,7 +190,7 @@ for tracer_str = sim.tracer_loop
         % FIXME: use x0 or x1 of solution?
         x = x0_sol;
 
-        if sim.num_relax_iterations > 0
+        if sim.num_single_tracer_relax_iters > 0
             [~, ~, sim, bgc, time_series, forcing, MTM, ~, ~] = ...
                 marbl_relax(x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
         end % relax step
@@ -200,9 +200,9 @@ for tracer_str = sim.tracer_loop
     % Next! allow ALL tracers, not just selection, to "relax' to solution.
     %    do pure forward integration for a while...
 
-    for fwd_itc = 1:sim.num_forward_years
+    for fwd_itc = 1:sim.num_forward_iters
 
-        fprintf("\n%s.m: starting forward integrate year #%d of %d\n", mfilename, fwd_itc, sim.num_forward_years)
+        fprintf("\n%s.m: starting forward integrate year #%d of %d\n", mfilename, fwd_itc, sim.num_forward_iters)
 
         [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
 
