@@ -1,4 +1,4 @@
-function [ sim, bgc, ierr, x , fnrm] = parfor_inner(sim, MTM, tracer_str)
+function [sim, bgc, time_series, forcing, ierr, x , fnrm] = parfor_inner(sim, MTM, tracer_str)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %     tracer_str = sim.tracer_loop(par_idx)
@@ -111,29 +111,24 @@ else % Solve for selected tracer
 
 end % Solve for selected tracer
 
-% Next! allow ALL tracers, not just selection, to "relax' to solution.
-%    do pure forward integration for a while...
-
-for fwd_itc = 1:sim.num_forward_iters
-
-    fprintf("\n%s.m: starting forward interation #%d of %d\n", mfilename, fwd_itc, sim.num_forward_iters)
-
-    [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
-
-    sim.start_yr  = sim.start_yr+1;
-%     if mod(round(sim.start_yr), sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
+% % Next! allow ALL tracers, not just selection, to "relax' to solution.
+% %    do pure forward integration for a while...
 % 
-%         myRestartFile_fwd = sprintf('%s/restart_%d_%s_fwd_x1.mat', sim.outputRestartDir, round(sim.start_yr),strjoin(tName(sim.selection)));
-%         [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile_fwd);
+% for fwd_itc = 1:sim.num_forward_iters
 % 
-%     end
-end % fwd loop
-
-%%%
-% always save my final answer
-% myRestartFile_fwd = sprintf('%s/restart_%d_%s_fwd_x1.mat', sim.outputRestartDir, round(sim.start_yr),strjoin(tName(sim.selection)));
-% [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile_fwd);
-
+%     fprintf("\n%s.m: starting forward interation #%d of %d\n", mfilename, fwd_itc, sim.num_forward_iters)
+% 
+%     [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
+% 
+%     sim.start_yr  = sim.start_yr+1;
+% %     if mod(round(sim.start_yr), sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
+% % 
+% %         myRestartFile_fwd = sprintf('%s/restart_%d_%s_fwd_x1.mat', sim.outputRestartDir, round(sim.start_yr),strjoin(tName(sim.selection)));
+% %         saveRestartFiles(sim, bgc.tracer, myRestartFile_fwd);
+% % 
+% %     end
+% end % fwd loop
+% 
 %%%
 elapsedTime_all_loc = toc(timer_PQ_init_solve_relax_fwd);
 disp(' ');
