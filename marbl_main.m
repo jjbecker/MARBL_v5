@@ -210,7 +210,7 @@ for tracer_str = sim.tracer_loop
         if mod(round(sim.start_yr), sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
 
             myRestartFile_fwd = sprintf('%s/restart_%d_%s_fwd_x1.mat', sim.outputRestartDir, round(sim.start_yr),strjoin(tName(sim.selection)));
-            [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile_fwd);
+            saveRestartFiles(sim, bgc.tracer, myRestartFile_fwd);
 
         end
     end % fwd loop
@@ -218,7 +218,7 @@ for tracer_str = sim.tracer_loop
     % this is my final answer!
     % always save my final answer
     myRestartFile_fwd = sprintf('%s/restart_%d_%s_fwd_x1.mat', sim.outputRestartDir, round(sim.start_yr),strjoin(tName(sim.selection)));
-    [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile_fwd);
+    saveRestartFiles(sim, bgc.tracer, myRestartFile_fwd);
 
 
 

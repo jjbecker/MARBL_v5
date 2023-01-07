@@ -1,5 +1,4 @@
-function [sim, bgc] = saveRestartFiles(sim, bgc, tracer, newRestartFileName)
-% function [sim, bgc] = saveRestartFiles(sim, bgc, tracer_0, years_gone_by)
+function saveRestartFiles(sim, tracer, newRestartFileName)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 

@@ -36,13 +36,13 @@ rtol = sim.rtol;        % stop if norm(drift,2) < 10% of G(x0)
 % In all of these cases we want to set a small limit for numbers of calls 
 % to f(x); like 5, and it is very valuable to hand in f(x0) along with x0.
 %
-% maxitl is NOT maxmium number of nonlinear iterations because of possible
-% line searches; maybe many line searches. maxitl = Max number of G() or 
+% maxit is NOT maxmium number of nonlinear iterations because of possible
+% line searches; maybe many line searches. maxit = Max number of G() or 
 % phi() IF AND ONLY IF G always decreases. Must be>2 because need at least 
 % 1 for a call to get f0 and 1 for a Newton, if we are calculating f(x0) in
 % nsoli().
 % 
-% COULD BE maxitl = maxit*maxit, (if steplength reductions do work on last 
+% COULD BE maxit = maxit*maxit, (if steplength reductions do work on last 
 % try), and that could be a VERY long time. maxfeval bounds total cnt of 
 % calls to G to definite value.
 %
@@ -131,7 +131,7 @@ x0_bgc  = replaceSelectedTracers(sim, c0, x0_sol, sim.selection);
 bgc.tracer = nsoli2bgc(sim, bgc, x0_bgc);   % marbl format x0
 
 myRestartFile_x0 = sprintf('%s/restart_%d_%s_sol_x0.mat', sim.outputRestartDir, round(sim.start_yr), strjoin(tName(sim.selection)));
-[sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile_x0);
+saveRestartFiles(sim, bgc.tracer, myRestartFile_x0);
 
 sol_fname = sprintf('%s/sol_%s_ierr_%d_x0', sim.outputRestartDir, string(tName(sim.selection)), ierr);
 fprintf('%s.m: Saving just x0_sol, ierr, it_hist, x_hist in %s\n', mfilename, sol_fname);
@@ -166,6 +166,6 @@ save(sol_fname, 'x0_sol', 'ierr', 'it_hist', 'x_hist', '-v7.3','-nocompression')
 %         x1_sol = c1(:,sim.selection);           % [393913] initial condition for Nsoli()
 %         % x1_sol = x1_sol(:);                     % unitless
 %         myRestartFile_x1 = sprintf('%s/restart_%d_%s_sol_x1.mat', sim.outputRestartDir, round(sim.start_yr), strjoin(tName(sim.selection)))
-%         [sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile_x1);
+%         saveRestartFiles(sim, bgc.tracer, myRestartFile_x1);
 
 end

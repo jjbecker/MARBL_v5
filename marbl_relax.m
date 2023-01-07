@@ -47,6 +47,6 @@ bgc = bgc_relax;    % final answer or input to fwd integration...
 
 tName = tracer_names(0);    % no CISO tracers
 myRestartFile_relaxed = sprintf('%s/restart_%d_%s_relax_x1.mat', sim.outputRestartDir, round(sim.start_yr), strjoin(tName(sim.selection)));
-[sim, bgc] = saveRestartFiles(sim, bgc, bgc.tracer, myRestartFile_relaxed);
+saveRestartFiles(sim, bgc.tracer, myRestartFile_relaxed);
 
 end
