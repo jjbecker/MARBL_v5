@@ -219,9 +219,17 @@ sim.logDiags = and (0, sim.logTracers) ; % Usually no diags..
 
 sim.runInParallel           = 0;    % parfor can't use spmd inside, at least I can not make that work
 sim.verbose_debug           = 0;
+sim.num_single_tracer_relax_iters = 0;    % 0 means no relax steps, just use NK x1_sol
+sim.num_forward_iters       = 3;    % num of bgc = phi(bgc) loops, but sim.phi_years can be >1.
+
 sim.forwardIntegrationOnly  = 0;    % 1 -> no NK just fwd integration
-sim.num_relax_iterations    = 0;    % 0 means no relax steps, just use NK x1_sol
-sim.num_forward_years       = 0;    % if fwd only, num fwd, else this inum fwd after relax step
+if sim.forwardIntegrationOnly
+    % if not doing NK, and just doing forward sims, ok then...
+    sim.phi_years           = 1;    % VERY special case. >1 to check end of year bugs.
+else
+    % NK always uses 1 year integration
+    sim.phi_years           = 1;    
+end
 
 sim.grd     = load(sim.inputRestartFile,'sim').sim.grd;
 sim.domain  = load(sim.inputRestartFile,'sim').sim.domain;
@@ -236,7 +244,6 @@ end
 
 %%%
 % These are control for nsoli(), that is called from marbl_solve
-sim.phi_years   = 1;        % NK always uses 1 year integration
 sim.maxfeval    = 11;       % assumes we input f(x0)
 sim.rtol        = 1e-2;     % stop if norm(drift,2) < 10% of G(x0)
 
