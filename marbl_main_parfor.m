@@ -1,5 +1,5 @@
 % MARBL code being used is https://github.com/marbl-ecosys/MARBL
-% function [singleColTracerError, singleColTracerSolution] = marbl_main_parfor(varargin) % tracer_loop, inputRestartFile, time_step_hr, logTracers, recalculate_PQ_inv, short_circuit
+% function [tracerError,x,y,z tracerSolution] = marbl_main_parfor(varargin) % tracer_loop, inputRestartFile, time_step_hr, logTracers, recalculate_PQ_inv, short_circuit
 % https://ctk.math.ncsu.edu/newtony.html
 % matlab -nodisplay -nodesktop -nosplash -noFigureWindows -logfile batch.txt < marbl_nsoli.m &
 %
@@ -22,7 +22,7 @@ diary off; diary off; diary on; diary off; diary on; diary on; % FIXME: diary be
 %%%
 % if outer loop is running use previous result...
 clear newRestartFileName
-numOuterLoops = 6;
+numOuterLoops = 10;
 % numOuterLoops = 1;
 for outerLoop_idx = 1:numOuterLoops
 
@@ -32,11 +32,14 @@ for outerLoop_idx = 1:numOuterLoops
     % sim = setInputAndOutputFilePaths([]);
     % sim = setInputAndOutputFilePaths(varargin)
 
-    % tmpTracer_loop  = {'DOP' 'DOC'};
-    tmpTracer_loop  = {'diazChl' };
-%     tmpTracer_loop  = tracer_names(0);
+    % tmpTracer_loop  = {'DOP'};
+    % tmpTracer_loop  = {'spChl' 'diatChl' 'diazChl' 'DOP' 'DOC' 'DOP'};
+    % Solve just the "inorganic" tracers, let the biology settle in the "num_single_tracer_relax_iters" loop
+    tmpTracer_loop  = tracer_names(0);
+    tmpTracer_loop = tmpTracer_loop(1:17);
+    tmpTracer_loop([9 11]) = []     % ignore "DIC_ALT" and "ALK_ALT"
     tmpTime_step_hr = 3;
-    tmpTime_step_hr = 12;
+    % tmpTime_step_hr = 12;
 
     tmpRecalculate_PQ_inv   = 1;    % default = 1
     tmpDebug_disable_phi    = 0;    % default = 0
@@ -63,9 +66,9 @@ for outerLoop_idx = 1:numOuterLoops
 
     % sim = setInputAndOutputFilePaths({tmpTracer_loop, tmpInputFile, tmpTime_step_hr});    % Order of args IMPORTANT !!!
     % sim = setInputAndOutputFilePaths({{'DOP' 'DOC'}, tmpInputFile, 12});                  % Order of args IMPORTANT !!!
+    % sim = setInputAndOutputFilePaths({{'DOP' 'DOC'}, tmpInputFile, 12, 0, 1, 0});         % Order of args IMPORTANT !!!
     sim = setInputAndOutputFilePaths({tmpTracer_loop, tmpInputFile, tmpTime_step_hr, ...
         tmpRecalculate_PQ_inv, tmpDebug_disable_phi, tmpLogTracer });                       % Order of args IMPORTANT !!!
-    % sim = setInputAndOutputFilePaths({{'DOP' 'DOC'}, tmpInputFile, 12, 0, 1, 0});         % Order of args IMPORTANT !!!
 
     clear tmpRecalculate_PQ_inv tmpDebug_disable_phi tmpLogTracer tmpTracer_loop tmpTime_step_hr tmpInputFile;
 
@@ -74,12 +77,13 @@ for outerLoop_idx = 1:numOuterLoops
     % relative tolerance; as fraction of f(x0)..
     sim.rtol     = 5e-1;    % marbl_solve(): stop if norm(drift,2) < 10% of G(x0)
     sim.maxfeval = 5;       % marbl_solve(): max number of function evaluation
+    sim.num_forward_iters = 1;    % num of bgc = phi(bgc) loops, but sim.phi_years can be >1.
 
     %%%
     % Never use more than numTracer
     numCores = min(round(feature('numcores')), numel(sim.tracer_loop));
     if (isunix && ismac)
-        numCores  = min(2, numCores);   % limited RAM on laptop...
+        numCores  = min(3, numCores);   % limited RAM on laptop...
         numMatlab = numCores;
     else
         numCores = min(numCores, 10);  % be a good citizen on GP
@@ -116,8 +120,9 @@ for outerLoop_idx = 1:numOuterLoops
     % f0 = calc_f0(sim, bgc, MTM, string(tracer_cell(par_idx)));
 
     fprintf('%s.m: "parfor" starting <=%d Matlab workers on %d cores\n', myFilename, numMatlab, numCores)
-    for par_idx = parforIdxRange  % DEBUG
+    % for par_idx = parforIdxRange  % DEBUG
     % parfor (par_idx = parforIdxRange, numMatlab)  % PARENTHESIS are CRUCIAL
+    parfor (par_idx = parforIdxRange)  % PARENTHESIS are CRUCIAL
 
         % par_idx is (usually) randomly selected order from range!
         % par_idx is simply "order of execution" -NOT- tracer number
@@ -127,17 +132,19 @@ for outerLoop_idx = 1:numOuterLoops
             par_idx, string(tracer_cell(par_idx)), tracerRange (par_idx))
 
         % this code is easy to read and avoids crazy syntax for slice variable.
+        % do NOT need tracer values in sim, bgc, or time_series, but do
+        % need stucts definition and so on later for forward/relax run
 
-        [~, ~, ierr, sol, fnrm] = parfor_inner(sim, MTM, string(tracer_cell(par_idx)));
+        [~, ~, ~, ~, ierr, sol , fnrm] = parfor_inner(sim, MTM, string(tracer_cell(par_idx)));
 
         tmp_ierr (:, par_idx) = ierr;
         tmp_xsol (:, par_idx) = sol;
         tmp_fnrm (:, par_idx) = fnrm;
 
-% elapsedTimeSave = tic; 
-% fprintf('%s.m: Finish integration of %s years: %s\n',mfilename,num2str(1+years_gone_by,2),datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
-%         fprintf('%s.m: Finished tracer parfor idx %d which is for tracer %s (#%d): %s\n', myFilename, ...
-%             par_idx, string(tracer_cell(par_idx)), tracerRange (par_idx),datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')))
+        % elapsedTimeSave = tic;
+        % fprintf('%s.m: Finish integration of %s years: %s\n',mfilename,num2str(1+years_gone_by,2),datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
+        %         fprintf('%s.m: Finished tracer parfor idx %d which is for tracer %s (#%d): %s\n', myFilename, ...
+        %             par_idx, string(tracer_cell(par_idx)), tracerRange (par_idx),datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')))
         fprintf('%s.m: Finished tracer parfor idx %d which is for tracer %s (#%d)\n', myFilename, ...
             par_idx, string(tracer_cell(par_idx)), tracerRange (par_idx))
 
@@ -147,9 +154,47 @@ for outerLoop_idx = 1:numOuterLoops
 
     %%%
     % put results in correct order
+    % result is saved in a file...
 
-    [newRestartFileName, singleColTracerError, singleColTracerNorm, c_sol]  = ...
-        unscrambleParFor(outerLoop_idx, sim, bgc, tmp_ierr, tmp_xsol, tmp_fnrm, parforIdxRange, tracer_cell );
+    % newRestartFileName = sprintf('%s/%s_%d_tmp.mat', sim.outputRestartDir, 'outerLoop', outerLoop_idx);
+    newRestartFileName = sprintf('%s/%s_%d.mat', sim.outputRestartDir, 'outerLoop', outerLoop_idx);
+
+    [tracerError, tracerNorm, c_sol]  = unscrambleAndSaveParFor(newRestartFileName, sim, bgc, tmp_ierr, tmp_xsol, tmp_fnrm, parforIdxRange, tracer_cell );
+
+    %%%
+    % POSSIBLY allow ALL tracers, not just selection, to "relax' to
+    % solution by doing pure forward integration for a while.
+
+    if sim.num_forward_iters >0
+
+        tName = tracer_names(0);    % no CISO tracers
+        sim.selection = unique(sort(find( strcmp(tName,string(tracer_cell(parforIdxRange(1)))) )));
+
+        % all we need to do is suck combined tracer from combined file and
+        % use forcing and time_seried from parfor_inner, but can NOT return
+        % sim and bgc so go thru all these gyrations...
+
+sim.phi_years = 3;
+        [sim, bgc, ~, time_series, forcing] = init_sim(sim);
+        sim = calc_global_moles_and_means(bgc, sim);
+        sim.inputRestartFile = newRestartFileName;
+        [~, tmp_bgc, ~] = loadRestartFile(sim);
+        bgc.tracer = tmp_bgc.tracer;
+
+        % now we can run
+        for fwd_itc = 1:sim.num_forward_iters % num of loops, but sim.phi_years can be >1.
+
+            fprintf("\n%s.m: starting forward interation #%d of %d\n", mfilename, fwd_itc, sim.num_forward_iters)
+
+            [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
+
+            sim.start_yr  = sim.start_yr+1;
+
+        end % fwd loop
+        sim.phi_years = 1;
+
+        saveRestartFiles(sim, bgc.tracer, newRestartFileName);
+    end % if
 
     %%% whew.
     fprintf('Shutting down parpool...\n')
@@ -191,20 +236,19 @@ end
 end % loadRestartFile
 
 %%
-function [newRestartFileName, singleColTracerError, singleColTracerNorm, c_sol]  = ...
-    unscrambleParFor(outerLoop_idx, sim, bgc, tmp_ierr, tmp_xsol, tmp_fnrm, parforIdxRange, tracer_cell )
+function [tracerError, tracerNorm, c_sol]  = unscrambleAndSaveParFor(newRestartFileName, sim, bgc, tmp_ierr, tmp_xsol, tmp_fnrm, parforIdxRange, tracer_cell )
 
 % Unscramble results captured in random order by parfor loop. No need
 % for a for loop, use array index on slices. Then replace initial values in
 % restart file with single column solution.
 
-singleColTracerError = zeros([1, size(bgc.tracer,3)]);
-singleColTracerNorm  = zeros([1, size(bgc.tracer,3)]);
+tracerError = zeros([1, size(bgc.tracer,3)]);
+tracerNorm  = zeros([1, size(bgc.tracer,3)]);
 % singleColTracerSolution = 0 *c0;
 
 tracerRange = sim.tracer_loop_idx (parforIdxRange);
-singleColTracerError (:, tracerRange) = tmp_ierr (:, parforIdxRange);
-singleColTracerNorm  (:, tracerRange) = tmp_fnrm (:, parforIdxRange);
+tracerError (:, tracerRange) = tmp_ierr (:, parforIdxRange);
+tracerNorm  (:, tracerRange) = tmp_fnrm (:, parforIdxRange);
 % tmp_c_sol          (:, tracerRange) = tmp_xsol (:, parforIdxRange);
 
 ierrLimit = 1;
@@ -225,41 +269,17 @@ sz_bgc = [ numel(sim.domain.iwet_JJ) , size(bgc.tracer,3) ];
 c_sol = reshape(c0_nsoli, sz_bgc);
 c_sol (:, goodTracers) = tmp_xsol (:, good_par_idx);
 
-% [~,oldName,~] = fileparts(sim.inputRestartFile)
-% newRestartFileName = sprintf('%s/%s_single_col_%s.mat', sim.outputRestartDir, oldName, strjoin(tracer_cell,'_'))
-% newRestartFileName = sprintf('%s/%s_%s.mat', sim.outputRestartDir, oldName, strjoin(tracer_cell,'_'))
-newRestartFileName = sprintf('%s/%s_%d.mat', sim.outputRestartDir, 'outerLoop', outerLoop_idx)
-
 tracer = nsoli2bgc(sim, bgc, c_sol);
-[sim, bgc] = saveRestartFiles(sim, bgc, tracer, newRestartFileName);
+% result is saved in a file, bgc and sim returned are bogus...
+saveRestartFiles(sim, tracer, newRestartFileName);
 
+% debug output
 tmp = reshape(c0_nsoli, sz_bgc);
 for idx = parforIdxRange
     col = sim.tracer_loop_idx (idx);
     xnrm = norm(tmp(:,col)-c_sol(:,col));
     fprintf('%s.m: (%s)\tierr = %d fnrm(r) = %-#13.7g norm(sol-x0) = %-#10.7g\n', mfilename, string(tracer_cell(idx)), ...
-        singleColTracerError(col), singleColTracerNorm(col), xnrm)
+        tracerError(col), tracerNorm(col), xnrm)
 end
 
-end % unscrambleParFor function
-
-% %%
-% function f0 = calc_f0(sim, bgc, MTM, tracer_str)
-%
-% [sim, bgc, bgc_struct, time_series, forcing] = init_sim(sim);
-% % sim = calc_global_moles_and_means(bgc, sim);
-%
-% sz = [ numel(sim.domain.iwet_JJ) , size(bgc.tracer,3) ];
-% c0 = bgc2nsoli(sim, bgc.tracer);    % nsoli format; unitless; aka scaled FP
-% c  = reshape(c0, sz);
-%
-% sim.selection = unique(sort(find( strcmp(tracer_names(0),tracer_str) )));
-% x0 = c(:,sim.selection);    % initial condition for Nsoli()
-% x0 = x0(:);                 % unitless
-%
-% PQ_inv = calc_PQ_inv(sim, bgc, time_series, forcing, MTM);
-% f = @(x) calc_G(x, c0, sim, bgc, time_series, forcing, MTM, PQ_inv);
-% f0=feval(f,x0);
-%
-% end % calc_f0
-%
+end % unscrambleAndSaveParFor function
