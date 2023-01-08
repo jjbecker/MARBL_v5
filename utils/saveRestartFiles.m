@@ -16,8 +16,9 @@ end
 
 if ~exist(sim.inputRestartFile, 'file')
     keyboard
+elseif ~strcmp(sim.inputRestartFile, newRestartFileName)
+    copyfile( sim.inputRestartFile, newRestartFileName);
 end
-copyfile( sim.inputRestartFile, newRestartFileName);
 
 save( newRestartFileName, 'tracer',  '-append' );    % overwrites tracer ONLY, keep forcing from init
 if ~exist(newRestartFileName, 'file')
