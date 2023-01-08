@@ -13,7 +13,7 @@ tName = tracer_names(0);    % no CISO tracers
 sim.selection = unique(sort(find( strcmp(tName,tracer_str) )));
 fprintf('%s.m: Selected tracer(s): #%d, "%s"\n', mfilename, sim.selection, string(tName(sim.selection)'));
 
-% FIXME: endless headache of MARBL threads! Kill any leftover MEX running. 
+% FIXME: endless headache of MARBL threads! Kill any leftover MEX running.
 clear functions
 clear calc_G calculate_forcing phi time_step_ann % clear "persistent" vars
 
@@ -111,25 +111,6 @@ else % Solve for selected tracer
 
 end % Solve for selected tracer
 
-% % Next! allow ALL tracers, not just selection, to "relax' to solution.
-% %    do pure forward integration for a while...
-% 
-% for fwd_itc = 1:sim.num_forward_iters
-% 
-%     fprintf("\n%s.m: starting forward interation #%d of %d\n", mfilename, fwd_itc, sim.num_forward_iters)
-% 
-%     [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
-% 
-%     sim.start_yr  = sim.start_yr+1;
-% %     if mod(round(sim.start_yr), sim.yearsBetweenRestartFiles) == 0    % This runs after last time step of every 10 y
-% % 
-% %         myRestartFile_fwd = sprintf('%s/restart_%d_%s_fwd_x1.mat', sim.outputRestartDir, round(sim.start_yr),strjoin(tName(sim.selection)));
-% %         saveRestartFiles(sim, bgc.tracer, myRestartFile_fwd);
-% % 
-% %     end
-% end % fwd loop
-% 
-%%%
 elapsedTime_all_loc = toc(timer_PQ_init_solve_relax_fwd);
 disp(' ');
 disp([mfilename,'.m: finished ', strjoin(tName(sim.selection))])
@@ -147,5 +128,5 @@ if sim.debug_disable_phi
     fprintf('\t%s.m: ********* phi() is short circuited force ierr to %d             *********\n\n',mfilename, ierr);
 else
     sim.inputRestartFile = myRestartFile_x0;
-end
-end
+end % if
+end % end function
