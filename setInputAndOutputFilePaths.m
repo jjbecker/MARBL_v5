@@ -187,8 +187,6 @@ end
 % "restart file" -FROM- this OFFline sim for restart on Mac, not CESM.
 % Another hack is needed to move results from NK here back to CESM.
 
-sim.yearsBetweenRestartFiles = 10;
-
 sim.outputRestartDir = strcat(myDataDir(),'restart_0_1_output/');
 fprintf('%s.m: Results will be saved in directory %s\n\n', mfilename,sim.outputRestartDir);
 [status, msg, msgID] = mkdir(sim.outputRestartDir);
@@ -220,10 +218,11 @@ sim.logDiags = and (0, sim.logTracers) ; % Usually no diags..
 sim.runInParallel           = 0;    % parfor can't use spmd inside, at least I can not make that work
 sim.verbose_debug           = 0;
 sim.num_single_tracer_relax_iters = 0;    % 0 means no relax steps, just use NK x1_sol
-sim.num_forward_iters       = 3;    % num of bgc = phi(bgc) loops, but sim.phi_years can be >1.
+sim.num_forward_iters       = 0;    % num of bgc = phi(bgc) loops, but sim.phi_years can be >1.
 
 sim.forwardIntegrationOnly  = 0;    % 1 -> no NK just fwd integration
 if sim.forwardIntegrationOnly
+    % FIXME: this is hacked in marbl_main_parfor to the number of interest.
     % if not doing NK, and just doing forward sims, ok then...
     sim.phi_years           = 1;    % VERY special case. >1 to check end of year bugs.
 else
