@@ -1,4 +1,4 @@
-function [ierr, x0_sol] = marbl_main(varargin) % tracer_loop, inputRestartFile, time_step_hr, logTracers, recalculate_PQ_inv, short_circuit
+function [ierr, x0_sol] = marbl_main_old(varargin) % tracer_loop, inputRestartFile, time_step_hr, logTracers, recalculate_PQ_inv, short_circuit
 % function varargout = redplot(varargin) [varargout{1:nargout}] = plot(varargin{:},'Color',[1,0,0]); end
 
 % "main" of cyclostationary transport version of MARBL,
