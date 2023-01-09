@@ -49,7 +49,7 @@ for outerLoop_idx = 1:numOuterLoops
     % assume for simplicity it is (probably) first pass...
     tmpInputFile = strcat(myDataDir(), 'restart_260_integrate_from_0.mat');
     % tmpInputFile = strcat(myDataDir(), 'restart_0_1_output/restart_260_integrate_from_0_DOP_DOC.mat');
-    tmpInputFile = strcat(myDataDir(), 'outerLoop_6.mat');
+    % tmpInputFile = strcat(myDataDir(), 'outerLoop_6.mat');
     %
     % outer loop #2 or greater?
     if exist('newRestartFileName','var')
