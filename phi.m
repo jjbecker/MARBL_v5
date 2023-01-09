@@ -65,6 +65,7 @@ while current_month < total_months
         else
             bgc.tracer = (1. - 0*phiFileCnt/10) +0*bgc.tracer;  % trigger Armijo steps
         end
+        years_gone_by = floor((total_months-1)/12);
         fprintf('%s.m: Finish integration of %s years: %s\n',mfilename,num2str(1+years_gone_by,2),datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
         return
     else
