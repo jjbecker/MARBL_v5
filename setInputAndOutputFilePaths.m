@@ -220,14 +220,14 @@ sim.verbose_debug           = 0;
 sim.num_single_tracer_relax_iters = 0;    % 0 means no relax steps, just use NK x1_sol
 sim.num_forward_iters       = 0;    % num of bgc = phi(bgc) loops, but sim.phi_years can be >1.
 
+% NK always uses 1 year integration
+sim.phi_years           = 1;    
 sim.forwardIntegrationOnly  = 0;    % 1 -> no NK just fwd integration
 if sim.forwardIntegrationOnly
     % FIXME: this is hacked in marbl_main_parfor to the number of interest.
     % if not doing NK, and just doing forward sims, ok then...
+    keyboard
     sim.phi_years           = 1;    % VERY special case. >1 to check end of year bugs.
-else
-    % NK always uses 1 year integration
-    sim.phi_years           = 1;    
 end
 
 sim.grd     = load(sim.inputRestartFile,'sim').sim.grd;
