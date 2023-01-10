@@ -53,11 +53,11 @@ for outerLoop_idx = 1:numOuterLoops
     %
     % outer loop #2 or greater?
     if exist('newRestartFileName','var')
-        if tmpDebug_disable_phi
-            fprintf('\n%s.m: outerLoop #%d initial condition WOULD HAVE BEEN %s but phi() is short circuited!! reuse initial condition  *********\n\n',mfilename, outerLoop_idx, newRestartFileName);
-        else
-            tmpInputFile = newRestartFileName;  % outer loop #2 or greater
-        end
+        %         if tmpDebug_disable_phi
+        %             fprintf('\n%s.m: outerLoop #%d initial condition WOULD HAVE BEEN %s but phi() is short circuited!! reuse initial condition  *********\n\n',mfilename, outerLoop_idx, newRestartFileName);
+        %         else
+        tmpInputFile = newRestartFileName;  % outer loop #2 or greater
+        %         end
     end
     fprintf('%s.m: outerLoop #%d initial condition is %s\n', mfilename, outerLoop_idx, tmpInputFile);
     if ~exist(tmpInputFile, 'file')
@@ -158,8 +158,13 @@ for outerLoop_idx = 1:numOuterLoops
 
     % newRestartFileName = sprintf('%s/%s_%d_tmp.mat', sim.outputRestartDir, 'outerLoop', outerLoop_idx);
     newRestartFileName = sprintf('%s/%s_%d.mat', sim.outputRestartDir, 'outerLoop', outerLoop_idx);
+    if sim.debug_disable_phi
+        fprintf('\n\n\t%s.m: ********* phi() is short circuited; just copy newRestartFileName  *********\n\n',mfilename);
+        copyfile( sim.inputRestartFile, newRestartFileName);
+    end % if
 
     [tracerError, tracerNorm, c_sol]  = unscrambleAndSaveParFor(newRestartFileName, sim, bgc, tmp_ierr, tmp_xsol, tmp_fnrm, parforIdxRange, tracer_cell );
+
 
     %%%
     % POSSIBLY allow ALL tracers, not just selection, to "relax' to
@@ -168,6 +173,7 @@ for outerLoop_idx = 1:numOuterLoops
     if sim.num_forward_iters >0
 
         tName = tracer_names(0);    % no CISO tracers
+        %sim.selection is only selects debug plots for desired tracer
         sim.selection = unique(sort(find( strcmp(tName,string(tracer_cell(parforIdxRange(1)))) )));
 
         % all we need to do is suck combined tracer from combined file and
@@ -175,11 +181,11 @@ for outerLoop_idx = 1:numOuterLoops
         % sim and bgc so go thru all these gyrations...
 
 sim.phi_years = 3;
-        [sim, bgc, ~, time_series, forcing] = init_sim(sim);
-        sim = calc_global_moles_and_means(bgc, sim);
         sim.inputRestartFile = newRestartFileName;
-        [~, tmp_bgc, ~] = loadRestartFile(sim);
-        bgc.tracer = tmp_bgc.tracer;
+        [sim, bgc, ~, time_series, forcing] = init_sim(sim);
+        %         sim = calc_global_moles_and_means(bgc, sim);
+        %         [~, tmp_bgc, ~] = loadRestartFile(sim);
+        %         bgc.tracer = tmp_bgc.tracer;
 
         % now we can run
         for fwd_itc = 1:sim.num_forward_iters % num of loops, but sim.phi_years can be >1.
@@ -191,9 +197,16 @@ sim.phi_years = 3;
             sim.start_yr  = sim.start_yr+1;
 
         end % fwd loop
-        sim.phi_years = 1;
 
+        % be sure to save forward iteration result...
+        % POSSIBLY need to reset time span of a phi() first
+        sim.phi_years = 1;
         saveRestartFiles(sim, bgc.tracer, newRestartFileName);
+
+        % be sure to shutdown MEX
+        mex_marbl_driver('shutdown');
+
+
     end % if
 
     %%% whew.
