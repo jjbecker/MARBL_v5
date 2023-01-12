@@ -35,12 +35,11 @@ fprintf('%s\n', datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:m
 
 % save initial state
 
-bgc_0 = bgc;
-
 numWaterParcels = numel(sim.domain.iwet_JJ);
 numTracers = sim.bgc_struct_base.size.tracer(2);
 sz = [numWaterParcels, numTracers];
 
+bgc_0 = bgc;
 x0_bgc = bgc2nsoli(sim, bgc_0.tracer);
 x0 = reshape(x0_bgc, sz);
 % x0 = x0(:,sim.selection);
@@ -52,7 +51,6 @@ n = 0;
 current_month = 0;
 years_gone_by = -1;
 
-initial_moles = global_moles(bgc_0.tracer, sim);
 while current_month < total_months
     current_month = current_month+1;
     myMonth = mod(current_month-1,12)+1;        % 1 to 12 if multi year
@@ -84,7 +82,8 @@ while current_month < total_months
 
     if mod(current_month, 12) == 0    % This runs after last time step of every y
 
-        final_moles = global_moles(bgc.tracer, sim);
+        initial_moles = global_moles(bgc_0.tracer, sim);
+        final_moles   = global_moles(bgc.tracer, sim);
 
         x1_bgc = bgc2nsoli(sim, bgc.tracer);    % unitless end of year values
         x1 = reshape(x1_bgc, sz);
@@ -109,8 +108,8 @@ while current_month < total_months
 
         % update for next year, if multiple year run
         x0 = x1;
-        x0_bgc = x1_bgc;
         bgc_0 = bgc;
+        x0_bgc = x1_bgc;
 
     end
 end % loop over time steps
