@@ -218,7 +218,7 @@ sim.logDiags = and (0, sim.logTracers) ; % Usually no diags..
 sim.runInParallel           = 0;    % parfor can't use spmd inside, at least I can not make that work
 sim.verbose_debug           = 0;
 sim.num_single_tracer_relax_iters = 0;    % 0 means no relax steps, just use NK x1_sol
-sim.num_forward_iters       = 0;    % num of bgc = phi(bgc) loops, but sim.phi_years can be >1.
+sim.num_forward_iters       = 0;    % years of all tracer relax; aka num of bgc = phi(bgc) loops after marbl_solve.
 
 % NK always uses 1 year integration
 sim.phi_years           = 1;    
