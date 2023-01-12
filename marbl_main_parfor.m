@@ -21,9 +21,24 @@ diary off; diary off; diary on; diary off; diary on; diary on; % FIXME: diary be
 
 %%%
 % if outer loop is running use previous result...
-clear newRestartFileName
+clear newRestartFileName tmpTracer_loop
+
+% tmpTracer_loop  = {'DOP'};
+% tmpTracer_loop  = {'spChl' 'diatChl' 'diazChl' 'DOP' 'DOC' 'DOP'};
+% Solve just the "inorganic" tracers, let the biology settle in the "num_single_tracer_relax_iters" loop
+% tmpTracer_loop  = tracer_names(0);
+% ignore biology in solution, solves implicity with time steps after
+% solving PO4 etc...
+% tmpTracer_loop = tmpTracer_loop(1:17);
+tmpTracer_loop = {'PO4' 'NO3' 'SiO3' 'NH4' 'Fe' 'Lig' 'O2' 'DIC' 'DIC_ALT_CO2' 'ALK' 'ALK_ALT_CO2' 'DOC' 'DON' 'DOP' 'DOPr' 'DONr' 'DOCr'};
+% ignore "DIC_ALT" and "ALK_ALT"
+tmpTracer_loop(ismember(tmpTracer_loop,{'DIC_ALT_CO2' 'ALK_ALT_CO2'}) >0) = []
+% DIC and ALK already stable, just wastes time to update. ignore "DIC_ALT" and "ALK_ALT"
+tmpTracer_loop(ismember(tmpTracer_loop,{'DIC' 'ALK'}) >0) = []
+% tmpTracer_loop  = {'Fe' 'DONr'}
+
 numOuterLoops = 10;
-% numOuterLoops = 1;
+% numOuterLoops = 2;
 for outerLoop_idx = 1:numOuterLoops
 
     clear calc_G calculate_forcing phi time_step_ann % clear "persistent" vars
@@ -32,18 +47,15 @@ for outerLoop_idx = 1:numOuterLoops
     % sim = setInputAndOutputFilePaths([]);
     % sim = setInputAndOutputFilePaths(varargin)
 
-    % tmpTracer_loop  = {'DOP'};
-    % tmpTracer_loop  = {'spChl' 'diatChl' 'diazChl' 'DOP' 'DOC' 'DOP'};
-    % Solve just the "inorganic" tracers, let the biology settle in the "num_single_tracer_relax_iters" loop
-    tmpTracer_loop  = tracer_names(0);
-    tmpTracer_loop = tmpTracer_loop(1:17);
-    tmpTracer_loop([9 11]) = []     % ignore "DIC_ALT" and "ALK_ALT"
     tmpTime_step_hr = 3;
-    % tmpTime_step_hr = 12;
+% tmpTime_step_hr = 12;
 
     tmpRecalculate_PQ_inv   = 1;    % default = 1
     tmpDebug_disable_phi    = 0;    % default = 0
-    tmpLogTracer            = 1;    % default = 0
+    tmpLogTracer            = 1;    % default = 1
+% tmpRecalculate_PQ_inv   = 0;    % default = 1
+% tmpDebug_disable_phi    = 1;    % default = 0
+% tmpLogTracer            = 1;    % default = 0
 
     % read an initial condition file.
     % assume for simplicity it is (probably) first pass...
@@ -70,56 +82,56 @@ for outerLoop_idx = 1:numOuterLoops
     sim = setInputAndOutputFilePaths({tmpTracer_loop, tmpInputFile, tmpTime_step_hr, ...
         tmpRecalculate_PQ_inv, tmpDebug_disable_phi, tmpLogTracer });                       % Order of args IMPORTANT !!!
 
-    clear tmpRecalculate_PQ_inv tmpDebug_disable_phi tmpLogTracer tmpTracer_loop tmpTime_step_hr tmpInputFile;
+    clear tmpRecalculate_PQ_inv tmpDebug_disable_phi tmpLogTracer tmpTime_step_hr tmpInputFile;
 
     %%%
     % Setup big picture parts of NK solution in marbl_solve():
     % relative tolerance; as fraction of f(x0)..
-    sim.rtol     = 5e-1;    % marbl_solve(): stop if norm(drift,2) < 10% of G(x0)
-    sim.maxfeval = 5;       % marbl_solve(): max number of function evaluation
-    sim.num_forward_iters = 1;    % num of bgc = phi(bgc) loops, but sim.phi_years can be >1.
+sim.rtol     = 5e-1;        % marbl_solve(): stop if norm(drift,2) < 10% of G(x0)
+sim.maxfeval = 3;           % marbl_solve(): max number of function evaluation
+% sim.maxfeval = 1;           % marbl_solve(): max number of function evaluation
+sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bgc) loops after marbl_solve.
 
     %%%
     % Never use more than numTracer
-    numCores = min(round(feature('numcores')), numel(sim.tracer_loop));
+    % numCores = min(round(feature('numcores')), numel(sim.tracer_loop));
+    numCores = ceil(numel(tmpTracer_loop)/2)    % note: ceil >=1
+
     if (isunix && ismac)
-        numCores  = min(3, numCores);   % limited RAM on laptop...
-        numMatlab = numCores;
+        numCores  = min(2, numCores);   % limited RAM on laptop...
+        % numMatlab = numCores;
     else
         numCores = min(numCores, 10);  % be a good citizen on GP
-        numMatlab= 2* numCores; % FIXME: does NOT work, only numCores
-        numMatlab = numCores;
+        % numMatlab= 2* numCores; % FIXME: does NOT work, only numCores
+        % numMatlab = numCores;
     end
-
-    fprintf('%s.m: Start %d cores to run a total of %d Matlabs at %s\n', mfilename, numCores, numMatlab, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
+    fprintf('%s.m: "parfor" using <=%d Matlab workers on %d tracers...\n', mfilename, numCores, numel(sim.tracer_loop))
+    parforIdxRange = 1:numel(sim.tracer_loop);
     delete(gcp('nocreate'))
+% parfor could start start but NOT close a parpool for itself, and it might
+% take all the cores. Set some reasonable limit...
     p = parpool(numCores);
     if p.NumWorkers ~= numCores, error("Could not allocate desired number of cores"); end
-    ticBytes(gcp);
+%     ticBytes(gcp);
 
     %%%
+    myFilename = mfilename;     % mfilename does NOT work in a parfor
     % IMPORTANT     % have to be so careful to avoid brodcasting huge struct.
     % Using sim.tracer_loop will waste copy of a huge  struct.
     tracerRange = sim.tracer_loop_idx;
     tracer_cell = sim.tracer_loop;
-    parforIdxRange = 1:numel(sim.tracer_loop);
-    myFilename = mfilename;     % mfilename does NOT work in a parfor
 
     %%%
     [sim, bgc, MTM] = loadRestartFile(sim);
     sim
 
-    % These are output result from parfor "slice variable", sized to accept all
-    % possible tracers, in random order.
+    %%%
+    % These are output result from parfor "slice variable", sized to accept
+    % all possible tracers, in random order
     tmp_xsol = zeros([size(sim.domain.iwet_JJ,1), size(bgc.tracer,3)]);
     tmp_ierr = zeros([1, size(bgc.tracer,3)]);
     tmp_fnrm = zeros([1, size(bgc.tracer,3)]);
 
-    % eventually pass in result of first calculate of f(x0) which is same for
-    % every tracer and save 3-4 hrs for every outer loop
-    % f0 = calc_f0(sim, bgc, MTM, string(tracer_cell(par_idx)));
-
-    fprintf('%s.m: "parfor" starting <=%d Matlab workers on %d cores\n', myFilename, numMatlab, numCores)
     % for par_idx = parforIdxRange  % DEBUG
     % parfor (par_idx = parforIdxRange, numMatlab)  % PARENTHESIS are CRUCIAL
     parfor (par_idx = parforIdxRange)  % PARENTHESIS are CRUCIAL
@@ -151,6 +163,9 @@ for outerLoop_idx = 1:numOuterLoops
     end % of loop over tracers
 
     fprintf('...end of loop over tracers : '); toc(elapsedTimeTotal)
+%     tocBytes(gcp)
+    fprintf('Shutting down parpool...\n')
+    delete(gcp('nocreate'))     % close parpool parfor created...
 
     %%%
     % put results in correct order
@@ -180,23 +195,23 @@ for outerLoop_idx = 1:numOuterLoops
         % use forcing and time_seried from parfor_inner, but can NOT return
         % sim and bgc so go thru all these gyrations...
 
-sim.phi_years = 3;
+% sim.phi_years = 3;
+        sim.phi_years = sim.num_forward_iters;
         sim.inputRestartFile = newRestartFileName;
         [sim, bgc, ~, time_series, forcing] = init_sim(sim);
         %         sim = calc_global_moles_and_means(bgc, sim);
         %         [~, tmp_bgc, ~] = loadRestartFile(sim);
         %         bgc.tracer = tmp_bgc.tracer;
 
-        % now we can run
-        for fwd_itc = 1:sim.num_forward_iters % num of loops, but sim.phi_years can be >1.
-
-            fprintf("\n%s.m: starting forward interation #%d of %d\n", mfilename, fwd_itc, sim.num_forward_iters)
-
-            [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
-
-            sim.start_yr  = sim.start_yr+1;
-
-        end % fwd loop
+        % now we can run forward a few years to couple the tracers we did
+        % NOT solve with nsoli()
+% for fwd_itc = 1:1         
+% fprintf("\n%s.m: starting forward interation #%d of %d\n", mfilename, fwd_itc, sim.num_forward_iters)
+        
+        [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
+        
+        sim.start_yr  = sim.start_yr+1;
+% end % fwd loop
 
         % be sure to save forward iteration result...
         % POSSIBLY need to reset time span of a phi() first
@@ -211,7 +226,7 @@ sim.phi_years = 3;
 
     %%% whew.
     fprintf('Shutting down parpool...\n')
-    tocBytes(gcp)
+%     tocBytes(gcp)
     delete(gcp('nocreate'))
 
     logDir = strcat(sim.outputRestartDir,'/Logs/');
