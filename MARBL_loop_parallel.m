@@ -52,7 +52,7 @@ time_series_lab         = 0;
 
 % constant inputs; -SHOULD- only need to be initialized and sent once.
 
-if (n == 1); ticBytes(gcp); end
+% if (n == 1); ticBytes(gcp); end
 spmd(num_threads)
     kmt_in = codistributed(kmt_client          , codistributor1d(1)); % 1 is by row
     F_in   = codistributed(Forcing_client      , codistributor1d(1));
@@ -234,7 +234,7 @@ if (sim.logTracers)
     update_log ();
 end
 
-if (n == 1); ticBytes(gcp); end
+% if (n == 1); ticBytes(gcp); end
 % tendency must be gathered because mfactor() does NOT work on distributed
 % bgc.tendency  = gather ( T_out);
 % bgc.state     = gather ( S_out);

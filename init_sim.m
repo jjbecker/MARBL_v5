@@ -126,7 +126,7 @@ if (sim.runInParallel)
 
     %     parpool('threads')
     parpool(sim.number_of_threads);
-    ticBytes(gcp)
+%     ticBytes(gcp)
     toc
     %     interior_base_client = interior_base;
     if (sim.runInParallel)
