@@ -111,6 +111,10 @@ else % Solve for selected tracer
 
 end % Solve for selected tracer
 
+% be sure to shutdown MEX
+mex_marbl_driver('shutdown');
+
+
 elapsedTime_all_loc = toc(timer_PQ_init_solve_relax_fwd);
 disp(' ');
 disp([mfilename,'.m: finished ', strjoin(tName(sim.selection))])
