@@ -1,4 +1,4 @@
-function [sol, it_hist, ierr, x_hist] = brsola(x,f,tol, parms,f0)
+function [sol, it_hist, ierr, x_hist] = brsola(x,f,tol,parms,tracerStr,f0)
 % BRSOLA  Broyden's Method solver, globally convergent
 %          solver for f(x) = 0, Armijo rule, one vector storage
 %
@@ -13,14 +13,16 @@ function [sol, it_hist, ierr, x_hist] = brsola(x,f,tol, parms,f0)
 %        function = f
 %        tol = [atol, rtol] relative/absolute
 %            error tolerances for the nonlinear iteration
-%        parms = [maxit, maxdim]
+%        parms = [maxit, maxdim, maxfeval, tracerIdx]
 %            maxit = maxmium number of nonlinear iterations
 %                default = 40
 %            maxdim = maximum number of Broyden iterations
 %                before restart, so maxdim-1 vectors are
 %                stored
 %                default = 40
-%
+%           maxfeval = maxmium number of calls to f (for any reason)
+%           tracerIdx = MARBL tracer idx 
+%       tracerStr = MARBL short name of tracerIdx
 % output:
 %        sol = solution
 %        it_hist(maxit,3) = l2 norms of nonlinear residuals
@@ -62,7 +64,8 @@ it_histx=zeros(maxit,3);
 maxarm=10;
 %
 if nargin >= 4
-    maxit=parms(1); maxdim=parms(2)-1; maxfeval=parms(3);
+    % parms is an input
+    maxit=parms(1);maxdim=parms(2)-1;maxfeval=parms(3);tracerIdx=parms(4);
 end
 if nargout>=4
     x_hist=x;
@@ -73,7 +76,7 @@ rtol=tol(2); atol=tol(1); n = length(x); fnrm=1; itc=0; nbroy=0;
 % compute the stop tolerance
 %
 % if caller already knows value of f0 vector, use that, otherwise call f
-if nargin <5
+if nargin <6
     f0=feval(f,x);
 end
 num_calls_f = 0;
@@ -90,7 +93,7 @@ outstat(itc+1, :) = [itc fnrm 0 0]
 if fnrm < stop_tol
     sol=x;
     it_hist=it_histx(1:itc+1,:);    % itc is 0!
-    fprintf('%s.m: outstat\n',mfilename)
+    fprintf('%s.m: outstat (%s)\n',mfilename, tracerStr)
     disp(outstat); return
 end
 %
@@ -164,7 +167,7 @@ while(itc < maxit && num_calls_f < maxfeval)
     %   set error flag and return on failure of the line search
     %
     if iarm == maxarm || ( fnrm >= (1 - lambda*alpha)*fnrmo )
-        fprintf('%s.m: Line search failure in brsola.m at itc = %d, iarm = %d\n', mfilename, itc, iarm)
+        fprintf('%s.m: Line search failure in brsola.m for tracer idx %d (%s) at itc = %d, iarm = %d\n', mfilename, tracerIdx, tracerStr, itc, iarm)
         ierr=2;
         it_hist=it_histx(1:itc+1,:)
         sol=xold;
