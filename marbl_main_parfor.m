@@ -35,10 +35,10 @@ tmpTracer_loop = {'PO4' 'NO3' 'SiO3' 'NH4' 'Fe' 'Lig' 'O2' 'DIC' 'DIC_ALT_CO2' '
 tmpTracer_loop(ismember(tmpTracer_loop,{'DIC_ALT_CO2' 'ALK_ALT_CO2'}) >0) = []
 % DIC and ALK already stable, just wastes time to update. ignore "DIC_ALT" and "ALK_ALT"
 tmpTracer_loop(ismember(tmpTracer_loop,{'DIC' 'ALK'}) >0) = []
-% tmpTracer_loop  = {'Fe' 'DONr'}
+tmpTracer_loop  = {'Fe' 'DONr'}
 
 numOuterLoops = 10;
-% numOuterLoops = 2;
+numOuterLoops = 2;
 for outerLoop_idx = 1:numOuterLoops
 
     clear calc_G calculate_forcing phi time_step_ann % clear "persistent" vars
@@ -94,14 +94,14 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
 
     %%%
     % Never use more than numTracer
-    % numCores = min(round(feature('numcores')), numel(sim.tracer_loop));
-    numCores = ceil(numel(tmpTracer_loop)/2)    % note: ceil >=1
+    numCores = min(round(feature('numcores')), numel(sim.tracer_loop));
 
     if (isunix && ismac)
         numCores  = min(2, numCores);   % limited RAM on laptop...
         % numMatlab = numCores;
     else
-        numCores = min(numCores, 10);  % be a good citizen on GP
+        numCores = ceil(numel(tmpTracer_loop)/2);    % note: ceil >=1
+        numCores = min(numCores, 10);                % be a good citizen on GP
         % numMatlab= 2* numCores; % FIXME: does NOT work, only numCores
         % numMatlab = numCores;
     end
@@ -173,6 +173,9 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
 
     % newRestartFileName = sprintf('%s/%s_%d_tmp.mat', sim.outputRestartDir, 'outerLoop', outerLoop_idx);
     newRestartFileName = sprintf('%s/%s_%d.mat', sim.outputRestartDir, 'outerLoop', outerLoop_idx);
+    if sim.num_forward_iters >0
+        newRestartFileName = sprintf('%s/%s_%d_tmp.mat', sim.outputRestartDir, 'outerLoop', outerLoop_idx);
+    end
     if sim.debug_disable_phi
         fprintf('\n\n\t%s.m: ********* phi() is short circuited; just copy newRestartFileName  *********\n\n',mfilename);
         copyfile( sim.inputRestartFile, newRestartFileName);
@@ -194,33 +197,26 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
         % all we need to do is suck combined tracer from combined file and
         % use forcing and time_seried from parfor_inner, but can NOT return
         % sim and bgc so go thru all these gyrations...
-
-% sim.phi_years = 3;
         sim.phi_years = sim.num_forward_iters;
         sim.inputRestartFile = newRestartFileName;
         [sim, bgc, ~, time_series, forcing] = init_sim(sim);
-        %         sim = calc_global_moles_and_means(bgc, sim);
-        %         [~, tmp_bgc, ~] = loadRestartFile(sim);
-        %         bgc.tracer = tmp_bgc.tracer;
 
         % now we can run forward a few years to couple the tracers we did
         % NOT solve with nsoli()
-% for fwd_itc = 1:1         
-% fprintf("\n%s.m: starting forward interation #%d of %d\n", mfilename, fwd_itc, sim.num_forward_iters)
         
         [sim, bgc, time_series] = phi(sim, bgc, time_series, forcing, MTM);
         
         sim.start_yr  = sim.start_yr+1;
-% end % fwd loop
-
-        % be sure to save forward iteration result...
-        % POSSIBLY need to reset time span of a phi() first
-        sim.phi_years = 1;
-        saveRestartFiles(sim, bgc.tracer, newRestartFileName);
 
         % be sure to shutdown MEX
         mex_marbl_driver('shutdown');
 
+        % save forward iteration result...
+        newRestartFileName = sprintf('%s/%s_%d.mat', sim.outputRestartDir, 'outerLoop', outerLoop_idx);
+        saveRestartFiles(sim, bgc.tracer, newRestartFileName);
+
+        % POSSIBLY need to reset time span of a phi() first
+        sim.phi_years = 1;
 
     end % if
 
