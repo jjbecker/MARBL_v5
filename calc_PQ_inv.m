@@ -14,7 +14,9 @@ function [PQ_inv, J_FP] = calc_PQ_inv(sim, bgc, time_series, forcing, MTM)
 % T = 12*num_step_per_month*dt;
 
 tName = tracer_names(0);    % no CISO tracers
-if sim.recalculate_PQ_inv && ~(numel(sim.disabledPreconditoners)>0 && ismember(tName(sim.selection), sim.disabledPreconditoners))
+if sim.recalculate_PQ_inv && ~sim.debug_disable_phi && ...
+        ~( numel(sim.disabledPreconditoners)>0 ...
+        && ismember(tName(sim.selection), sim.disabledPreconditoners) )
     fprintf('%s.m: Start at %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
     tName = tracer_names(0);    % no CISO tracers
     fprintf('%s.m: Calculating PQ_inv for tracers: [%s]\n', mfilename, strjoin(tName(sim.selection)) )
