@@ -1,4 +1,4 @@
-function [ierr, fnrm, myRestartFile_x0, x0_sol, c0, sim, bgc] = marbl_solve(x0, c0, sim, bgc, f)
+function [ierr, fnrm, myRestartFile_x0, sol, c0, sim, bgc] = marbl_solve(x0, c0, sim, bgc, f)
 
 % Get initial G of all tracers to pick sensible rtol for selected tracer???
 % [r0,G0,x1] = calc_G(x0,c0,sim,bgc,time_series,forcing,MTM,PQ_inv);
@@ -50,7 +50,7 @@ rtol = sim.rtol;        % stop if norm(drift,2) < 10% of G(x0)
 %   because line search rarely works, and search fails quickly...
 %
 % maxdim = maximum number of x in history (aka emperical Jacobian). 
-% size(x_hist) = [393913, maxdim];
+% size(x0_hist) = [393913, maxdim];
 %
 % Given x is a large array, do NOT want large maxdim, and it could never be
 % case we need maxdim > maxfeval which is max POSSIBLE total calls to G
@@ -68,7 +68,10 @@ maxdim   = min(sim.maxfeval, maxdim);
 % lmeth  = 2;             % Nsoli() method 2 = GMRES(m), not used by brsola().
 % restart_limit = 10;     % max number of restarts for GMRES if lmeth = 2, default = 20;
 
-parms  = [maxit, maxdim, sim.maxfeval];
+tName = tracer_names(0);    % no CISO tracers
+tracerStr   = strjoin(tName(sim.selection));
+
+parms  = [maxit, maxdim, sim.maxfeval, sim.selection];
 
 % NOTE: f has one input, x, and a bunch of parameters; e.g. bgc etc. If G()
 % changes parameters subsequent cals to f do NOT get new parameter value 
@@ -94,16 +97,13 @@ parms  = [maxit, maxdim, sim.maxfeval];
 
 % This is finally call to Newton Krylov solver!
 
-tName = tracer_names(0);    % no CISO tracers
-tendStr   = strjoin(tName(sim.selection));
-% fprintf('%s.m: (%s) ###### norm(x0) = %g, norm(r(x0)) = %g\n', mfilename, tendStr, norm(x0), norm(f0));
-fprintf('%s.m: (%s) ###### norm(x0) = %g\n', mfilename, tendStr, norm(x0));
+fprintf('%s.m: (%s) ###### norm(x0) = %g\n', mfilename, tracerStr, norm(x0));
 
-% [x0_sol,it_hist,ierr,x_hist] = brsola(x0, f, [atol,rtol], parms, f0);
-[x0_sol,it_hist,ierr,x_hist] = brsola(x0, f, [atol,rtol], parms);
+% [sol,it_hist,ierr,x0_hist] = brsola(x0, f, [atol,rtol],parms,tracerStr,f0);
+[sol,it_hist,ierr,x0_hist] = brsola(x0,f,[atol,rtol],parms,tracerStr);
 
 fnrm = it_hist(end,1);
-fprintf('%s.m: fnrm = %g\n', mfilename, fnrm)
+fprintf('%s.m: (%s) ###### fnrm = %g\n', mfilename, tracerStr, fnrm)
 
 % Save results, which are many and sort of tricky. Might want x0, the
 % initial condition that solves f, or one forward integral of that (x1),
@@ -111,37 +111,45 @@ fprintf('%s.m: fnrm = %g\n', mfilename, fnrm)
 
 % remember that "sol" of nsoli() is an x0 value !!!
 %
-% if ierr == 0, or 1, last column of x_hist is x0_sol
+% if ierr == 0, or 1, last column of x0_hist is sol
 %
-% if ierr == 2 then last column x_hist is x when iarm == maxarm,
-% and next to last column x_hist is x when armijo iterations
+% if ierr == 2 then last column x0_hist is x when iarm == maxarm,
+% and next to last column x0_hist is x when armijo iterations
 % started, and second to last column, might be x if there was no
-% restart, or only one line search; in short if ierr = 2 x_hist is
+% restart, or only one line search; in short if ierr = 2 x0_hist is
 % hard to understand...
 
-x0_sol_norm = norm(x0_sol)
-norm_x_hist = vecnorm(x_hist)
 if ierr >1
-    fprintf('\n\n%s.m: **** ierr = %d****\n\n', mfilename,ierr);
+    fprintf('%s.m: (%s) ###### ierr = %d\n', mfilename, tracerStr, ierr);
 %     keyboard
 end
 
+tmpStr=sprintf('%g ', vecnorm(x0_hist));
+fprintf('%s.m: (%s) ###### norm(x0_hist) = %s\n', mfilename, tracerStr, tmpStr)
+
+tmpStr=sprintf('%g ', it_hist(:,1));
+fprintf('%s.m: (%s) ###### it_hist(:,1)  = iterations of norm(preconditioned(drift = x1-x0)\n', mfilename, tracerStr)
+fprintf('%s.m: (%s) ###### it_hist(:,1)  = %s\n', mfilename, tracerStr, tmpStr)
+% fprintf('%s.m: (%s) ###### it_hist(:,1) = norm(%s\n', mfilename, tracerStr, tmpStr)
+
+fprintf('%s.m: (%s) ###### norm(sol)     = %g\n', mfilename, tracerStr, norm(sol))
+
 % save complete bgc with -sol- tracers
-x0_bgc  = replaceSelectedTracers(sim, c0, x0_sol, sim.selection);
+x0_bgc  = replaceSelectedTracers(sim, c0, sol, sim.selection);
 bgc.tracer = nsoli2bgc(sim, bgc, x0_bgc);   % marbl format x0
 
 myRestartFile_x0 = sprintf('%s/restart_%d_%s_sol_x0.mat', sim.outputRestartDir, round(sim.start_yr), strjoin(tName(sim.selection)));
 saveRestartFiles(sim, bgc.tracer, myRestartFile_x0);
 
 sol_fname = sprintf('%s/sol_%s_ierr_%d_x0', sim.outputRestartDir, string(tName(sim.selection)), ierr);
-fprintf('%s.m: Saving just x0_sol, ierr, it_hist, x_hist in %s\n', mfilename, sol_fname);
+fprintf('%s.m: Saving just sol, ierr, it_hist, x0_hist in %s\n', mfilename, sol_fname);
 if sim.debug_disable_phi
-    fprintf('\n\n\t%s.m: ********* phi() is short circuited skip sol_fname save  *********\n\n',mfilename)
+    fprintf('%s.m: (%s) ###### phi() is short circuited skip sol_fname save\n',mfilename, tracerStr)
     return
 end
-save(sol_fname, 'x0_sol', 'ierr', 'it_hist', 'x_hist', '-v7.3','-nocompression');
+save(sol_fname, 'sol', 'ierr', 'it_hist', 'x0_hist', '-v7.3','-nocompression');
 
-% "sol" from brsola() will be last x that had smaller norm than previous 
+% "sol" from brsola() will be last x0 that had smaller norm than previous 
 % call of f(x), --not-- last one caclualated, which is "restart_x0.mat". In
 % other words, last x might be a failed line search and sol is last value
 % of x that was converging.
