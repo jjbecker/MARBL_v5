@@ -37,31 +37,27 @@ figure (700); scatter(x0(:,selection),tmpG); title(strjoin(["scatter(",gStr,", "
 figure (701); plot(tmpG);       title(strjoin(["plot(",gStr,")"]));         xlabel('idx FP');                        ylabel(gStr); grid on
 figure (702); qqplot(tmpG);     title(strjoin(["qqplot(",gStr,")"])); grid on
 figure (601); histogram(tmpG);  title(strjoin(["histogram(",gStr,")"]));    xlabel(gStr);                            ylabel('Count'); grid on
-
-
-figure (311)
-clf(311)
-
-% Plot the max, min and median of each water column
+figure (602); clf(602)
+% whisker plot each water column
+% cross at median
 % https://stackoverflow.com/questions/20224615/matlab-boxplots
-
 maxData = max((G_bgc),[],2,'omitnan')';
 minData = min((G_bgc),[],2,'omitnan')';
 medData = median((G_bgc),2,'omitnan')';
 stdData = std(G_bgc(:),'omitnan');
 x = 1:numel(maxData);
 
-% whisker plot each water column
-% cross at median
-
 hold on
-line([x; x], [minData; maxData])
-yline(+stdData)
+
+line([x; x], [minData; maxData])    % vertical whiskers at each col#
+plot(x, medData, '+')               % ticks on whiskers at median
+
+yline(+stdData)                     % reference line at std
 yline(-stdData)
-plot(x, medData, '+')
+
 hold off
 
-xlabel('water col#');
+xlabel('Water Column');
 tmpStr = strjoin(["Extremes of",gStr,"in each water column"]);
 ylabel(tmpStr);
 title(tmpStr);
