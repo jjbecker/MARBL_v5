@@ -91,7 +91,10 @@ while current_month < total_months
 
         G = reshape(x1_bgc -x0_bgc, sz); % needed G size is sz; aka 32 col
 
-        [x0, G] = calcStats(x0, G, initial_moles, final_moles, sim.selection, current_yr, mfilename);
+        G_bgc_all = unpackMarbl(G, sim.domain.iwet_JJ, size(bgc.tracer));   % (7881,60,32)
+        G_bgc = G_bgc_all(:,:,sim.selection);                               % (7881,60)
+
+        [x0, G] = calcStats(x0, G, G_bgc, initial_moles, final_moles, sim.selection, current_yr, mfilename);
 
         % save annual restart in a way that doesnt fill up disk...
         %%%

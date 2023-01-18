@@ -1,4 +1,4 @@
-function [x0,tmpG_all] = calcStats(x0, tmpG_all, initial_moles, final_moles, selection, current_yr, callersName);
+function [x0,tmpG_all] = calcStats(x0, tmpG_all, G_bgc, initial_moles, final_moles, selection, current_yr, callersName)
 
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
@@ -37,3 +37,50 @@ figure (700); scatter(x0(:,selection),tmpG); title(strjoin(["scatter(",gStr,", "
 figure (701); plot(tmpG);       title(strjoin(["plot(",gStr,")"]));         xlabel('idx FP');                        ylabel(gStr); grid on
 figure (702); qqplot(tmpG);     title(strjoin(["qqplot(",gStr,")"])); grid on
 figure (601); histogram(tmpG);  title(strjoin(["histogram(",gStr,")"]));    xlabel(gStr);                            ylabel('Count'); grid on
+
+
+figure (311)
+clf(311)
+
+% Plot the max, min and median of each water column
+% https://stackoverflow.com/questions/20224615/matlab-boxplots
+
+maxData = max((G_bgc),[],2,'omitnan')';
+minData = min((G_bgc),[],2,'omitnan')';
+medData = median((G_bgc),2,'omitnan')';
+
+x = 1:numel(maxData);
+
+% whisker plot each water column
+% cross at median
+
+hold on
+line([x; x], [minData; maxData])
+
+plot(x, medData, '+')
+hold off
+
+xlabel('water col#');
+tmpStr = strjoin(["Extremes of",gStr,"in each water column"]);
+ylabel(tmpStr);
+title(tmpStr);
+
+
+% figure(211); plot(colMax /std(colMax));
+% title(strjoin(["max ( abs (",gStr,")) / std()"]));         xlabel('water col#');                        ylabel(strjoin(["abs ( ",gStr,") / std(abs)"])); grid on
+% figure(212); histogram( colMax /std(colMax));   set(gca,'YScale','log')
+% title(strjoin(["max ( abs (",gStr,")) / std()"]));  xlabel(strjoin(["max ( abs (",gStr,")) / std()"]));    ylabel("log(cnt)"); grid on
+% figure(213); qqplot( colMax );
+% colMax = max((G_bgc),[],2);
+% figure(111); plot(colMax /std(colMax)); title(strjoin(["max ( ",gStr,")) / std()"]));         xlabel('water col#');                        ylabel(strjoin([" ",gStr,") / std(abs)"])); grid on
+% figure(112); histogram( colMax /std(colMax));   set(gca,'YScale','log')
+% title(strjoin(["max ( ",gStr,")) / std()"]));   xlabel(strjoin(["max ( ",gStr,")) / std()"]));   ylabel("log(cnt)");     grid on
+% figure(113); qqplot( colMax );
+%
+% % Find the abs of each water column, and max histogram
+% colMax = max(abs(G_bgc),[],2);
+% figure(211); plot(colMax /std(colMax));
+% title(strjoin(["max ( abs (",gStr,")) / std()"]));         xlabel('water col#');                        ylabel(strjoin(["abs ( ",gStr,") / std(abs)"])); grid on
+% figure(212); histogram( colMax /std(colMax));   set(gca,'YScale','log')
+% title(strjoin(["max ( abs (",gStr,")) / std()"]));  xlabel(strjoin(["max ( abs (",gStr,")) / std()"]));    ylabel("log(cnt)"); grid on
+% figure(213); qqplot( colMax );
