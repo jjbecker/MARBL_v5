@@ -48,7 +48,7 @@ clf(311)
 maxData = max((G_bgc),[],2,'omitnan')';
 minData = min((G_bgc),[],2,'omitnan')';
 medData = median((G_bgc),2,'omitnan')';
-
+stdData = std(G_bgc(:),'omitnan');
 x = 1:numel(maxData);
 
 % whisker plot each water column
@@ -56,7 +56,8 @@ x = 1:numel(maxData);
 
 hold on
 line([x; x], [minData; maxData])
-
+yline(+stdData)
+yline(-stdData)
 plot(x, medData, '+')
 hold off
 
