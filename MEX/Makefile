@@ -114,11 +114,12 @@ lib: $(MARBL_LIB)
 .PHONY: clean
 clean:
 	$(info $$MARBL_ROOT_FULL is [${MARBL_ROOT_FULL}])
-	rm -f *.mod *.mexa64 *.o *.pyc $(SO_INTERFACE)
+	rm -f *.mod *.mexmaci64 *.o *.pyc $(SO_INTERFACE)
 
 # Or use "$ make allclean" to clean up the interface files and the MARBL library
 .PHONY: allclean
 allclean: clean
 	$(info $$MARBL_ROOT_FULL is [${MARBL_ROOT_FULL}])
 	rm -f marbl_include/*.mod marbl_include/*.o marbl_include/*.d $(MARBL_LIB)
+	rmdir marbl_include marbl_lib
 
