@@ -33,9 +33,15 @@ clear newRestartFileName tmpTracer_loop
 tmpTracer_loop = {'PO4' 'NO3' 'SiO3' 'NH4' 'Fe' 'Lig' 'O2' 'DIC' 'DIC_ALT_CO2' 'ALK' 'ALK_ALT_CO2' 'DOC' 'DON' 'DOP' 'DOPr' 'DONr' 'DOCr'};
 % ignore "DIC_ALT" and "ALK_ALT"
 tmpTracer_loop(ismember(tmpTracer_loop,{'DIC_ALT_CO2' 'ALK_ALT_CO2'}) >0) = []
-% DIC and ALK already stable, just wastes time to update. ignore "DIC_ALT" and "ALK_ALT"
-tmpTracer_loop(ismember(tmpTracer_loop,{'DIC' 'ALK'}) >0) = []
-tmpTracer_loop  = {'Fe' 'DONr'}
+% DIC ALK SiO3 already stable, just wastes time to update. 
+% PO4 NO3 SiO3 might be stable, just wastes time to update. 
+% Fe not stable, and does not solve single tracer, just wastes time to update. 
+% PO4 NO3 SiO3 might be stable, but do not solve single tracer, just wastes time to update. 
+tmpTracer_loop(ismember(tmpTracer_loop,{'DIC' 'ALK' 'PO4' 'NO3' 'SiO3' 'Fe' }) >0) = []
+% spCaCO3 clearly diverges if not single tracer solved
+% diazFe might diverge if not single tracer solved
+tmpTracer_loop = [tmpTracer_loop 'spCaCO3' 'diazFe']
+% tmpTracer_loop  = {'Fe' 'DONr'}
 
 numOuterLoops = 10;
 numOuterLoops = 2;
@@ -48,12 +54,12 @@ for outerLoop_idx = 1:numOuterLoops
     % sim = setInputAndOutputFilePaths(varargin)
 
     tmpTime_step_hr = 3;
-% tmpTime_step_hr = 12;
+tmpTime_step_hr = 12;
 
     tmpRecalculate_PQ_inv   = 1;    % default = 1
     tmpDebug_disable_phi    = 0;    % default = 0
     tmpLogTracer            = 1;    % default = 1
-% tmpRecalculate_PQ_inv   = 0;    % default = 1
+tmpRecalculate_PQ_inv   = 0;    % default = 1
 % tmpDebug_disable_phi    = 1;    % default = 0
 % tmpLogTracer            = 1;    % default = 0
 
@@ -61,7 +67,7 @@ for outerLoop_idx = 1:numOuterLoops
     % assume for simplicity it is (probably) first pass...
     tmpInputFile = strcat(myDataDir(), 'restart_260_integrate_from_0.mat');
     % tmpInputFile = strcat(myDataDir(), 'restart_0_1_output/restart_260_integrate_from_0_DOP_DOC.mat');
-    % tmpInputFile = strcat(myDataDir(), 'outerLoop_6.mat');
+    tmpInputFile = strcat(myDataDir(), 'outerLoop_6.mat');
     %
     % outer loop #2 or greater?
     if exist('newRestartFileName','var')
@@ -132,9 +138,9 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
     tmp_ierr = zeros([1, size(bgc.tracer,3)]);
     tmp_fnrm = zeros([1, size(bgc.tracer,3)]);
 
-    % for par_idx = parforIdxRange  % DEBUG
+    for par_idx = parforIdxRange  % DEBUG
     % parfor (par_idx = parforIdxRange, numMatlab)  % PARENTHESIS are CRUCIAL
-    parfor (par_idx = parforIdxRange)  % PARENTHESIS are CRUCIAL
+%     parfor (par_idx = parforIdxRange)  % PARENTHESIS are CRUCIAL
 
         % par_idx is (usually) randomly selected order from range!
         % par_idx is simply "order of execution" -NOT- tracer number
