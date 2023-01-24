@@ -1,26 +1,40 @@
+To install the MEX version of Matlab, you need a Mac with a FORTRAN 90 compiler. It doesn't have to be the machine you're going to run on, because a MEX file is simply a OSX executable that runs on any Mac. However, OSX "Xcode" development tools no longer include FORTRAN, so you may have to install one of your own. While this is not especially complicated if you can buy a compiler, and there are few free compilers, but those free ones are slightly tricky to install. I used "gfortran" which used to be part of gcc, but not any more...
 
-A few words about this...
+The big picture is that you simply need to run a Makefile on a machine with a F90 compiler and a copy of the MARBL source code. Obviously the makefile needs to be edited so the path is correct first, but if you have a F() compiler installed in a way that Matlab can use it, it's as simple as...
 
-https://www.mathworks.com/matlabcentral/answers/338303-how-to-set-up-mex-with-gfortran-on-mac
+	Using the usual GitHib tools download the MARBL source from GitHub.com into a working directory
+
+	1) In the MATLAB command window verify a FORTAN compiler is installed by typing "mex -setup -v FORTRAN". Look for at least one "Yes" and something like "Found installed compiler 'gfortran'."
+
+    If you do have FORTREAN open a OSX Terminal, just...
+    
+        cd to the MARBL_LANL_1d/MEX  folder
+        edit the directory paths in the Makefile
+	    
+        "make allclean"
+	    "make all"
+
+==== I have NOT tested any of this on a Mac with Apple silicon ====
 
 
-These 9 steps, looks complicated, but it boils down to a few copy and pastes in a few files. Outside of install gfortran, which is a small mess, you just need to let Matlab know "gfortran" is the FORTRAN compiler you want. Before you start into all this, maybe your Mac already has a FORTRAN installed.
+If you don't have a FORTRAN its a messy slog best collaborate on over the phone but here is a rough outline... 
+
+Here is a link that has some comuter-ish details. Mac sys admins will be helpful...
+
+    https://www.mathworks.com/matlabcentral/answers/338303-how-to-set-up-mex-with-gfortran-on-mac
 
 
-0)
+These 9 steps, that looks complicated, but boils down to a few copy and pastes in a few files. Outside of install gfortran, which is a seperate small mess, you just need to let Matlab know "gfortran" is the FORTRAN compiler you want. Before you start into all this, maybe double check if your Mac already has a FORTRAN installed.
 
-Check if FORTRAN is already installed. In Matlab, type this and see if you get a good answer, if so your are done.
+
+0) Check if FORTRAN is already installed. In Matlab, type this and see if you get a good answer, if so your are done. 
 
 	>> mex -setup -v FORTRAN
 
-1)
-
-You do not need, I think, the latest version of Matlab, but you do need a version after R2019a, I think.  I know that versions before 2019 will not run correctly because internal Matlab changes such has "row major" and "complex interleave".
+1) You do not need, I think, the latest version of Matlab, but you do need a version after R2019a, I think. I know that versions before 2019 will not run correctly because internal Matlab changes such has "row major" and "complex interleave".
 
 
-2)
-
-Install gfortran. Google this up. It's easy, and there is/was even a "dmg" to do it. Other choices are "macports", "brew", etc.
+2) Install gfortran. Google this up. It's easy, usually, and there is/was even a "dmg" to do it. Other choices are "macports", "brew", etc.
 
 Make sure that
 
@@ -29,9 +43,7 @@ Make sure that
 returns something sensible.
 
 
-3)
-
-Both "gfortran.xml" and "mex_FORTRAN_maci64.xml" need to be hacked to use the SDK that is current on your Mac. Several places, towards the end of both of these files there many lines along the lines of...
+3) Both "gfortran.xml" and "mex_FORTRAN_maci64.xml" need to be hacked to use the SDK that is current on your Mac. Several places, towards the end of both of these files there many lines along the lines of...
 
   <dirExists name="$$/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.1.sdk"/>
 
@@ -49,12 +61,13 @@ so it now reads 11.2...
 
   <dirExists name="$$/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.2.sdk"/>
 	
+---> To reiterate the are MANY lines in the XML files that look to me virtually identical. Use a "find" in a text editor to get every single one!
 
-4)
-
-Place a copy of the corrected version of the "gfotran.xml" file in your Matlab app folder. You might have several versions of Matlab on the Mac. 
+4) Place a copy of the corrected version of the "gfotran.xml" file in your Matlab app folder. You might have several versions of Matlab on the Mac. 
 
 Each will have 2 directories that need to be hacked...
+
+    Copy the gfortran.xml in the MEX directory I provided in the MATLAB bin directories...
 
 	$ cp gfortran.xml /Applications/MATLAB_R20XXX.app/bin/maci64/mexopts/
 
@@ -63,10 +76,9 @@ Also place a copy of "mex_FORTRAN_maci64.xml" in your library
 	$ cp mex_FORTRAN_maci64.xml ~/Library/Application\ Support/MathWorks/MATLAB/R20XXX/
 	
 	
-5)
+5) Run the following in Matlab. 
 
-Run the following in Matlab. You must run it twice, and it takes about 30 seconds, to make sure it's "cleared its throat" and updated all its internal variables and such.
-
+    --> You must run this twice, and it takes about 30 seconds, to make sure it's "cleared its throat" and updated all its internal variables and such.
 
 	>> mex -setup -v FORTRAN
 	
@@ -87,12 +99,9 @@ That prints lots of scary looking messages but a successful run looks like this 
 
 7) When installing a new version of Matlab, in the past it seemed the two XML files were copied to the new releases' directories. Maybe not. If you can't compile, repeat the above.
 
-8) OSX updates will NOT update the XML code so you need to update both "gfortran.xml" and "mex_FORTRAN_maci64.xml" to use the correct SDK.
+8) OSX updates may NOT update the XML code so you need to update both "gfortran.xml" and "mex_FORTRAN_maci64.xml" to use the correct SDK.
 
-
-9)
-
-After the Fortran part of the MEX file you develop is compiled in FORTRAN, its need to be processed with the "mex" app to make a ".mexmaci64" file that Matlab calls.
+9) After the Fortran part of the MEX file you develop is compiled in FORTRAN, it needs to be processed with the "mex" app in MATLAB to make a ".mexmaci64" file that Matlab calls.
 
 Add the "mex" app, aka the "Matlab compiler/linker" that is part of Matlab to your UNIX PATH. Note that this changes every time you update Matlab; e.g. go to R2020b from "2020a".
 
@@ -102,3 +111,4 @@ For example,
 	
 Note that this changes every time you update Matlab; e.g. go to R2020b from "2020a".
 
+whew!
