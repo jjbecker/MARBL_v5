@@ -21,6 +21,9 @@ for i=1:size(y_array,2)
     else
         hold on
         plot([t_or_z(1) t_or_z(end)],[y_array(1,i) y_array(end,i)])
+        if floor(t_or_z(end)/365) >0
+            xline([1:floor(t_or_z(end)/365)]*365)% fig = 6;
+        end
         hold off
     end
     grid on
