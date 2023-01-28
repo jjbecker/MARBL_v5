@@ -29,15 +29,15 @@ end
     sim.domain.zt  *sim.domain.MARBL_depth_per_m );
 
 firstErr = 0;
-for i = 1:size(marbl_log,1)
-    if (strfind(marbl_log(i,:),'ERROR')) >0
+for i = 1:size(output_text,1)
+    if (strfind(output_text(i,:),'ERROR')) >0
         if (firstErr == 0)
             firstErr = i;
         end
     end
 end
 if (firstErr >0)
-    disp(marbl_log(firstErr,:));
+    disp(output_text(firstErr,:));
     error("Probably only fix is to restart Matlab...")
 end
 mex_marbl_driver('set_depth', size(sim.domain.M3d,3) )
