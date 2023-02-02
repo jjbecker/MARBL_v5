@@ -141,6 +141,10 @@ end
 if  length(args) >= 3    % Input time step in hours
     if isnumeric(args{3})
         fprintf('%s.m: time step is %g hr\n', mfilename, args{3})
+% FIXME: this is a hack to account for the fact that forcing and other data
+% from CESM is captured on a 3 hr time step sim. We can, at the cost of 
+% aliasing, use only multiples of that. Really need to interpolate of 
+% something to arbitrary time steps
         if sum(~ismember(args{3},[3 12])) >0
             error("Time step must be 3 or 12 (FIXME: or possibly other integer multiples of 3 because 'SOLAR_3hr_forcing.mat' is 3hr time step...")
         end
@@ -245,6 +249,8 @@ end
 % These are control for nsoli(), that is called from marbl_solve
 sim.maxfeval    = 11;       % assumes we input f(x0)
 sim.rtol        = 1e-2;     % stop if norm(drift,2) < 10% of G(x0)
+
+sim.disable_ALL_Preconditioner = 1;
 
 end % of function
 
