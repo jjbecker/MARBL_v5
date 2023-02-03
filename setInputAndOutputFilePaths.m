@@ -250,7 +250,8 @@ end
 sim.maxfeval    = 11;       % assumes we input f(x0)
 sim.rtol        = 1e-2;     % stop if norm(drift,2) < 10% of G(x0)
 
-sim.disable_ALL_Preconditioner = 1;
+% DEBUG only use this if not actually running a sim, aka phi is disabled.
+% sim.disable_ALL_Preconditioner = 1;
 
 end % of function
 
