@@ -40,6 +40,8 @@ if (firstErr >0)
     disp(output_text(firstErr,:));
     error("Probably only fix is to restart Matlab...")
 end
+
+% set default "kmt" aka bottom of water, if not grid, at max depth
 mex_marbl_driver('set_depth', size(sim.domain.M3d,3) )
 
 % initialze forcing first so we can use CISO values to init tracers
