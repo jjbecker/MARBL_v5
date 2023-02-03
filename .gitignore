@@ -3,6 +3,7 @@
 .DS_Store
 *.asv
 *.fig
+*.mat
 diary
 # don't check in files in Data directory into git
 Data/
