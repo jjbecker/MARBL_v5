@@ -94,6 +94,8 @@ for it = 1:steps_per_period
     % calculate tendency
     tic  % comment this tic out to get cumulative time
 
+% keyboard
+% save('MARBL_IC_3d.mat', 'dt', 'bgc', 'sim', 'forcing', 'time_series', 'surfaceLayerThickness_MARBL','river_tendency',  '-v7.3','-nocompression');
     if (sim.runInParallel)
         [bgc, time_series] = MARBL_loop_parallel (n, sim, bgc,time_series);
     else
