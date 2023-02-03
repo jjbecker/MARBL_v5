@@ -97,11 +97,8 @@ subroutine mexFunction(nlhs, plhs, nrhs, prhs)
   ! integer*4 :: log_line_cnt
   integer*4 :: mxGetString
   mwPointer :: mxGetPr
-! !  mwPointer :: mxGetDoubles    ! FIXME not found in R2019b ?!?
-!   mwPointer :: mxGetM           ! run doc mxGetM and note difference between C and FORTRAN
-!   mwPointer :: mxGetN
   integer*4 :: mexCallMATLAB
-! 
+
   ! Matlab 32 vs 64 bit integer conflict. 
   ! Must use 32/64 invariant types. 
   !   e.g. Use "mwSize" not "integer" calling MEX functions
@@ -127,8 +124,6 @@ subroutine mexFunction(nlhs, plhs, nrhs, prhs)
    
   ! at last, some local F90 data e.g. number of layers in ocean, thickness, etc
   
-  ! integer*4 :: nlev 
-  ! integer*4 :: tracer_cnt
   real*8, allocatable, dimension(:) :: delta_z
   real*8, allocatable, dimension(:) :: zw
   real*8, allocatable, dimension(:) :: zt
@@ -145,8 +140,6 @@ subroutine mexFunction(nlhs, plhs, nrhs, prhs)
   integer*4                 :: init_result
   integer                 :: ioerr
   real*8                    :: tmp_array(1:MAX_TMP_CNT)
-  ! integer                   :: msg_cnt
-  ! type(marbl_status_log_entry_type), pointer :: msg_ptr
 
     ! Locals, tmps, and debug stuff...
   
@@ -213,106 +206,82 @@ subroutine mexFunction(nlhs, plhs, nrhs, prhs)
     case ('surface_flux_compute')
     
       call marbl_instance%surface_flux_compute()
-      
+      x_r8 = 0
       if (marbl_instance%StatusLog%labort_marbl) then
         write(msg, *) 'MARBL ABORT: surface_flux_compute(): labort_marbl', "\n";
 !         call mexPrintf(msg)
+! return a non zero status so Matlab code knows MARBL failed.
         call mexWarnMsgTxt(msg)
-        
-!         call outputLog ()      
-!     msg_cnt = 0
-!     msg_ptr => marbl_instance%StatusLog%FullLog
-!     do while (associated(msg_ptr))
-!       msg_cnt = msg_cnt + 1
-!     end do
-! write(msg, *) 'msg_cnt', msg_cnt, "\n"; call mexPrintf(msg)
-
+        x_r8 = 456
       end if      
+      call outputReal ( x_r8 )
 
     case ('interior_tendency_compute')
     
       call marbl_instance%interior_tendency_compute()
-      
+      x_r8 = 0
       if (marbl_instance%StatusLog%labort_marbl) then
         write(msg, *) 'MARBL ABORT: interior_tendency_compute: labort_marbl', "\n";
 !         call mexPrintf(msg)
         call mexWarnMsgTxt(msg)
-      
-!         call outputLog ()
-
+! return a non zero status so Matlab code knows MARBL failed.
+        x_r8 = 789
       end if
+      call outputReal ( x_r8 )
 
 
 
 ! Interior tracers and such...
 
     case ('tracers')
-!       call outputTracer ('tracers', marbl_instance%tracers, surfaceNotInterior = .false.)
       call outputTracer (marbl_instance%tracers)
 
     case ('interior_tendencies')
-!       call outputTracer ('interior_tendencies', marbl_instance%interior_tendencies, surfaceNotInterior = .false.)
       call outputTracer (marbl_instance%interior_tendencies)
 
     case ('interior_tendency_saved_state')
-!       call outputSaved_state ('interior_tendency_saved_state', marbl_instance%interior_tendency_saved_state)
       call outputSaved_state (marbl_instance%interior_tendency_saved_state)
       
     case ('interior_tendency_diags')
-!       call output_diag ('interior_tendency_diags', marbl_instance%interior_tendency_diags, surfaceNotInterior = .false.)
       call output_diag (marbl_instance%interior_tendency_diags, surfaceNotInterior = .false.)
 
 
     case ('restore_interior_tendency_saved_state')
-!       call restore_saved_state('interior_tendency_saved_state', marbl_instance%interior_tendency_saved_state)
       call restore_saved_state(marbl_instance%interior_tendency_saved_state)
 
     case ('restore_tracers')
-!       call restoreTracer('tracers', marbl_instance%tracers, surfaceNotInterior = .false.)
       call restoreTracer(marbl_instance%tracers)
 
     case ('restore_interior_tendency_forcings')
       call restore_interior_tendency_forcings(size(marbl_instance%tracers,2))
 
-!     case ('restore_interior_tendencies')
-!       call restoreTracer('interior_tendencies', marbl_instance%interior_tendencies, surfaceNotInterior = .false.)
-
 
 ! Surface tracers and such...
 
     case ('tracers_at_surface')
-!       call outputTracer ('tracers_at_surface', marbl_instance%tracers_at_surface, surfaceNotInterior = .true.)
       call outputTracer (marbl_instance%tracers_at_surface)
 
     case ('surface_fluxes')
-!       call outputTracer ('surface_fluxes', marbl_instance%surface_fluxes, surfaceNotInterior = .true.)
       call outputTracer (marbl_instance%surface_fluxes)
 
     case ('sfo')
       call outputSfo ()
 
     case ('surface_flux_saved_state')
-!       call outputSaved_state ('surface_flux_saved_state', marbl_instance%surface_flux_saved_state)
       call outputSaved_state (marbl_instance%surface_flux_saved_state)
       
     case ('surface_flux_diags')
-!       call output_diag ('surface_flux_diags', marbl_instance%surface_flux_diags, surfaceNotInterior = .true.)
       call output_diag (marbl_instance%surface_flux_diags, surfaceNotInterior = .true.)
 
 
     case ('restore_surface_flux_saved_state')
-!       call restore_saved_state('surface_flux_saved_state', marbl_instance%surface_flux_saved_state)
       call restore_saved_state(marbl_instance%surface_flux_saved_state)
       
     case ('restore_tracers_at_surface')
-!       call restoreTracer('tracers_at_surface', marbl_instance%tracers_at_surface, surfaceNotInterior = .true.)
       call restoreTracer(marbl_instance%tracers_at_surface)
 
     case ('restore_surface_flux_forcings')
       call restore_surface_flux_forcings()
-        
-!     case ('restore_surface_fluxes')
-!       call restoreTracer ('surface_fluxes', marbl_instance%surface_fluxes, surfaceNotInterior = .true.)
 
 
 
@@ -585,15 +554,12 @@ subroutine outputReal ( x )
 
   real(kind=r8),  intent(in)    :: x
 
-!  integer*4                     :: i, j, k
   mwSize                        :: numRows
   mwSize                        :: numCols
   integer*4                     :: ComplexFlag
   real*8                        :: tmp_array(1:MAX_TMP_CNT)
 
   ComplexFlag = 0
-!     call jj_print_tracer(var_name, myTracer, surfaceNotInterior)
-
   numRows = 1
   numCols = 1
 
@@ -610,15 +576,12 @@ end subroutine outputReal
 ! 
 !   real(kind=r8),  intent(in)    :: x(:,:)
 ! 
-! !  integer*4                     :: i, j, k
 !   mwSize                        :: numRows
 !   mwSize                        :: numCols
 !   integer*4                     :: ComplexFlag
 !   real*8                        :: tmp_array(1:MAX_TMP_CNT)
 ! 
-!   ComplexFlag = 0
-! !     call jj_print_tracer(var_name, myTracer, surfaceNotInterior)
-! 
+!   ComplexFlag = 0! 
 !   numRows = size(x, 1)
 !   numCols = size(x, 2)
 ! 
@@ -640,8 +603,6 @@ subroutine outputSfo ()
   real*8                        :: tmp_array(1:MAX_TMP_CNT)
 
   ComplexFlag = 0
-!     call jj_print_sfo
-
   numRows = 1
   numCols = size(marbl_instance%surface_flux_output%sfo)
 
@@ -695,7 +656,6 @@ end subroutine outputTracer
 ! subroutine output_diag ( var_name, diag, surfaceNotInterior )
 subroutine output_diag ( diag, surfaceNotInterior )
 
-!   character (*),                intent(in) :: var_name
   type(marbl_diagnostics_type), intent(in) :: diag
   logical,                      intent(in) :: surfaceNotInterior
 
@@ -720,13 +680,6 @@ subroutine output_diag ( diag, surfaceNotInterior )
 !   write (msg, *) var_name, ' numCols: ', numCols, "\n";  call mexPrintf(msg)
 
    do n=1,size(diags)
-
-!     write(msg, *) var_name, n,                     &
-!       '\tname: ',  trim(diags(n)%short_name),      &
-!       '\tunits: ', trim(diags(n)%units),           &
-!       '\t: ',      trim(diags(n)%long_name), "\n"; 
-!       call mexPrintf(msg)
-! write (msg,*) shape(diags(n)%field_2d), "\n"; call mexPrintf(msg)
 
       k = n
       do j=1,INT(numCols)
@@ -755,7 +708,6 @@ subroutine output_diag ( diag, surfaceNotInterior )
 !   subroutine outputSaved_state ( var_name, saved_state )
   subroutine outputSaved_state ( saved_state )
   
-!   character (*),  intent(in)    :: var_name
   type(marbl_saved_state_type)  :: saved_state
   mwPointer                     :: mxCreateDoubleMatrix
 
@@ -849,9 +801,7 @@ subroutine outputLog ( )
 ! subroutine restoreTracer ( var_name, myTracer, surfaceNotInterior )
 subroutine restoreTracer ( myTracer )
 
-!   character (*),  intent(in)    :: var_name
   real(kind=r8),  intent(inout) ::myTracer(:,:)
-!   logical,        intent(in)    :: surfaceNotInterior
 
   integer*4                     :: i, j, k
   mwSize                        :: numRows
@@ -880,7 +830,6 @@ end subroutine restoreTracer
 ! subroutine restore_saved_state ( var_name, saved_state )
 subroutine restore_saved_state ( saved_state )
   
-!   character (*),  intent(in)    :: var_name
   type(marbl_saved_state_type)  :: saved_state
 
   integer*4                     :: j, k
@@ -960,7 +909,6 @@ subroutine restore_saved_state ( saved_state )
   end do
 
   end associate
-!   call jj_print_forcing('surface_flux_forcings', marbl_instance%surface_flux_forcings)
 
   end subroutine restore_surface_flux_forcings
 
