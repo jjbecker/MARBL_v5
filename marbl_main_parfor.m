@@ -141,9 +141,9 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
     tmp_ierr = zeros([1, size(bgc.tracer,3)]);
     tmp_fnrm = zeros([1, size(bgc.tracer,3)]);
 
-    for par_idx = parforIdxRange  % DEBUG
+    % for par_idx = parforIdxRange  % DEBUG
     % parfor (par_idx = parforIdxRange, numMatlab)  % PARENTHESIS are CRUCIAL
-%     parfor (par_idx = parforIdxRange)  % PARENTHESIS are CRUCIAL
+    parfor (par_idx = parforIdxRange)  % PARENTHESIS are CRUCIAL
 
         % par_idx is (usually) randomly selected order from range!
         % par_idx is simply "order of execution" -NOT- tracer number
