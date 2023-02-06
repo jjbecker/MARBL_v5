@@ -29,19 +29,22 @@ clear newRestartFileName tmpTracer_loop
 % tmpTracer_loop  = tracer_names(0);
 % ignore biology in solution, solves implicity with time steps after
 % solving PO4 etc...
-% tmpTracer_loop = tmpTracer_loop(1:17);
-tmpTracer_loop = {'PO4' 'NO3' 'SiO3' 'NH4' 'Fe' 'Lig' 'O2' 'DIC' 'DIC_ALT_CO2' 'ALK' 'ALK_ALT_CO2' 'DOC' 'DON' 'DOP' 'DOPr' 'DONr' 'DOCr'};
-% ignore "DIC_ALT" and "ALK_ALT"
-tmpTracer_loop(ismember(tmpTracer_loop,{'DIC_ALT_CO2' 'ALK_ALT_CO2'}) >0) = []
+tName = tracer_names(0);
+tmpTracer_loop  = tName([1:17]);
+tmpTracer_loop  = tName([18:32]);
+% tmpTracer_loop = {'PO4' 'NO3' 'SiO3' 'NH4' 'Fe' 'Lig' 'O2' 'DIC' 'DIC_ALT_CO2' 'ALK' 'ALK_ALT_CO2' 'DOC' 'DON' 'DOP' 'DOPr' 'DONr' 'DOCr'};
 % DIC ALK SiO3 already stable, just wastes time to update. 
 % PO4 NO3 SiO3 might be stable, just wastes time to update. 
 % Fe not stable, and does not solve single tracer, just wastes time to update. 
 % PO4 NO3 SiO3 might be stable, but do not solve single tracer, just wastes time to update. 
-tmpTracer_loop(ismember(tmpTracer_loop,{'DIC' 'ALK' 'PO4' 'NO3' 'SiO3' 'Fe' }) >0) = []
+% tmpTracer_loop(ismember(tmpTracer_loop,{'DIC' 'ALK' 'PO4' 'NO3' 'SiO3' 'Fe' }) >0) = []
 % spCaCO3 clearly diverges if not single tracer solved
 % diazFe might diverge if not single tracer solved
-tmpTracer_loop = [tmpTracer_loop 'spCaCO3' 'diazFe']
-% tmpTracer_loop  = {'Fe' 'DONr'}
+% tmpTracer_loop = [tmpTracer_loop 'spCaCO3' 'diazFe']
+% tmpTracer_loop  = {'Fe' 'DIC'}
+
+% ignore "DIC_ALT" and "ALK_ALT"
+tmpTracer_loop(ismember(tmpTracer_loop,{'DIC_ALT_CO2' 'ALK_ALT_CO2'}) >0) = []
 
 numOuterLoops = 10;
 numOuterLoops = 2;
@@ -59,7 +62,7 @@ tmpTime_step_hr = 12;
     tmpRecalculate_PQ_inv   = 1;    % default = 1
     tmpDebug_disable_phi    = 0;    % default = 0
     tmpLogTracer            = 1;    % default = 1
-tmpRecalculate_PQ_inv   = 0;    % default = 1
+% tmpRecalculate_PQ_inv   = 0;    % default = 1
 % tmpDebug_disable_phi    = 1;    % default = 0
 % tmpLogTracer            = 1;    % default = 0
 
@@ -67,7 +70,7 @@ tmpRecalculate_PQ_inv   = 0;    % default = 1
     % assume for simplicity it is (probably) first pass...
     tmpInputFile = strcat(myDataDir(), 'restart_260_integrate_from_0.mat');
     % tmpInputFile = strcat(myDataDir(), 'restart_0_1_output/restart_260_integrate_from_0_DOP_DOC.mat');
-    tmpInputFile = strcat(myDataDir(), 'outerLoop_6.mat');
+    tmpInputFile = strcat(myDataDir(), 'outerLoop_0.mat');
     %
     % outer loop #2 or greater?
     if exist('newRestartFileName','var')
@@ -130,7 +133,7 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
     %%%
     [sim, bgc, MTM] = loadRestartFile(sim);
     sim
-
+    sim.tracer_loop
     %%%
     % These are output result from parfor "slice variable", sized to accept
     % all possible tracers, in random order
