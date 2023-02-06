@@ -57,7 +57,7 @@ for outerLoop_idx = 1:numOuterLoops
     % sim = setInputAndOutputFilePaths(varargin)
 
     tmpTime_step_hr = 3;
-tmpTime_step_hr = 12;
+% tmpTime_step_hr = 12;
 
     tmpRecalculate_PQ_inv   = 1;    % default = 1
     tmpDebug_disable_phi    = 0;    % default = 0
