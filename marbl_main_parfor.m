@@ -47,7 +47,7 @@ tmpTracer_loop  = tName([18:32]);
 tmpTracer_loop(ismember(tmpTracer_loop,{'DIC_ALT_CO2' 'ALK_ALT_CO2'}) >0) = []
 
 numOuterLoops = 10;
-numOuterLoops = 2;
+% numOuterLoops = 2;
 for outerLoop_idx = 1:numOuterLoops
 
     clear calc_G calculate_forcing phi time_step_ann % clear "persistent" vars
