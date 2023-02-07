@@ -30,8 +30,10 @@ clear newRestartFileName tmpTracer_loop
 % ignore biology in solution, solves implicity with time steps after
 % solving PO4 etc...
 tName = tracer_names(0);
-tmpTracer_loop  = tName([1:17]);
+% tmpTracer_loop  = tName([1:32]);
+% tmpTracer_loop  = tName([1:17]);
 tmpTracer_loop  = tName([18:32]);
+
 % tmpTracer_loop = {'PO4' 'NO3' 'SiO3' 'NH4' 'Fe' 'Lig' 'O2' 'DIC' 'DIC_ALT_CO2' 'ALK' 'ALK_ALT_CO2' 'DOC' 'DON' 'DOP' 'DOPr' 'DONr' 'DOCr'};
 % DIC ALK SiO3 already stable, just wastes time to update. 
 % PO4 NO3 SiO3 might be stable, just wastes time to update. 
@@ -102,19 +104,22 @@ sim.maxfeval = 3;           % marbl_solve(): max number of function evaluation
 sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bgc) loops after marbl_solve.
 
     %%%
-    % Never use more than numTracer
-    numCores = min(round(feature('numcores')), numel(sim.tracer_loop));
+    % Never use more than half of cores available for workers.
+    % total cores = 1 client + as many workers as we can get away with
 
-    if (isunix && ismac)
-        numCores  = min(2, numCores);   % limited RAM on laptop...
-        % numMatlab = numCores;
+    maxCores = ceil(feature('numcores')/2);
+% maxCores = ceil(15/2);
+
+    if numel(sim.tracer_loop) <= maxCores       % small job just run it
+        numCores = numel(sim.tracer_loop);   
+    elseif ( ceil(numel(sim.tracer_loop)/2) <= maxCores ) % ad hoc; 2 batchs
+        numCores = ceil(numel(sim.tracer_loop)/2);    
     else
-        numCores = ceil(numel(tmpTracer_loop)/2);    % note: ceil >=1
-        numCores = min(numCores, 10);                % be a good citizen on GP
-        % numMatlab= 2* numCores; % FIXME: does NOT work, only numCores
-        % numMatlab = numCores;
+        numCores = maxCores;
     end
-    fprintf('%s.m: "parfor" using <=%d Matlab workers on %d tracers...\n', mfilename, numCores, numel(sim.tracer_loop))
+    fprintf('numCores = %d\tnumTracers = %d\t workerCores = %d\n',  feature('numcores'), numel(sim.tracer_loop), numCores )
+    
+    fprintf('%s.m: "parfor" using %d workers +1 client = %d of %d cores on %d tracers...\n', mfilename, numCores, numCores+1, feature('numcores'), numel(sim.tracer_loop))
     parforIdxRange = 1:numel(sim.tracer_loop);
     delete(gcp('nocreate'))
 % parfor could start start but NOT close a parpool for itself, and it might
