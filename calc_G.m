@@ -62,15 +62,8 @@ x1 = x0 +G;                         % x1 only of selection
 
 % Precondition residual
 
-% if ~sim.disable_ALL_Preconditioner
-%     r = mfactor(PQ_inv, G) - G;
-% else
-%     fprintf('\n\n\t%s.m: ********* Disabling mfactor in calc_G  *********\n\n',mfilename)
-%     r = G;
-% end
-
 if sim.disable_ALL_Preconditioner || (numel(sim.disabledPreconditoners)>0 && ismember(tName(sim.selection), sim.disabledPreconditoners))
-    fprintf('\n\n\t%s.m: ********* Disabling mfactor in calc_G  *********\n\n',mfilename)
+    fprintf('\n\n\t%s.m: ********* Disabling mfactor in calc_G  for %s *********\n\n',mfilename, strjoin(tName(sim.selection)))
     r = G;
 else
     r = mfactor(PQ_inv, G) -G;

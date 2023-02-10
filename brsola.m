@@ -85,7 +85,7 @@ fnrm=norm(f0);
 it_histx(itc+1,1)=fnrm; it_histx(itc+1,2)=0; it_histx(itc+1,3)=0;
 fnrmo=1;
 stop_tol=atol + rtol*fnrm;
-fprintf('%s.m: stop_tol = %g\n',mfilename,stop_tol);
+fprintf('%s.m: stop_tol for tracer idx %d (%s) = %g\n',mfilename, tracerIdx, tracerStr, stop_tol);
 outstat(itc+1, :) = [itc fnrm 0 0]
 %
 % terminate on entry?
@@ -93,7 +93,7 @@ outstat(itc+1, :) = [itc fnrm 0 0]
 if fnrm < stop_tol
     sol=x;
     it_hist=it_histx(1:itc+1,:);    % itc is 0!
-    fprintf('%s.m: outstat (%s)\n',mfilename, tracerStr)
+    fprintf('%s.m: outstat for tracer idx %d (%s)\n',mfilename, tracerIdx, tracerStr)
     disp(outstat); return
 end
 %
@@ -125,7 +125,7 @@ while(itc < maxit && num_calls_f < maxfeval)
     %
     xold=x; lambda=1; iarm=0; lrat=.5; alpha=1.d-4;
     x = x + stp(:,nbroy);
-    fprintf('%s.m: itc = %d, iarm = %d: norm(xold) = %g, norm(x) = %g \n', mfilename, itc, iarm, norm(xold), norm(x))
+    fprintf('%s.m: for tracer idx %d (%s) itc = %d, iarm = %d: norm(xold) = %g, norm(x) = %g \n', mfilename, tracerIdx, tracerStr, itc, iarm, norm(xold), norm(x))
     if nargout == 4
         x_hist=[x_hist,x];
     end
@@ -142,7 +142,7 @@ while(itc < maxit && num_calls_f < maxfeval)
     %   Three-point parabolic line search
     %
     while fnrm >= (1 - lambda*alpha)*fnrmo && iarm < maxarm && num_calls_f < maxfeval
-        fprintf('%s.m: Line search in brsola.m at itc = %d, iarm = %d\n', mfilename, itc, iarm)
+        fprintf('%s.m: Line search in brsola.m for tracer idx %d (%s) at itc = %d, iarm = %d\n', mfilename, tracerIdx, tracerStr, itc, iarm)
         %       lambda=lambda*lrat;
         if iarm==0
             lambda=lambda*lrat;
@@ -174,7 +174,7 @@ while(itc < maxit && num_calls_f < maxfeval)
         if nargout == 4
             x_hist=[x_hist,x];
         end
-        fprintf('%s.m: outstat\n',mfilename)
+        fprintf('%s.m: outstat for tracer idx %d (%s) \n',mfilename, tracerIdx, tracerStr)
         disp(outstat); return;
     end
     %
@@ -186,7 +186,7 @@ while(itc < maxit && num_calls_f < maxfeval)
         outstat(itc+1, :) = [itc fnrm iarm rat];
         it_hist=it_histx(1:itc+1,:)
         %        it_hist(itc+1)=fnrm;
-        fprintf('%s.m: outstat\n',mfilename)
+        fprintf('%s.m: outstat for tracer idx %d (%s) \n',mfilename, tracerIdx, tracerStr)
         disp(outstat); return
     end
     %
@@ -205,7 +205,7 @@ while(itc < maxit && num_calls_f < maxfeval)
     rat=fnrm/fnrmo;
     outstat(itc+1, :) = [itc fnrm iarm rat];
     if debug==1
-        fprintf('%s.m: outstat\n',mfilename)
+        fprintf('%s.m: outstat for tracer idx %d (%s) \n',mfilename, tracerIdx, tracerStr)
         disp(outstat)
     end
     %
@@ -261,7 +261,7 @@ if nargout == 4
 end
 ierr=1;
 if debug==1
-    fprintf('%s.m: outstat\n',mfilename)
+    fprintf('%s.m: outstat for tracer idx %d (%s) \n',mfilename, tracerIdx, tracerStr)
     disp(outstat)
 end
 %
