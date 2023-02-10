@@ -23,8 +23,6 @@ diary off; diary off; diary on; diary off; diary on; diary on; % FIXME: diary be
 % if outer loop is running use previous result...
 clear newRestartFileName tmpTracer_loop
 
-% tmpTracer_loop  = {'DOP'};
-% tmpTracer_loop  = {'spChl' 'diatChl' 'diazChl' 'DOP' 'DOC' 'DOP'};
 % Solve just the "inorganic" tracers, let the biology settle in the "num_single_tracer_relax_iters" loop
 % tmpTracer_loop  = tracer_names(0);
 % ignore biology in solution, solves implicity with time steps after
@@ -39,11 +37,10 @@ tmpTracer_loop  = tName([18:32]);
 % PO4 NO3 SiO3 might be stable, just wastes time to update. 
 % Fe not stable, and does not solve single tracer, just wastes time to update. 
 % PO4 NO3 SiO3 might be stable, but do not solve single tracer, just wastes time to update. 
-% tmpTracer_loop(ismember(tmpTracer_loop,{'DIC' 'ALK' 'PO4' 'NO3' 'SiO3' 'Fe' }) >0) = []
 % spCaCO3 clearly diverges if not single tracer solved
 % diazFe might diverge if not single tracer solved
-% tmpTracer_loop = [tmpTracer_loop 'spCaCO3' 'diazFe']
 % tmpTracer_loop  = {'Fe' 'DIC'}
+% tmpTracer_loop  = {'DOP'};
 
 % ignore "DIC_ALT" and "ALK_ALT"
 tmpTracer_loop(ismember(tmpTracer_loop,{'DIC_ALT_CO2' 'ALK_ALT_CO2'}) >0) = [];
@@ -108,11 +105,16 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
 % sim.num_forward_iters = 1;  % DEBUG ONLY
 
     %%%
-    % Never use more than half of cores available for workers.
+    % Set some reasonable limit...
+    % Never use more than half of cores available for workers on GP.
     % total cores = 1 client + as many workers as we can get away with
 
-    maxCores = ceil(feature('numcores')/2);
-
+    if ismac
+        maxCores = ceil(feature('numcores'))-1; % save one for user
+    else
+        maxCores = ceil(feature('numcores')/2); % Green Planet cluster
+    end
+    maxCores = maxCores -1;                     % one for client
     if numel(sim.tracer_loop) <= maxCores       % small job just run it
         numCores = numel(sim.tracer_loop);   
     elseif ( ceil(numel(sim.tracer_loop)/2) <= maxCores ) % ad hoc; 2 batchs
@@ -125,9 +127,8 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
     fprintf('%s.m: "parfor" using %d workers +1 client = %d of %d cores on %d tracers...\n', mfilename, numCores, numCores+1, feature('numcores'), numel(sim.tracer_loop))
     parforIdxRange = 1:numel(sim.tracer_loop);
     delete(gcp('nocreate'))
-% parfor could start start but NOT close a parpool for itself, and it might
-% take all the cores. Set some reasonable limit...
     p = parpool(numCores);
+    % parfor might start, but NOT get requested parpool
     if p.NumWorkers ~= numCores, error("Could not allocate desired number of cores"); end
 %     ticBytes(gcp);
 
@@ -150,6 +151,7 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
     tmp_fnrm = zeros([1, size(bgc.tracer,3)]);
 
     % for par_idx = parforIdxRange  % DEBUG
+    % for par_idx = 1:0
     % parfor (par_idx = parforIdxRange, numMatlab)  % PARENTHESIS are CRUCIAL
     parfor (par_idx = parforIdxRange)  % PARENTHESIS are CRUCIAL
 
