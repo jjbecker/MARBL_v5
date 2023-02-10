@@ -22,7 +22,8 @@ for i=1:size(y_array,2)
         hold on
         plot([t_or_z(1) t_or_z(end)],[y_array(1,i) y_array(end,i)])
         if floor(t_or_z(end)/365) >0
-            xline([1:floor(t_or_z(end)/365)]*365, '-.k');
+            % xline([1:floor(t_or_z(end)/365)]*365, '-.k'); % doesn't work on pre 2022 Matlab
+            for x_yrs = [1:floor(t_or_z(end)/365)]*365, xline(x_yrs, '-.k'), end
         end
         hold off
     end
