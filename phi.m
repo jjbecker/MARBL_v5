@@ -30,7 +30,7 @@ if (total_months ~= 12)
     % keyboard
     fprintf('\n%s.m: Length of simulation is >1 year...\n\n', mfilename)
 end
-fprintf('\n%s.m: Start  integration of %s years: ',mfilename, int2str(total_months/12))
+fprintf('\n%s.m: Start  integration of %s for %s years: ',mfilename, phiStr, int2str(total_months/12))
 fprintf('%s\n', datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')))
 
 % save initial state
@@ -64,7 +64,7 @@ while current_month < total_months
             bgc.tracer = (1. - 0*phiFileCnt/10) +0*bgc.tracer;  % trigger Armijo steps
         end
         years_gone_by = floor((total_months-1)/12);
-        fprintf('%s.m: Finish integration of %s years: %s\n',mfilename,num2str(1+years_gone_by,2),datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
+        fprintf('%s.m: Finish integration of %s for %s years: %s\n',mfilename,phiStr, num2str(1+years_gone_by,2),datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
         return
     else
 
@@ -117,8 +117,8 @@ while current_month < total_months
     end
 end % loop over time steps
 
-fprintf('%s.m: Finish integration of %s years: %s\n',mfilename,num2str(1+years_gone_by,2),datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
-fprintf('%s.m: Total Runtime: %s min, rate = %s hr/sim_y\n', mfilename, ...
+fprintf('%s.m: Finish integration of %s for %s years: %s\n',mfilename,phiStr, num2str(1+years_gone_by,2),datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
+fprintf('%s.m: Total Runtime of %s: %s min, rate = %s hr/sim_y\n', mfilename, phiStr, ...
     num2str(toc(timer_total)/60,'%.2f'), ...
     num2str((toc(timer_total)/3600/(current_month/12)),'%.2f'));
 

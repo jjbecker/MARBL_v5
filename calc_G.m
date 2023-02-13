@@ -10,14 +10,15 @@ persistent gFileCnt x0_prev
 if isempty(gFileCnt)
     gFileCnt = 1;
     fprintf('\ncall #%d to %s\n', gFileCnt, gStr);
-    fprintf('norm(x0         ) = %-#15.7g\n', norm(x0         ));
+    fprintf('%s: %s norm(x0         ) = %-#15.7g\n', mfilename, gStr, norm(x0         ));
 else
     gFileCnt = gFileCnt +1;
+    fprintf('%s: %s norm(x0         ) = %-#15.7g\n', mfilename, strjoin(tName(sim.selection)), norm(x0         ));
     fprintf('\ncall #%d to %s\n', gFileCnt, gStr);
-    fprintf('norm(x0_prev    ) = %-#15.7g\n', norm(x0_prev    ));
-    fprintf('norm(x0         ) = %-#15.7g\n', norm(x0         ));
+    fprintf('%s: %s norm(x0_prev    ) = %-#15.7g\n', mfilename, gStr, norm(x0_prev    ));
+    fprintf('%s: %s norm(x0         ) = %-#15.7g\n', mfilename, gStr, norm(x0         ));
     dx0 = x0 -x0_prev;
-    fprintf('norm(x0 -x0_prev) = %-#15.7g\n', norm(dx0) );
+    fprintf('%s: %s norm(x0 -x0_prev) = %-#15.7g\n', mfilename, gStr, norm(dx0) );
     if (sim.verbose_debug)
         figure (503); plot(dx0)    ; title('dx0'); xlabel('idx FP'); ylabel(strjoin(tName(sim.selection))); grid on
     end

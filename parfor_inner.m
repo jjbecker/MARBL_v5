@@ -46,9 +46,9 @@ sim = calc_global_moles_and_means(bgc, sim);
 
 toc(timer_total)
 
-fprintf('\n%s.m: Start Newton (Broyden Method) solver: %s\n',mfilename,datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
+fprintf('%s.m: Start Newton (Broyden Method) solver for tracer: ( %s ) @ %s\n',mfilename, string(tracer_str),datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 timer_PQ_init_solve_relax_fwd = tic;
-fprintf('%s.m: Solving for tracer: %s\n', mfilename, string(tracer_str));
+% fprintf('%s.m: Solving for tracer: %s\n', mfilename, string(tracer_str));
 
 
 %%%%
@@ -117,7 +117,8 @@ mex_marbl_driver('shutdown');
 
 elapsedTime_all_loc = toc(timer_PQ_init_solve_relax_fwd);
 disp(' ');
-disp([mfilename,'.m: finished ', strjoin(tName(sim.selection))])
+% disp([mfilename,'.m: finished ', strjoin(tName(sim.selection))])
+fprintf('%s.m: Finished Newton (Broyden Method) solver for tracer: ( %s ) @ %s\n',mfilename, strjoin(tName(sim.selection)),datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
 disp([mfilename,'.m: Runtime ', num2str(elapsedTime_all_loc, '%1.0f'),' (s) or ', num2str(elapsedTime_all_loc/60, '%1.1f'), ' (m)'])
 %     disp(['Runtime per location per iteration: ', num2str(elapsedTime_all_loc/sim.num_time_steps/sim.domain.num_wet_loc*1000, '%1.2f'), ' (ms) MARBL, advection, diffusion, mfactor()'])
 %     disp(['Runtime all location per iteration: ', num2str(elapsedTime_all_loc/sim.num_time_steps, '%1.2f'),                    ' (s)  MARBL, advection, diffusion, mfactor()'])
