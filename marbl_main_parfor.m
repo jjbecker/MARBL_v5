@@ -40,10 +40,16 @@ tmpTracer_loop  = tName([18:32]);
 % spCaCO3 clearly diverges if not single tracer solved
 % diazFe might diverge if not single tracer solved
 % tmpTracer_loop  = {'Fe' 'DIC'}
-% tmpTracer_loop  = {'DOP'};
+% tmpTracer_loop  = {'O2'};
 
 % ignore "DIC_ALT" and "ALK_ALT"
 tmpTracer_loop(ismember(tmpTracer_loop,{'DIC_ALT_CO2' 'ALK_ALT_CO2'}) >0) = [];
+
+% Fe not stable, and does not solve single tracer, just wastes time to update.
+% "" NH4 DOP diatC diatChl dpC spChl
+% "" possibly spCaCO3 
+% tmpTracer_loop(ismember(tmpTracer_loop,{'Fe' 'NH4' 'DOP' 'spChl' 'diatChl' 'diazChl' 'spC' 'diatC' }) >0) = [];
+tmpTracer_loop(ismember(tmpTracer_loop,{'Fe' 'NH4' 'DOP' 'spChl' 'diatChl' 'diazChl' }) >0) = [];
 
 % Shuffle tracers: TRY to avoid blocking by slower tracers in parfor loop.
 tmpTracer_loop = tmpTracer_loop ( randperm ( length ( tmpTracer_loop )))
@@ -99,7 +105,8 @@ for outerLoop_idx = 1:numOuterLoops
     % Setup big picture parts of NK solution in marbl_solve():
     % relative tolerance; as fraction of f(x0)..
 sim.rtol     = 5e-1;        % marbl_solve(): stop if norm(drift,2) < 10% of G(x0)
-sim.maxfeval = 3;           % marbl_solve(): max number of function evaluation
+% sim.maxfeval = 3;           % marbl_solve(): max number of function evaluation
+sim.maxfeval = 5;           % marbl_solve(): max number of function evaluation
 sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bgc) loops after marbl_solve.
 % sim.maxfeval = 1;           % DEBUG ONLY
 % sim.num_forward_iters = 1;  % DEBUG ONLY
@@ -110,11 +117,11 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
     % total cores = 1 client + as many workers as we can get away with
 
     if ismac
-        maxCores = ceil(feature('numcores'))-1; % save one for user
+        maxCores = ceil(feature('numcores'))-2; % save one for user
     else
         maxCores = ceil(feature('numcores')/2); % Green Planet cluster
     end
-    maxCores = maxCores -1;                     % one for client
+%     maxCores = maxCores -1;                     % one for client
     if numel(sim.tracer_loop) <= maxCores       % small job just run it
         numCores = numel(sim.tracer_loop);   
     elseif ( ceil(numel(sim.tracer_loop)/2) <= maxCores ) % ad hoc; 2 batchs
