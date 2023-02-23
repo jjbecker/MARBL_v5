@@ -49,7 +49,7 @@ dummy_build_marbl_lib := $(shell mkdir -p $(LIB_DIR))
 
 
 # This is for gfortran 8.3 
-FFLAGS += -fPIC -Wall -fmax-stack-var-size=8388607
+FFLAGS += -fdefault-integer-8 -fPIC -Wall -fmax-stack-var-size=8388607
 # This is for gfortran 10.2 
 # FFLAGS += $(FFLAGS) -fallow-invalid-boz
 

@@ -93,8 +93,8 @@ That prints lots of scary looking messages but a successful run looks like this 
 	MEX configured to use 'gfortran' for FORTRAN language compilation.
 
 	To choose a different FORTRAN compiler, select one from the following:
-	gfortran  mex -setup:'/Users/jj/Library/Application Support/MathWorks/MATLAB/R2020b/mex_FORTRAN_maci64.xml' FORTRAN
-	gfortran  mex -setup:/Applications/MATLAB_R2020b.app/bin/maci64/mexopts/gfortran.xml FORTRAN
+	gfortran  mex -setup:'/Users/jj/Library/Application Support/MathWorks/MATLAB/R2022b/mex_FORTRAN_maci64.xml' FORTRAN
+	gfortran  mex -setup:/Applications/MATLAB_R2022b.app/bin/maci64/mexopts/gfortran.xml FORTRAN
 ========
 
 
@@ -107,12 +107,12 @@ That prints lots of scary looking messages but a successful run looks like this 
 
 9) After the Fortran part of the MEX file you develop is compiled in FORTRAN, it needs to be processed with the "mex" app in MATLAB to make a ".mexmaci64" file that Matlab calls.
 
-Add the "mex" app, aka the "Matlab compiler/linker" that is part of Matlab to your UNIX PATH. Note that this changes every time you update Matlab; e.g. go to R2020b from "2020a".
+Add the "mex" app, aka the "Matlab compiler/linker" that is part of Matlab to your UNIX PATH. Note that this changes every time you update Matlab; e.g. go to R2022b from "2022a".
 
 For example,
 
-	export PATH=/Applications/MATLAB_R2020b.app/bin/:$PATH
+	export PATH=/Applications/MATLAB_R2022b.app/bin/:$PATH
 	
-Note that this changes every time you update Matlab; e.g. go to R2020b from "2020a".
+Note that this changes every time you update Matlab; e.g. go to R2022b from "2022a".
 
 whew!
