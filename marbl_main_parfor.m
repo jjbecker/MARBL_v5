@@ -49,7 +49,7 @@ tmpTracer_loop(ismember(tmpTracer_loop,{'DIC_ALT_CO2' 'ALK_ALT_CO2'}) >0) = [];
 % "" NH4 DOP diatC diatChl dpC spChl
 % "" possibly spCaCO3 
 % tmpTracer_loop(ismember(tmpTracer_loop,{'Fe' 'NH4' 'DOP' 'spChl' 'diatChl' 'diazChl' 'spC' 'diatC' }) >0) = [];
-tmpTracer_loop(ismember(tmpTracer_loop,{'Fe' 'NH4' 'DOP' 'spChl' 'diatChl' 'diazChl' }) >0) = [];
+% tmpTracer_loop(ismember(tmpTracer_loop,{'Fe' 'NH4' 'DOP' 'spChl' 'diatChl' 'diazChl' }) >0) = [];
 
 % Shuffle tracers: TRY to avoid blocking by slower tracers in parfor loop.
 tmpTracer_loop = tmpTracer_loop ( randperm ( length ( tmpTracer_loop )))
@@ -106,7 +106,7 @@ for outerLoop_idx = 1:numOuterLoops
     % relative tolerance; as fraction of f(x0)..
 sim.rtol     = 5e-1;        % marbl_solve(): stop if norm(drift,2) < 10% of G(x0)
 % sim.maxfeval = 3;           % marbl_solve(): max number of function evaluation
-sim.maxfeval = 5;           % marbl_solve(): max number of function evaluation
+sim.maxfeval = 10;           % marbl_solve(): max number of function evaluation
 sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bgc) loops after marbl_solve.
 % sim.maxfeval = 1;           % DEBUG ONLY
 % sim.num_forward_iters = 1;  % DEBUG ONLY
