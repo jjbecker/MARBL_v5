@@ -79,6 +79,7 @@ for outerLoop_idx = 1:numOuterLoops
     tmpInputFile = strcat(myDataDir(), 'restart_260_integrate_from_0.mat');
     % tmpInputFile = strcat(myDataDir(), 'restart_0_1_output/restart_260_integrate_from_0_DOP_DOC.mat');
     tmpInputFile = strcat(myDataDir(), 'outerLoop_0.mat');
+    % tmpInputFile = strcat(myDataDir(), 'tmp/outerLoop_1_tmp.mat');    % restart from outerLoop_1_tmp
     %
     % outer loop #2 or greater?
     if exist('newRestartFileName','var')
@@ -158,9 +159,9 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
     tmp_fnrm = zeros([1, size(bgc.tracer,3)]);
 
     % for par_idx = parforIdxRange  % DEBUG
-    % for par_idx = 1:0
+    % for par_idx = 1:0                             % restart from outerLoop_1_tmp
     % parfor (par_idx = parforIdxRange, numMatlab)  % PARENTHESIS are CRUCIAL
-    parfor (par_idx = parforIdxRange)  % PARENTHESIS are CRUCIAL
+    parfor (par_idx = parforIdxRange)             % PARENTHESIS are CRUCIAL
 
         % par_idx is (usually) randomly selected order from range!
         % par_idx is simply "order of execution" -NOT- tracer number
@@ -224,7 +225,7 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
         % use forcing and time_seried from parfor_inner, but can NOT return
         % sim and bgc so go thru all these gyrations...
         sim.phi_years = sim.num_forward_iters;
-        sim.inputRestartFile = newRestartFileName;
+        % sim.inputRestartFile = newRestartFileName;          % restart from outerLoop_1_tmp by NOT using the combo which is fake.
         [sim, bgc, ~, time_series, forcing] = init_sim(sim);
 
         % now we can run forward a few years to couple the tracers we did
@@ -312,8 +313,8 @@ goodTracers  = sim.tracer_loop_idx ( good_par_idx )
 
 %%%
 % Need moles for calc_global_moles_and_means() for bgc2nsoli()
-% We need initial tracers for restart file[sim,
-% FIXME: or do we?
+% Need initial tracers for restart file
+
 c0_nsoli = bgc2nsoli(sim, bgc.tracer);    % nsoli format; unitless; aka scaled FP
 sz_bgc = [ numel(sim.domain.iwet_JJ) , size(bgc.tracer,3) ];
 c_sol = reshape(c0_nsoli, sz_bgc);
