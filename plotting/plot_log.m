@@ -18,12 +18,27 @@ for i=1:size(y_array,2)
     ylabel (idx(i)+". "+name(i), 'Interpreter', 'none')
     if (depthNotTime)
         view([90 90]);
-    else
+    else                % annote plot with lines at each year
         hold on
-        plot([t_or_z(1) t_or_z(end)],[y_array(1,i) y_array(end,i)])
+%         plot([t_or_z(1) t_or_z(end)],[y_array(1,i) y_array(end,i)])
         if floor(t_or_z(end)/365) >0
+            
             % xline([1:floor(t_or_z(end)/365)]*365, '-.k'); % doesn't work on pre 2022 Matlab
-            for x_yrs = [1:floor(t_or_z(end)/365)]*365, xline(x_yrs, '-.k'), end
+            for x_yrs = [1:floor(t_or_z(end)/365)]*365
+                xline(x_yrs, '-.k')
+            end
+
+            dt = t_or_z(2)-t_or_z(1);
+            steps_yr = 365/dt;
+            for my_yr = 1:floor(t_or_z(end)/365)
+                x0 = 1+(my_yr-1)*steps_yr;    x1 = 1+(my_yr-0)*steps_yr;
+                plot(t_or_z([x0 x1]), y_array([x0 x1],i))
+            end
+            x0 = x1; x1 = numel(t_or_z);
+            plot(t_or_z([x0 x1]), y_array([x0 x1],i))
+
+        else
+            plot([t_or_z(1) t_or_z(end)],[y_array(1,i) y_array(end,i)])
         end
         hold off
     end
