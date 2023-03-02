@@ -20,18 +20,19 @@ if (or (sim.logDiags, sim.logTracers))
     % FIXME: need a clean way to convert (lat,lon) to (iLat,iLon), but in the
     % mean time; iterate thise by hand...
     %
-    % iLat = 50; iLon = 81; iLvl = 10;    % Galapagos(0.3N, 108.7W)   iFp = 6496
-    % iLat = 77; iLon = 60; iLvl = 10;    % NorPac  (45.7N, 176.8E)   iFp = 4629
-    % iLat = 50; iLon = 61; iLvl = 1;     % Dateline  ( 0.3N,  179.3E)   iFp = 4702
-    % iLat = 49; iLon = 11; iLvl = 10;    % Zulu =  ( 0.3N, 0.7E)     iFp = 1049
-    % iLat = 58; iLon = 50; iLvl = 10;    % Palau = ( 5.6N, 139.7E)   iFp = 3704
-    % iLat = 50; iLon = 28; iLvl = 10;    % IO      ( 0.3N,  50.5E)   iFp = 2080
-    %     iLat = 57; iLon =  3; iLvl = 10;    % AF 447 =  ( 4.7N, -29.5E)     iFp = 1049
-    iLat = 20; iLon =  95; iLvl = 4;    % "-48" =  ( -45.695N, -58.3E)     iFp = 31045 iCol 7462
-    %     iLat = 2; iLon =  95; iLvl = 1;    % 7445
+      iLat = 50; iLon = 81; iLvl = 10;    % Galapagos (   0.3N, +108.7W)  iCol = 6496
+    % iLat = 77; iLon = 60; iLvl = 10;    % NorPac    (  45.7N,  176.8E)  iCol = 4629
+    % iLat = 50; iLon = 61; iLvl = 1;     % Dateline  (   0.3N,  179.3E)  iCol = 4702
+    % iLat = 49; iLon = 11; iLvl = 10;    % Zulu =    (   0.3N,    0.7E)  iCol = 1049
+    % iLat = 58; iLon = 50; iLvl = 10;    % Palau =   (   5.6N,  139.7E)  iCol = 3704
+    % iLat = 50; iLon = 28; iLvl = 10;    % IO        (   0.3N,   50.5E)  iCol = 2080
+    % iLat = 57; iLon =  3; iLvl = 10;    % AF 447 =  (   4.7N,  -29.5E)  iCol = 1049
+    % iLat = 20; iLon =  95; iLvl = 4;    % "-48" =   ( -45.7N,  -58.3E)  iCol = 7462 iFp = 31045 
+    % iLat = 37; iLon =  89; iLvl = 50;   % Bad G     (  -9.1N,  -79.9E, 2.889km) 
+    % iLat =  2; iLon =  95; iLvl = 1;    % 7445
+
     % Check that! Make a map!
     % first get iFp on level 1, Simpy put: on level 1, iFp = iCol...
-
     iFp = coordTransform_xyz2fp(iLat, iLon, 1, sim);
     %     [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(iFp, sim, 999); title('Time Series "Peek" Localtion')
     %     [~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(iFp, sim);
