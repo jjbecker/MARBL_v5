@@ -15,7 +15,10 @@ mex_marbl_driver ( 'restore_interior_tendency_saved_state', interior.state      
 
 % compute tendency using MARBL
 
-mex_marbl_driver('interior_tendency_compute');
+status = mex_marbl_driver('interior_tendency_compute');
+if status
+   error('MEX failed: "bad input data"??')
+end
 
 % FIXME: check tendency for NaN and other errors...
 % FIXME:    ...record record (bad) tracer and surface_flux_forcing

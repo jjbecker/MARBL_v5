@@ -31,7 +31,10 @@ mex_marbl_driver ( 'restore_surface_flux_saved_state', surface.state   );
 % sign of flux is such that negative values are OUT water layer.
 
 % marbl_log = mex_marbl_driver('surface_flux_compute');
-mex_marbl_driver('surface_flux_compute');
+status = mex_marbl_driver('surface_flux_compute');
+if status
+   error('MEX failed: "bad input data"??')
+end
 
 surface.flux  = mex_marbl_driver ( 'surface_fluxes' );
 % FIXME: comment next line out if not using all diags at all locations. 
