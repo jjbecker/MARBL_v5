@@ -7,8 +7,8 @@ mex_marbl_driver ( 'restore_interior_tendency_forcings',    interior.forcing );
 mex_marbl_driver ( 'set_depth',                             interior.domain.kmt );
 
 % FIXME: FLUX limit? This should have been done in MARBL_loop_iteration()
-mex_marbl_driver ( 'restore_tracers',                       interior.tracer     );
-% mex_marbl_driver ( 'restore_tracers',              max(eps, interior.tracer(:)) );
+% mex_marbl_driver ( 'restore_tracers',                       interior.tracer     );
+mex_marbl_driver ( 'restore_tracers',              max(-sqrt(eps), interior.tracer) );      % force nonnegative
 % mex_marbl_driver ( 'restore_tracers',                max(0, interior.tracer)    );
 
 mex_marbl_driver ( 'restore_interior_tendency_saved_state', interior.state      );

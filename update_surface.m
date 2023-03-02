@@ -20,8 +20,8 @@ surface.tracer = (interior.tracer_old(:,1));
 mex_marbl_driver ( 'restore_surface_flux_forcings',         surface.forcing );
 
 % FIXME: FLUX limit?
-mex_marbl_driver ( 'restore_tracers_at_surface',            surface.tracer  );
-% mex_marbl_driver ( 'restore_tracers_at_surface',   max(eps, surface.tracer(:)));
+% mex_marbl_driver ( 'restore_tracers_at_surface',            surface.tracer  );
+mex_marbl_driver ( 'restore_tracers_at_surface',   max(-sqrt(eps), surface.tracer));      % force nonnegative
 % mex_marbl_driver ( 'restore_tracers_at_surface',     max(0, surface.tracer(:)));
 
 % intial condition for calculation, not critical, just use previous value
