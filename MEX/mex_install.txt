@@ -1,16 +1,65 @@
-To install the MEX version of Matlab, you need a Mac with a FORTRAN 90 compiler. If fact there is an Inter Mac executable in the repsoitory, and it might run on a Mac with Apple silicon, but I doubt it...
+Before trying to go thru the following very computer-ish steps, just run LANL_1d/MARBL_LANL_1d.m and see what happens! There is an Intel Mac executable in the repository, and it might run on a Mac with Apple silicon, but I doubt it. This is the executable in the LANAL_1d/MEX directory. 
 
     MEX/mex_marbl_driver.mexmaci64
     
-It doesn't have to be created on the machine you're going to run on, because a MEX file is simply a OSX executable that runs on any Mac. However, OSX "Xcode" development tools no longer include FORTRAN, so you may have to install one of your own. While this is not especially complicated if you can buy a compiler, and there are few free compilers, but those free ones are slightly tricky to install. I used "gfortran" which used to be part of gcc, but not any more...
+If it does not run then you have to recompile the MARBL and MEX F90 code, which is a a lot of downloading free compilers and fiddling with paths because OSX "Xcode" development tools no longer include FORTRAN. That file does -NOT- have to be created on the machine you're going to run on, because a MEX file is simply a OSX executable that runs on any Mac. So even if your persoanl Mac doesn't have FORTRAN installed in a way that MATLAB understands, if you can use another Mac that does have all those things installed, just run the makefile there. 
 
-The big picture is that you simply need to run a Makefile on a machine with a F90 compiler and a copy of the MARBL source code. Obviously the makefile needs to be edited so the path is correct first, but if you have a F90 compiler installed in a way that Matlab can use it, it's as simple as...
+If it does NOT run and you need to have to install a F90 compiler of your own, the following brief outline shoudl get you moving, but you do need to have system adminsterator permission on your mac and the ability to run and debug a relatively simple Makefile or two. 
 
-	Using the usual GitHib tools download the MARBL source from GitHub.com into a working directory
+-jj
 
-	1) In the MATLAB command window verify a FORTAN compiler is installed by typing "mex -setup -v FORTRAN". Look for at least one "Yes" and something like "Found installed compiler 'gfortran'."
+The big picture is that you simply need to run a Makefile on a machine with a F90 compiler and a copy of the MARBL source code. Obviously the makefile needs to be edited so the path to the MARBL source is correct but if you have a F90 compiler installed in a way that Matlab can use it, it's as simple as...
 
-    If you do have FORTREAN open a OSX Terminal, just...
+1) Using the usual GitHub tools download the MARBL source from GitHub.com into a working directory, and the UCI code with the MATLB interface. 
+
+For simplicity lets say you put both in a common directory. They can be anywhere you want, but for simplicity I'll assume you did the following...
+	
+	mkdir ~/Desktop/MARBL_test
+	cd ~/MARBL_test
+	git clone https://github.com/marbl-ecosys/MARBL
+	git clone https://github.com/jjbecker/MARBL_LANL_1d.git
+
+2) Now we need to compile. The MARBL and MEX code is pretty simple vanilla F90, but it is F90 and so on. If you already have a F90 compiler, then you just need to know it's path. For example, I use "gfortran" version 8.2, but you can probably use anything you like. You do need to know where it is, and possibly what version it is...
+
+	which gfortran
+	
+returns this on my Mac
+
+	/usr/local/bin/gfortran
+	
+and I have an old compiler because I have an old Mac (2019)
+
+	gfortran -v
+
+which returns
+	
+	gcc version 8.2.0 (GCC) 
+
+3) If you do NOT have a F90 compiler you need to install one. Before you can install it you need to have the Mac "clang" compiler.
+
+3a) In the Apple "App Store" download (20 GB) and wait a while...
+
+	Xcode
+	
+3b) You also need the 'Xcode command line tools'. In a xterminal run this and download and install a bunch of stuff
+
+	xcode-select --install
+
+3c) Download and install "gfortran" or your choice of compiler. On a Mac the gfortran products are free, easy to install and to use because they are in the familiar gcc "universe". Please be aware that there are small differences between the versions of GCC, and even worse there are now the Intel and Apple versions of the silicon in the Mac and therefore the compilers. Nothing too hard will pop up getting things straightened out on your machine, but it is almost certain you will have to debug a path or two and google a few error messages. 
+
+Download an "dmg" or Mac installer, and pay attention on that web page about a step where you may have to uninstall some old version that you are NOT using and so on. This page has MANY versions, I use 8.2 but I think any would work, but 8.2 is still available for download.
+
+	https://github.com/fxcoudert/gfortran-for-macOS/releases
+
+3d) after you download and install it, "locate" will show the many, many, many files, libraries and their full paths. There are so many files this will take a moment to run...
+
+	locate gfortran | less
+	
+
+
+4) In the MATLAB command window verify a FORTAN compiler is installed by typing "mex -setup -v FORTRAN". Look for at least one "Yes" and something like "Found installed compiler 'gfortran'."
+
+    If you do have FORTRAN open a OSX Terminal, just...
     
         cd to the MARBL_LANL_1d/MEX  folder
         edit the directory paths in the Makefile
@@ -23,12 +72,12 @@ The big picture is that you simply need to run a Makefile on a machine with a F9
 
 If you don't have a FORTRAN its a messy slog best collaborate on over the phone but here is a rough outline... 
 
-Here is a link that has some comuter-ish details. Mac sys admins will be helpful...
+Here is a link that has some computer-ish details. Mac sys admins will be helpful...
 
     https://www.mathworks.com/matlabcentral/answers/338303-how-to-set-up-mex-with-gfortran-on-mac
 
 
-These 9 steps, that looks complicated, but boils down to a few copy and pastes in a few files. Outside of install gfortran, which is a seperate small mess, you just need to let Matlab know "gfortran" is the FORTRAN compiler you want. Before you start into all this, maybe double check if your Mac already has a FORTRAN installed.
+These 9 steps, that looks complicated, but boils down to a few copy and pastes in a few files. Outside of install gfortran, which is a separate small mess, you just need to let Matlab know "gfortran" is the FORTRAN compiler you want. Before you start into all this, maybe double check if your Mac already has a FORTRAN installed.
 
 
 0) Check if FORTRAN is already installed. In Matlab, type this and see if you get a good answer, if so your are done. 
@@ -67,7 +116,7 @@ so it now reads 11.2...
 	
 ---> To reiterate the are MANY lines in the XML files that look to me virtually identical. Use a "find" in a text editor to get every single one!
 
-4) Place a copy of the corrected version of the "gfotran.xml" file in your Matlab app folder. You might have several versions of Matlab on the Mac. 
+4) Place a copy of the corrected version of the "gfortran.xml" file in your Matlab app folder. You might have several versions of Matlab on the Mac. 
 
 Each will have 2 directories that need to be hacked...
 
