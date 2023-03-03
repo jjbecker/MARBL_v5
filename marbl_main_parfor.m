@@ -76,11 +76,12 @@ for outerLoop_idx = 1:numOuterLoops
 
     % read an initial condition file.
     % assume for simplicity it is (probably) first pass...
-    tmpInputFile = strcat(myDataDir(), 'restart_260_integrate_from_0.mat');
+    % tmpInputFile = strcat(myDataDir(), 'restart_260_integrate_from_0.mat');
     % tmpInputFile = strcat(myDataDir(), 'restart_0_1_output/restart_260_integrate_from_0_DOP_DOC.mat');
-    tmpInputFile = strcat(myDataDir(), 'outerLoop_0.mat');
+    % tmpInputFile = strcat(myDataDir(), 'outerLoop_0.mat');
     % tmpInputFile = strcat(myDataDir(), 'tmp/outerLoop_1_tmp.mat');    % restart from outerLoop_1_tmp
-    %
+    % tmpInputFile = strcat(myDataDir(), 'passive_restart_init.mat');
+    
     % outer loop #2 or greater?
     if exist('newRestartFileName','var')
         %         if tmpDebug_disable_phi
@@ -149,6 +150,7 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
 
     %%%
     [sim, bgc, MTM] = loadRestartFile(sim);
+
     sim
     sim.tracer_loop
     %%%
@@ -161,7 +163,7 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
     % for par_idx = parforIdxRange  % DEBUG
     % for par_idx = 1:0                             % restart from outerLoop_1_tmp
     % parfor (par_idx = parforIdxRange, numMatlab)  % PARENTHESIS are CRUCIAL
-    parfor (par_idx = parforIdxRange)             % PARENTHESIS are CRUCIAL
+    % parfor (par_idx = parforIdxRange)             % PARENTHESIS are CRUCIAL % restart from outerLoop_1_tmp
 
         % par_idx is (usually) randomly selected order from range!
         % par_idx is simply "order of execution" -NOT- tracer number
