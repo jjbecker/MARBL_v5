@@ -80,7 +80,7 @@ for outerLoop_idx = 1:numOuterLoops
     % tmpInputFile = strcat(myDataDir(), 'restart_0_1_output/restart_260_integrate_from_0_DOP_DOC.mat');
     % tmpInputFile = strcat(myDataDir(), 'outerLoop_0.mat');
     % tmpInputFile = strcat(myDataDir(), 'tmp/outerLoop_1_tmp.mat');    % restart from outerLoop_1_tmp
-    % tmpInputFile = strcat(myDataDir(), 'passive_restart_init.mat');
+    tmpInputFile = strcat(myDataDir(), 'passive_restart_init.mat');
     
     % outer loop #2 or greater?
     if exist('newRestartFileName','var')
@@ -150,6 +150,8 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
 
     %%%
     [sim, bgc, MTM] = loadRestartFile(sim);
+    min(bgc.tracer(:))                           % force nonnegative
+    bgc.tracer = max(-sqrt(eps), bgc.tracer);    % force nonnegative
 
     sim
     sim.tracer_loop
@@ -163,7 +165,7 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
     % for par_idx = parforIdxRange  % DEBUG
     % for par_idx = 1:0                             % restart from outerLoop_1_tmp
     % parfor (par_idx = parforIdxRange, numMatlab)  % PARENTHESIS are CRUCIAL
-    % parfor (par_idx = parforIdxRange)             % PARENTHESIS are CRUCIAL % restart from outerLoop_1_tmp
+    parfor (par_idx = parforIdxRange)             % PARENTHESIS are CRUCIAL
 
         % par_idx is (usually) randomly selected order from range!
         % par_idx is simply "order of execution" -NOT- tracer number
@@ -229,6 +231,9 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
         sim.phi_years = sim.num_forward_iters;
         % sim.inputRestartFile = newRestartFileName;          % restart from outerLoop_1_tmp by NOT using the combo which is fake.
         [sim, bgc, ~, time_series, forcing] = init_sim(sim);
+        % init_sim reads the initial condition file so force nonnegative -and- restart from outerLoop_1_tmp by
+        min(bgc.tracer(:))                           % force nonnegative -and- restart from outerLoop_1_tmp by
+        bgc.tracer = max(-sqrt(eps), bgc.tracer);    % force nonnegative -and- restart from outerLoop_1_tmp by
 
         % now we can run forward a few years to couple the tracers we did
         % NOT solve with nsoli()
