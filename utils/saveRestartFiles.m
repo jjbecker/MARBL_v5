@@ -17,7 +17,9 @@ end
 if ~exist(sim.inputRestartFile, 'file')
     keyboard
 elseif ~strcmp(sim.inputRestartFile, newRestartFileName)
-    copyfile( sim.inputRestartFile, newRestartFileName);
+    copyfile(  sim.inputRestartFile, newRestartFileName);
+    % FIXME: Matlab can NOT use chmod a+w "locked" attribute set in the Finder. Have to make a writtable copy of inputRestartFile 
+    fileattrib( sim.inputRestartFile,'+w','a'); % FIXME: this can NOT over ride a "locked file" set in the Finder. 
 end
 
 save( newRestartFileName, 'tracer',  '-append' );    % overwrites tracer ONLY, keep forcing from init

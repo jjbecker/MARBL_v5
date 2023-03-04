@@ -75,6 +75,7 @@ for outerLoop_idx = 1:numOuterLoops
 % tmpLogTracer            = 1;    % default = 0
 
     % read an initial condition file.
+    % FIXME: Matlab can NOT use chmod a+w "locked" attribute set in the Finder. Have to make a writtable copy of inputRestartFile 
     % assume for simplicity it is (probably) first pass...
     % tmpInputFile = strcat(myDataDir(), 'restart_260_integrate_from_0.mat');
     % tmpInputFile = strcat(myDataDir(), 'restart_0_1_output/restart_260_integrate_from_0_DOP_DOC.mat');
@@ -209,7 +210,9 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
     end
     if sim.debug_disable_phi
         fprintf('\n\n\t%s.m: ********* phi() is short circuited; just copy newRestartFileName  *********\n\n',mfilename);
-        copyfile( sim.inputRestartFile, newRestartFileName);
+% FIXME: Matlab can NOT use chmod a+w "locked" attribute set in the Finder. Have to make a writtable copy of inputRestartFile
+        copyfile( sim.inputRestartFile, newRestartFileName); % FIXME: this can NOT over ride a "locked file" set in the Finder. 
+        fileattrib( sim.inputRestartFile,'+w','a');
     end % if
 
     [tracerError, tracerNorm, c_sol]  = unscrambleAndSaveParFor(newRestartFileName, sim, bgc, tmp_ierr, tmp_xsol, tmp_fnrm, parforIdxRange, tracer_cell );
