@@ -46,10 +46,9 @@ tmpTracer_loop  = tName([1:17]);
 tmpTracer_loop(ismember(tmpTracer_loop,{'DIC_ALT_CO2' 'ALK_ALT_CO2'}) >0) = [];
 
 % Fe not stable, and does not solve single tracer, just wastes time to update.
-% "" NH4 DOP diatC diatChl dpC spChl
-% "" possibly spCaCO3 
-% tmpTracer_loop(ismember(tmpTracer_loop,{'Fe' 'NH4' 'DOP' 'spChl' 'diatChl' 'diazChl' 'spC' 'diatC' }) >0) = [];
-tmpTracer_loop(ismember(tmpTracer_loop,{'Fe' 'NH4' 'DOP' 'spChl' 'diatChl' 'diazChl' }) >0) = [];
+% "" NH4 DIC ALK DOP spChl diatChl diazChl
+% tmpTracer_loop(ismember(tmpTracer_loop,{'NH4' 'Fe' 'DIC' 'ALK' 'DOP' 'spChl' 'diatChl' 'diazChl' 'spC' 'diatC' }) >0) = [];
+tmpTracer_loop(ismember(tmpTracer_loop,{  'NH4' 'Fe' 'DIC' 'ALK' 'DOP' 'spChl' 'diatChl' 'diazChl' }) >0) = [];
 
 % Shuffle tracers: TRY to avoid blocking by slower tracers in parfor loop.
 tmpTracer_loop = tmpTracer_loop ( randperm ( length ( tmpTracer_loop )))
