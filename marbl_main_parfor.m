@@ -29,8 +29,8 @@ clear newRestartFileName tmpTracer_loop
 % solving PO4 etc...
 tName = tracer_names(0);
 % tmpTracer_loop  = tName([1:32]);
-% tmpTracer_loop  = tName([1:17]);
-tmpTracer_loop  = tName([18:32]);
+tmpTracer_loop  = tName([1:17]);
+% tmpTracer_loop  = tName([18:32]);
 
 % tmpTracer_loop = {'PO4' 'NO3' 'SiO3' 'NH4' 'Fe' 'Lig' 'O2' 'DIC' 'DIC_ALT_CO2' 'ALK' 'ALK_ALT_CO2' 'DOC' 'DON' 'DOP' 'DOPr' 'DONr' 'DOCr'};
 % DIC ALK SiO3 already stable, just wastes time to update. 
@@ -49,7 +49,7 @@ tmpTracer_loop(ismember(tmpTracer_loop,{'DIC_ALT_CO2' 'ALK_ALT_CO2'}) >0) = [];
 % "" NH4 DOP diatC diatChl dpC spChl
 % "" possibly spCaCO3 
 % tmpTracer_loop(ismember(tmpTracer_loop,{'Fe' 'NH4' 'DOP' 'spChl' 'diatChl' 'diazChl' 'spC' 'diatC' }) >0) = [];
-% tmpTracer_loop(ismember(tmpTracer_loop,{'Fe' 'NH4' 'DOP' 'spChl' 'diatChl' 'diazChl' }) >0) = [];
+tmpTracer_loop(ismember(tmpTracer_loop,{'Fe' 'NH4' 'DOP' 'spChl' 'diatChl' 'diazChl' }) >0) = [];
 
 % Shuffle tracers: TRY to avoid blocking by slower tracers in parfor loop.
 tmpTracer_loop = tmpTracer_loop ( randperm ( length ( tmpTracer_loop )))
@@ -121,6 +121,7 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
 
     if ismac
         maxCores = ceil(feature('numcores'))-2; % save one for user
+        maxCores = 2; % laptop only has 32 GB of RAM, jobs need 30/tracer...
     else
         maxCores = ceil(feature('numcores')/2); % Green Planet cluster
     end
