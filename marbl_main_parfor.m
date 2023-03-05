@@ -123,6 +123,7 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
         maxCores = 2; % laptop only has 32 GB of RAM, jobs need 30/tracer...
     else
         maxCores = ceil(feature('numcores')/2); % Green Planet cluster
+        maxCores = 10;
     end
 %     maxCores = maxCores -1;                     % one for client
     if numel(sim.tracer_loop) <= maxCores       % small job just run it
