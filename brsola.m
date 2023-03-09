@@ -161,7 +161,7 @@ while(itc < maxit && num_calls_f < maxfeval)
     %
     it_histx(itc+1,1)=fnrm;
     it_histx(itc+1,2)=it_histx(itc,2)+iarm+1;
-    if(itc == 1) it_histx(itc+1,2) = it_histx(itc+1,2)+1; end;
+    if(itc == 1) it_histx(itc+1,2) = it_histx(itc+1,2)+1; end
     it_histx(itc+1,3)=iarm;
     %
     %   set error flag and return on failure of the line search
