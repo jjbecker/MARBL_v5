@@ -29,7 +29,7 @@ clear newRestartFileName tmpTracer_loop
 % solving PO4 etc...
 tName = tracer_names(0);
 % tmpTracer_loop  = tName([1:32]);
-tmpTracer_loop  = tName([1:17]);
+tmpTracer_loop  = tName(1:17);
 % tmpTracer_loop  = tName([18:32]);
 
 % tmpTracer_loop = {'PO4' 'NO3' 'SiO3' 'NH4' 'Fe' 'Lig' 'O2' 'DIC' 'DIC_ALT_CO2' 'ALK' 'ALK_ALT_CO2' 'DOC' 'DON' 'DOP' 'DOPr' 'DONr' 'DOCr'};
@@ -47,8 +47,9 @@ tmpTracer_loop(ismember(tmpTracer_loop,{'DIC_ALT_CO2' 'ALK_ALT_CO2'}) >0) = [];
 
 % Fe not stable, and does not solve single tracer, just wastes time to update.
 % "" NH4 DIC ALK DOP spChl diatChl diazChl
-% tmpTracer_loop(ismember(tmpTracer_loop,{'NH4' 'Fe' 'DIC' 'ALK' 'DOP' 'spChl' 'diatChl' 'diazChl' 'spC' 'diatC' }) >0) = [];
-tmpTracer_loop(ismember(tmpTracer_loop,{  'NH4' 'Fe' 'DIC' 'ALK' 'DOP' 'spChl' 'diatChl' 'diazChl' }) >0) = [];
+% except DOP might sove (DON and DOC do) once the autotropes are close.
+tmpTracer_loop(ismember(tmpTracer_loop,{'NH4' 'Fe' 'DIC' 'ALK' 'DOP' 'spChl' 'diatChl' 'diazChl' 'spC' 'diatC' }) >0) = [];
+% tmpTracer_loop(ismember(tmpTracer_loop,{  'NH4' 'Fe' 'DIC' 'ALK'       'spChl' 'diatChl' 'diazChl' }) >0) = [];
 
 % Shuffle tracers: TRY to avoid blocking by slower tracers in parfor loop.
 tmpTracer_loop = tmpTracer_loop ( randperm ( length ( tmpTracer_loop )))
@@ -81,7 +82,8 @@ for outerLoop_idx = 1:numOuterLoops
     % tmpInputFile = strcat(myDataDir(), 'outerLoop_0.mat');
     % tmpInputFile = strcat(myDataDir(), 'tmp/outerLoop_1_tmp.mat');    % restart from outerLoop_1_tmp
     tmpInputFile = strcat(myDataDir(), 'passive_restart_init.mat');
-    
+%     tmpInputFile = sprintf('%s/%s_%d.mat', myDataDir(), 'outerLoop', outerLoop_idx-1);
+
     % outer loop #2 or greater?
     if exist('newRestartFileName','var')
         %         if tmpDebug_disable_phi
@@ -123,7 +125,7 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
         maxCores = 2; % laptop only has 32 GB of RAM, jobs need 30/tracer...
     else
         maxCores = ceil(feature('numcores')/2); % Green Planet cluster
-        maxCores = 10;
+        % maxCores = 8;
     end
 %     maxCores = maxCores -1;                     % one for client
     if numel(sim.tracer_loop) <= maxCores       % small job just run it
