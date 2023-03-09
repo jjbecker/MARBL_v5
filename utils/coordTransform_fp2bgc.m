@@ -94,13 +94,12 @@ else
             return
         end
 
-        %     close(debugFigNum); % error if figure is not open
+        % close(debugFigNum); % error if figure is not open
         figure(debugFigNum);
 
-        %         myColors = 1:numel(iLat);
-        myColors = iTr;
-        mySize = 100;
-
+        % myColors = 1:numel(iLat);
+        % myColors = iTr;
+        % mySize = 100;
         myColors = 'black';
         mySize = 10;
 
