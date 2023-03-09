@@ -21,7 +21,7 @@ tName = tracer_names(0);    % no CISO tracers
 % Some tracers are known NOT work in single column with precoditioner, but
 % do not crash MARBL. Use 'G()' rather than 'r(G()' as 'f()' in nsoli()
 
-disabledPreconditoners = { 'DIC' 'ALK' 'diatC' 'spChl' 'diatChl' 'diazChl'};
+% disabledPreconditoners = { 'DIC' 'ALK' 'diatC' 'spChl' 'diatChl' 'diazChl'};
 disabledPreconditoners = { 'DIC' 'ALK'         'spChl' 'diatChl' 'diazChl'};
 % FIXME; Fe might not precondition correctly
 disabledPreconditoners(end+1) = {'Fe'};
@@ -91,7 +91,7 @@ if numel(sim.excluded_tracer) == 0  % Nothing to exclude, move on!
     idx = [];
 else
     [flag, idx] = ismember ( sim.excluded_tracer, sim.tracer_loop );
-    if (length(args) >0)
+    if (~isempty(args))
         idx = sort(idx(flag>0));
     else
         idx = 0;
@@ -101,7 +101,7 @@ if any(idx)
     fprintf('%s.m: Tracers ALWAYS EXCLUDED from run: %s\n', mfilename, strjoin(sim.excluded_tracer));
     %     error(sprintf('\n%s.m: illegal INPUT Tracers: %s\n', mfilename, strjoin(sim.tracer_loop(idx))));
     fprintf('\n%s.m: Removing illegal INPUT Tracers: %s\n', mfilename, strjoin(sim.tracer_loop(idx)));
-    sim.tracer_loop([idx]) = [];
+    sim.tracer_loop(idx) = [];
 end
 fprintf('%s.m: *** Final *** List of tracers to loop over : %s\n', mfilename, strjoin(sim.tracer_loop));
 
@@ -151,9 +151,8 @@ if  length(args) >= 3    % Input time step in hours
         end
         sim.time_step_hr = args{3};
     else
-        errMsg = sprintf('%s.m: time step input must be NUMERIC, not string or cell it is (possibly string):\n', mfilename)
         disp(args{3})
-        error(errMsg)
+        error('%s.m: time step input must be NUMERIC, not string or cell it is (possibly) string\n', mfilename)
     end
 else
     sim.time_step_hr = 3;
