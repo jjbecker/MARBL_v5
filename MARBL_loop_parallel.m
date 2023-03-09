@@ -64,7 +64,7 @@ spmd(num_threads)
     global_rows_this_worker_stores = globalIndices(kmt_in, 1);
     row_time_series_loc = find( global_rows_this_worker_stores == time_series_loc_client);
     if (row_time_series_loc>0)
-        time_series_lab = labindex;
+        time_series_lab = spmdIndex;
     end
     % end
     % if (n == 1)
@@ -134,11 +134,11 @@ spmd(num_threads)
     % client in for loop!
 
     tend_localSize = tend_globalSize;
-    tend_localSize ( tend_codistr.Dimension ) = tend_codistr.Partition ( labindex );
+    tend_localSize ( tend_codistr.Dimension ) = tend_codistr.Partition ( spmdIndex );
     tend_L = zeros ( tend_localSize );          % What we write to in loop
 
     S_out_localSize = S_out_globalSize;
-    S_out_localSize ( S_out_codistr.Dimension ) = S_out_codistr.Partition ( labindex );
+    S_out_localSize ( S_out_codistr.Dimension ) = S_out_codistr.Partition ( spmdIndex );
     S_out_L = zeros ( S_out_localSize );          % What we write to in loop
 
     % FIXME: currently we do NOT use these, probably should NOT waste time
