@@ -108,12 +108,12 @@ for outerLoop_idx = 1:numOuterLoops
     %%%
     % Setup big picture parts of NK solution in marbl_solve():
     % relative tolerance; as fraction of f(x0)..
-sim.rtol     = 5e-1;        % marbl_solve(): stop if norm(drift,2) < 10% of G(x0)
-% sim.maxfeval = 3;           % marbl_solve(): max number of function evaluation
-sim.maxfeval = 10;           % marbl_solve(): max number of function evaluation
-sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bgc) loops after marbl_solve.
+sim.rtol     = 1e-3;        % marbl_solve(): stop if norm(G(x),2) < rtol * G(x0)
 % sim.maxfeval = 1;           % DEBUG ONLY
+% sim.maxfeval = 3;           % marbl_solve(): max number of function evaluation
+sim.maxfeval = 8;           % marbl_solve(): max number of function evaluation
 % sim.num_forward_iters = 1;  % DEBUG ONLY
+sim.num_forward_iters = 5;  % years of all tracer relax; aka num of bgc = phi(bgc) loops after marbl_solve.
 
     %%%
     % Set some reasonable limit...
@@ -124,14 +124,14 @@ sim.num_forward_iters = 3;  % years of all tracer relax; aka num of bgc = phi(bg
         maxCores = ceil(feature('numcores'))-2; % save one for user
         maxCores = 2; % laptop only has 32 GB of RAM, jobs need 30/tracer...
     else
-        maxCores = ceil(feature('numcores')/2); % Green Planet cluster
-        % maxCores = 8;
+        % maxCores = ceil(feature('numcores')/2); % Green Planet cluster
+        maxCores = 8;
     end
-%     maxCores = maxCores -1;                     % one for client
+
     if numel(sim.tracer_loop) <= maxCores       % small job just run it
         numCores = numel(sim.tracer_loop);   
-    elseif ( ceil(numel(sim.tracer_loop)/2) <= maxCores ) % ad hoc; 2 batchs
-        numCores = ceil(numel(sim.tracer_loop)/2);    
+%     elseif ( ceil(numel(sim.tracer_loop)/2) <= maxCores ) % ad hoc; 2 batchs
+%         numCores = ceil(numel(sim.tracer_loop)/2);    
     else
         numCores = maxCores;
     end
