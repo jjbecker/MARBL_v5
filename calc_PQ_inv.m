@@ -44,6 +44,7 @@ if sim.recalculate_PQ_inv && ~sim.debug_disable_phi && ...
     fprintf('%s.m: %1.3f (s) to mfactor PQ\n', mfilename, toc(tStart));
 
     fprintf('%s.m: Saving 23 GB preconditioner...\n', mfilename)
+    [status, msg, msgID] = mkdir(strcat(myDataDir(),'sol/'));
     % save(strcat(myDataDir(),'sol/',strjoin(tName(sim.selection)),'_QJ'), 'PQ_inv', 'PQ', 'Q', 'J_FP','-v7.3','-nocompression')
     save(strcat(myDataDir(),'sol/',strjoin(tName(sim.selection)),'_QJ'), 'PQ_inv','-v7.3','-nocompression')
     % save(strcat(myDataDir(),'sol/',strjoin(tName(sim.selection)),'_QJ'), 'PQ_inv','-v7.3')
