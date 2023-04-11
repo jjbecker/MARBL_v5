@@ -16,7 +16,7 @@ function [ surface, interior ] = MARBL_loop_iteration(dt, n, col_num, surface, i
 %
 % but no globals allowed in parallel code. So it's hard coded...
 % 
-% interior.tracer = max ( -sqrt(eps), interior.tracer);
+% interior.tracer = max ( -sqrt(eps), interior.tracer); % force nonnegative
 % 
 % neither of surface_update or interior_update changes tracers, 
 % so don't have to check after updates
