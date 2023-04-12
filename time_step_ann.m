@@ -45,6 +45,10 @@ surfaceLayerThickness_MARBL = (sim.domain.dzt(1) *sim.domain.MARBL_depth_per_m);
 river_tendency = forcing.river_flux /surfaceLayerThickness_MARBL;
 
 %%
+% 
+% if     min(bgc.tracer(:))    <     -sqrt(eps) % force nonnegative
+%     min(packMarbl( bgc.tracer, sim.domain.iwet_JJ ))
+% end
 
 C_1 = packMarbl( bgc.tracer, sim.domain.iwet_JJ );
 [C_2, C_3, C_4] = deal( zeros( size(C_1)));
@@ -159,7 +163,7 @@ for it = 1:steps_per_period
             %             bgc.accumulate = bgc.accumulate + ( S ./C_3 ); % FIXME: time stepped tracer or input tracer
     end
 
-    bgc.tracer = max(-sqrt(eps), bgc.tracer);    % force nonnegative
+%     bgc.tracer = max(-sqrt(eps), bgc.tracer);    % force nonnegative
 
     if sim.logTracers && ( n+1 == size(time_series.moles,2))    % capture value expected at start of next year.
 

@@ -23,6 +23,9 @@ function J = calc_J_Single_Tracer(sim, bgc, time_series, forcing, MTM)
 %   J(:,i,j) = d(MARBL(:,i,idxTr)) / d(tracer(:,j,idxTr) @ all water col
 
 fprintf('%s.m: Start at %s\n', mfilename, datestr(datetime('now','TimeZone','local','Format','d-MMM-y HH:mm:ss Z')));
+% if     min(bgc.tracer(:))    <     -sqrt(eps)   % force nonnegative
+%     min(packMarbl( bgc.tracer, sim.domain.iwet_JJ ))
+% end
 bgc_0 = bgc;
 
 tName = tracer_names(0);    % no CISO tracers
