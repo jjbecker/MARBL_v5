@@ -209,19 +209,19 @@ sim.num_forward_iters = 1;  % DEBUG ONLY
     % result is saved in a file...
 
     % newRestartFileName = sprintf('%s/%s_%d_tmp.mat', sim.outputRestartDir, 'outerLoop', outerLoop_idx);
-    newRestartFileName = sprintf('%s/%s_%d.mat', sim.outputRestartDir, 'outerLoop', outerLoop_idx);
-    if sim.num_forward_iters >0
+    % newRestartFileName = sprintf('%s/%s_%d.mat', sim.outputRestartDir, 'outerLoop', outerLoop_idx);
+    % if sim.num_forward_iters >0
         newRestartFileName = sprintf('%s/%s_%d_tmp.mat', sim.outputRestartDir, 'outerLoop', outerLoop_idx);
-    end
-    if sim.debug_disable_phi
-        fprintf('\n\n\t%s.m: ********* phi() is short circuited; just copy newRestartFileName  *********\n\n',mfilename);
-% FIXME: Matlab can NOT use chmod a+w "locked" attribute set in the Finder. Have to make a writtable copy of inputRestartFile
-        copyfile( sim.inputRestartFile, newRestartFileName); % FIXME: this can NOT over ride a "locked file" set in the Finder. 
-        fileattrib( sim.inputRestartFile,'+w','a');
-    end % if
+    % end
+%     if sim.debug_disable_phi
+%         fprintf('\n\n\t%s.m: ********* phi() is short circuited; just copy newRestartFileName  *********\n\n',mfilename);
+% % FIXME: Matlab can NOT use chmod a+w "locked" attribute set in the Finder. Have to make a writtable copy of inputRestartFile
+%         copyfile( sim.inputRestartFile, newRestartFileName); % FIXME: this can NOT over ride a "locked file" set in the Finder. 
+%         fileattrib( sim.inputRestartFile,'+w','a');
+%     end % if
 
+    % write the "_tmp" file with the single column/single tracer solutions...
     [tracerError, tracerNorm, c_sol]  = unscrambleAndSaveParFor(newRestartFileName, sim, bgc, tmp_ierr, tmp_xsol, tmp_fnrm, parforIdxRange, tracer_cell );
-
 
     %%%
     % POSSIBLY allow ALL tracers, not just selection, to "relax' to
@@ -233,15 +233,23 @@ sim.num_forward_iters = 1;  % DEBUG ONLY
         %sim.selection is only selects debug plots for desired tracer
         sim.selection = unique(sort(find( strcmp(tName,string(tracer_cell(parforIdxRange(1)))) )));
 
+        sim.phi_years = sim.num_forward_iters;
+
         % all we need to do is suck combined tracer from combined file and
         % use forcing and time_seried from parfor_inner, but can NOT return
         % sim and bgc so go thru all these gyrations...
-        sim.phi_years = sim.num_forward_iters;
+        
+        % FIXME: we need to use the "_tmp file" as input to the "relax step"
+        % but sim.inputRestartFile is pointing to the NOT "_tmp" file
+        old_inputRestartFile = sim.inputRestartFile;
+        sim.inputRestartFile = newRestartFileName;
+
         % BROKEN debug busted parfor ONLY % sim.inputRestartFile = newRestartFileName;          % restart from outerLoop_1_tmp by NOT using the combo which is fake.
+        
         [sim, bgc, ~, time_series, forcing] = init_sim(sim);
         % init_sim reads the initial condition file so force nonnegative -and- restart from outerLoop_1_tmp by
         min(bgc.tracer(:))                           % force nonnegative -and- restart from outerLoop_1_tmp by
-%         bgc.tracer = max(-sqrt(eps), bgc.tracer);    % force nonnegative -and- restart from outerLoop_1_tmp by
+        % bgc.tracer = max(-sqrt(eps), bgc.tracer);    % force nonnegative -and- restart from outerLoop_1_tmp by
 
         % now we can run forward a few years to couple the tracers we did
         % NOT solve with nsoli()
@@ -252,6 +260,11 @@ sim.num_forward_iters = 1;  % DEBUG ONLY
 
         % be sure to shutdown MEX
         mex_marbl_driver('shutdown');
+
+        % FIXME: we need to use "old file" as input to "next outer loop"
+        % but sim.inputRestartFile is pointing to "_tmp" file
+        % ---> right the tracer from relax over old input file data
+        % sim.inputRestartFile = old_inputRestartFile;
 
         % save forward iteration result...
         newRestartFileName = sprintf('%s/%s_%d.mat', sim.outputRestartDir, 'outerLoop', outerLoop_idx);
@@ -300,52 +313,3 @@ else
     sim = calc_global_moles_and_means(bgc, sim);
 end
 end % loadRestartFile
-
-%%
-% function [tracerError, tracerNorm, c_sol]  = unscrambleAndSaveParFor(newRestartFileName, sim, bgc, tmp_ierr, tmp_xsol, tmp_fnrm, parforIdxRange, tracer_cell )
-% 
-% % Unscramble results captured in random order by parfor loop. No need
-% % for a for loop, use array index on slices. Then replace initial values in
-% % restart file with single column solution.
-% 
-% tracerError = zeros([1, size(bgc.tracer,3)]);
-% tracerNorm  = zeros([1, size(bgc.tracer,3)]);
-% % singleColTracerSolution = 0 *c0;
-% 
-% tracerRange = sim.tracer_loop_idx (parforIdxRange);
-% tracerError (:, tracerRange) = tmp_ierr (:, parforIdxRange);
-% tracerNorm  (:, tracerRange) = tmp_fnrm (:, parforIdxRange);
-% % tmp_c_sol          (:, tracerRange) = tmp_xsol (:, parforIdxRange);
-% 
-% ierrLimit = 1;
-% 
-% bad_par_idx = parforIdxRange( tmp_ierr >  ierrLimit )
-% badTracers  = sim.tracer_loop_idx ( bad_par_idx )
-% 
-% good_par_idx = parforIdxRange;
-% good_par_idx( bad_par_idx ) = []
-% goodTracers  = sim.tracer_loop_idx ( good_par_idx )
-% 
-% %%%
-% % Need moles for calc_global_moles_and_means() for bgc2nsoli()
-% % Need initial tracers for restart file
-% 
-% c0_nsoli = bgc2nsoli(sim, bgc.tracer);    % nsoli format; unitless; aka scaled FP
-% sz_bgc = [ numel(sim.domain.iwet_JJ) , size(bgc.tracer,3) ];
-% c_sol = reshape(c0_nsoli, sz_bgc);
-% c_sol (:, goodTracers) = tmp_xsol (:, good_par_idx);
-% 
-% tracer = nsoli2bgc(sim, bgc, c_sol);
-% % result is saved in a file, bgc and sim returned are bogus...
-% saveRestartFiles(sim, tracer, newRestartFileName);
-% 
-% % debug output
-% tmp = reshape(c0_nsoli, sz_bgc);
-% for idx = parforIdxRange
-%     col = sim.tracer_loop_idx (idx);
-%     xnrm = norm(tmp(:,col)-c_sol(:,col));
-%     fprintf('%s.m: (%s)\tierr = %d fnrm(r) = %-#13.7g norm(sol-x0) = %-#10.7g\n', mfilename, string(tracer_cell(idx)), ...
-%         tracerError(col), tracerNorm(col), xnrm)
-% end
-% 
-% end % unscrambleAndSaveParFor function
