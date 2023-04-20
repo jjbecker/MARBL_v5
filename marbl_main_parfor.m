@@ -40,7 +40,8 @@ tmpTracer_loop  = tName(1:17);
 % spCaCO3 clearly diverges if not single tracer solved
 % diazFe might diverge if not single tracer solved
 % tmpTracer_loop  = {'Fe' 'DIC'}
-tmpTracer_loop  = {'DOPr','DOCr', 'DONr'};
+% tmpTracer_loop  = {'DOPr','DOCr', 'DONr'};
+% tmpTracer_loop  = {'O2' 'DOC' 'DON' 'DOP' 'DOPr' 'DONr' 'DOCr'};
 
 % ignore "DIC_ALT" and "ALK_ALT"
 tmpTracer_loop(ismember(tmpTracer_loop,{'DIC_ALT_CO2' 'ALK_ALT_CO2'}) >0) = [];
@@ -48,11 +49,11 @@ tmpTracer_loop(ismember(tmpTracer_loop,{'DIC_ALT_CO2' 'ALK_ALT_CO2'}) >0) = [];
 % Fe not stable, and does not solve single tracer, just wastes time to update.
 % "" NH4 DIC ALK DOP spChl diatChl diazChl
 % except DOP might sove (DON and DOC do) once the autotropes are close.
-tmpTracer_loop(ismember(tmpTracer_loop,{'NH4' 'Fe' 'DIC' 'ALK' 'DOP' 'spChl' 'diatChl' 'diazChl' 'spC' 'diatC' }) >0) = [];
-% tmpTracer_loop(ismember(tmpTracer_loop,{  'NH4' 'Fe' 'DIC' 'ALK'       'spChl' 'diatChl' 'diazChl' }) >0) = [];
+% tmpTracer_loop(ismember(tmpTracer_loop,{'NH4' 'Fe' 'DIC' 'ALK' 'DOP' 'spChl' 'diatChl' 'diazChl' 'spC' 'diatC' }) >0) = [];
+tmpTracer_loop(ismember(tmpTracer_loop,{  'NH4' 'Fe' 'DIC' 'ALK'       'spChl' 'diatChl' 'diazChl' }) >0) = [];
 
 % Shuffle tracers: TRY to avoid blocking by slower tracers in parfor loop.
-tmpTracer_loop = tmpTracer_loop ( randperm ( length ( tmpTracer_loop )))
+% tmpTracer_loop = tmpTracer_loop ( randperm ( length ( tmpTracer_loop )))
 
 numOuterLoops = 10;
 % numOuterLoops = 2;
@@ -65,12 +66,12 @@ for outerLoop_idx = 1:numOuterLoops
     % sim = setInputAndOutputFilePaths(varargin)
 
     tmpTime_step_hr = 3;
-tmpTime_step_hr = 12;
+% tmpTime_step_hr = 12;
 
     tmpRecalculate_PQ_inv   = 1;    % default = 1
     tmpDebug_disable_phi    = 0;    % default = 0
     tmpLogTracer            = 1;    % default = 1
-tmpRecalculate_PQ_inv   = 0;    % default = 1
+% tmpRecalculate_PQ_inv   = 0;    % default = 1
 % tmpDebug_disable_phi    = 1;    % default = 0
 % tmpLogTracer            = 1;    % default = 0
 
