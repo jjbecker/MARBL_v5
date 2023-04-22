@@ -1,27 +1,59 @@
-function plotWorstResidual(sim, fname)
+% function plotWorstResidual(sim, fname)
+function plotWorstResidual(x0, G, G_bgc_all, current_yr, callersName)
 
-load(fname, 'r');
-figure (700)
-plot(r)
+% load(fname, 'r');
+myFig = 800;
+figure (myFig)
+figure (myFig); 
+clf(myFig)
 
-% rO2 = unpackMarbl(r,sim.domain.iwet_JJ,[7881,60,1]);
-% rO2_tst = rO2(sim.time_series_loc,:);
+tl = tiledlayout('flow','TileSpacing','compact','Padding','compact');
 
-myRng = 1:100;
-[maxR,idxR] = sort(   (r),"descend",'MissingPlacement','last');
-maxR(1)
-[~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxR(myRng), sim, 701); title('Most postive')
+myInc = 4;
+for i=1:myInc:size(G_bgc_all,3)
 
-[minR,idxR] = sort(   (r),"ascend",'MissingPlacement','last');
-minR(1)
-[~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxR(myRng), sim, 702);  title('Most Negative')
+    G_bgc = G_bgc_all(:,:,i);       % just selected cols
+%     tmpG = tmpG(:);              % nsoli format
 
-[maxAbsR,idxAbs] = sort(abs(r),"descend",'MissingPlacement','last');
-[~, ~, ~, ~, ~, ~] = coordTransform_fp2xyz(idxAbs(myRng), sim, 703); title('Largest Abs')
 
-% 
-% [doubleSort,idxAbs] = sort(maxAbsR(:,1),"descend");
-% doubleSort(1:30)
-% idxAbs(1:30)
-%
+    tName = tracer_names(0);    % no CISO tracers
+    tendStr   = strjoin(tName(i));
+    gStr = sprintf('G( %s )', tendStr, 'Interpreter', 'none');
+
+
+    ax(i) = nexttile(tl);
+
+    maxData = max((G_bgc),[],2,'omitnan')';
+    minData = min((G_bgc),[],2,'omitnan')';
+    medData = median((G_bgc),2,'omitnan')';
+    stdData = std(G_bgc(:),'omitnan');
+    x = 1:numel(maxData);
+
+    hold on
+
+    line([x; x], [minData; maxData])    % vertical whiskers at each col#
+    plot(x, medData, '+')               % ticks on whiskers at median
+
+    yline(+stdData)                     % reference line at std
+    yline(-stdData)
+
+    hold off
+
+    xlabel('Water Column');
+    tmpStr = strjoin(["Extremes of",gStr,"in each water column"]);
+    ylabel(tmpStr);
+    title(tmpStr);
+
+
+    grid on
+end
+% linkaxes(ax,'x')
+
+% title(tl, myTitle, 'Interpreter', 'none');
+% if (depthNotTime)
+%     ylabel (tl,"Depth (m)");
+% else
+%     xlabel (tl,"Time (day)");
+% end
+
 end
