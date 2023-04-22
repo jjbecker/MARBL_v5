@@ -42,6 +42,7 @@ tmpTracer_loop  = tName(1:17);
 % tmpTracer_loop  = {'Fe' 'DIC'}
 % tmpTracer_loop  = {'DOPr','DOCr', 'DONr'};
 % tmpTracer_loop  = {'O2' 'DOC' 'DON' 'DOP' 'DOPr' 'DONr' 'DOCr'};
+tmpTracer_loop  = {'DOPr'};
 
 % ignore "DIC_ALT" and "ALK_ALT"
 tmpTracer_loop(ismember(tmpTracer_loop,{'DIC_ALT_CO2' 'ALK_ALT_CO2'}) >0) = [];
@@ -66,7 +67,7 @@ for outerLoop_idx = 1:numOuterLoops
     % sim = setInputAndOutputFilePaths(varargin)
 
     tmpTime_step_hr = 3;
-% tmpTime_step_hr = 12;
+tmpTime_step_hr = 12;
 
     tmpRecalculate_PQ_inv   = 1;    % default = 1
     tmpDebug_disable_phi    = 0;    % default = 0
@@ -78,9 +79,9 @@ for outerLoop_idx = 1:numOuterLoops
     % read an initial condition file.
     % FIXME: Matlab can NOT use chmod a+w "locked" attribute set in the Finder. Have to make a writtable copy of inputRestartFile 
     % assume for simplicity it is (probably) first pass...
-    tmpInputFile = strcat(myDataDir(), 'restart_260_integrate_from_0.mat');
+%     tmpInputFile = strcat(myDataDir(), 'restart_260_integrate_from_0.mat');
     % tmpInputFile = strcat(myDataDir(), 'restart_0_1_output/restart_260_integrate_from_0_DOP_DOC.mat');
-    % tmpInputFile = strcat(myDataDir(), 'outerLoop_0.mat');
+    tmpInputFile = strcat(myDataDir(), 'outerLoop_4.mat');
 %     tmpInputFile = strcat(myDataDir(), 'tmp/outerLoop_1_tmp.mat');    % restart from outerLoop_1_tmp
 %     tmpInputFile = strcat(myDataDir(), 'xouterLoop_1_tmp.mat');    % restart from outerLoop_1_tmp
 %     tmpInputFile = strcat(myDataDir(), 'passive_restart_init.mat');
@@ -116,6 +117,7 @@ sim.maxfeval = 1;           % DEBUG ONLY
 % sim.maxfeval = 8;           % marbl_solve(): max number of function evaluation
 sim.num_forward_iters = 1;  % DEBUG ONLY
 % sim.num_forward_iters = 5;  % years of all tracer relax; aka num of bgc = phi(bgc) loops after marbl_solve.
+sim.num_forward_iters = 15;  % years of all tracer relax; aka num of bgc = phi(bgc) loops after marbl_solve.
 
     %%%
     % Set some reasonable limit...
@@ -170,9 +172,9 @@ sim.num_forward_iters = 1;  % DEBUG ONLY
     tmp_fnrm = zeros([1, size(bgc.tracer,3)]);
 
 %     for par_idx = parforIdxRange  % DEBUG
-    % for par_idx = 1:0                             % restart from outerLoop_1_tmp
+    for par_idx = 1:0                             % restart from outerLoop_1_tmp
     % parfor (par_idx = parforIdxRange, numMatlab)  % PARENTHESIS are CRUCIAL
-    parfor (par_idx = parforIdxRange)             % PARENTHESIS are CRUCIAL
+%     parfor (par_idx = parforIdxRange)             % PARENTHESIS are CRUCIAL
 
         % par_idx is (usually) randomly selected order from range!
         % par_idx is simply "order of execution" -NOT- tracer number
