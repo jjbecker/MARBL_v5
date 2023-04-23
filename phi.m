@@ -106,6 +106,8 @@ while current_month < total_months
         % save "x1" or final state file...
         myRestartFile = sprintf('%s/%s_restart_x1.mat', sim.outputRestartDir,tendStr);
         saveRestartFiles(sim, bgc.tracer, myRestartFile);
+restartFileName_current_yr = sprintf('%s/restart_%d_relax.mat', sim.outputRestartDir, round(current_yr))
+saveRestartFiles(sim, bgc.tracer, restartFileName_current_yr);
 
         %%%
 
