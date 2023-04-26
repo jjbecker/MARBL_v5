@@ -67,7 +67,7 @@ for outerLoop_idx = 1:numOuterLoops
     % sim = setInputAndOutputFilePaths(varargin)
 
     tmpTime_step_hr = 3;
-tmpTime_step_hr = 12;
+% tmpTime_step_hr = 12;
 
     tmpRecalculate_PQ_inv   = 1;    % default = 1
     tmpDebug_disable_phi    = 0;    % default = 0
@@ -172,9 +172,9 @@ sim.num_forward_iters = 15;  % years of all tracer relax; aka num of bgc = phi(b
     tmp_fnrm = zeros([1, size(bgc.tracer,3)]);
 
 %     for par_idx = parforIdxRange  % DEBUG
-    for par_idx = 1:0                             % restart from outerLoop_1_tmp
+    % for par_idx = 1:0                             % restart from outerLoop_1_tmp
     % parfor (par_idx = parforIdxRange, numMatlab)  % PARENTHESIS are CRUCIAL
-%     parfor (par_idx = parforIdxRange)             % PARENTHESIS are CRUCIAL
+    parfor (par_idx = parforIdxRange)             % PARENTHESIS are CRUCIAL
 
         % par_idx is (usually) randomly selected order from range!
         % par_idx is simply "order of execution" -NOT- tracer number
