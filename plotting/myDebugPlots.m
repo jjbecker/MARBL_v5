@@ -1,4 +1,14 @@
 % %%
+% 
+% file_a = '/Users/jj/Desktop/relax/restart_790_relax.mat';
+% file_b = '/Users/jj/Desktop/relax/restart_791_relax.mat';
+% 
+% tracer_a = load(file_a, '-mat').tracer;
+% tracer_b = load(file_b, '-mat').tracer;
+% 
+% sim      = load(file_a, '-mat').sim;
+% M3d      = sim.domain.M3d;
+% 
 % % tracer_names(0)
 % fld  = 5;   % Fe
 % lvl  = 1;
@@ -46,19 +56,21 @@ function [] = myDebugPlots(tracer_a, tracer_b, lvl, fld, M3d)
 
 %% Contour plot of Tracer A
 
-myContourPlot(tracer_b, lvl, fld, M3d, 201, "Tracer A");
+myContourPlot(tracer_a, lvl, fld, M3d, 201, "Tracer A");
 
 %% Contour plot of Tracer B
 
 myContourPlot(tracer_b, lvl, fld, M3d, 202, "Tracer B");
+% mySurfacePlot(tracer_b, lvl, fld, M3d, 202, "Interpolated 'surf plot' Tracer B");
 
 %% Contour plot of Tracer B - Tracer A
 
-myContourPlot(tracer_b -tracer_a, lvl, fld, M3d, 203, "Tracer B-A");
+myContourPlot(tracer_b -tracer_a, lvl, fld, M3d, 203, "(Tracer B - Tracer A)");
 
 %% Make a cool 3D surf plot of Tracer A - Tracer B we can spin around...
 
-mySurfacePlot(tracer_b -tracer_a, lvl, fld, M3d, 204, "3D Surface Tracer B-A");
+mySurfacePlot(tracer_b -tracer_a, lvl, fld, M3d, 204, "Interpolated (Tracer B - Tracer A)");
+% mySurfacePlot(tracer_b , lvl, fld, M3d, 204, "3D Surface Tracer B-A");
 
 end % myDebugPlots
 
@@ -75,7 +87,13 @@ tmp(wet_loc) = tracer(:,lvl,fld);
 
 figure(figNum)
 
-contourf (tmp); colorbar;
+contourf (tmp,'LineColor','none'); colorbar;
+% y = 1:size(tmp,1);
+% x = 1:size(tmp,2);
+% Z = tmp(:);
+% contourf (x,y,tmp); colorbar;
+% surf (tmp, 'EdgeColor', 'none', 'FaceColor', 'interp'); view(2); colorbar;
+surf (tmp, 'EdgeColor', 'none', 'FaceColor', 'flat'); view(2); colorbar;
 
 % Title and labels...
 
@@ -83,7 +101,8 @@ name  = tracer_names(0);
 units = tracer_units(0);
 nameUnits = strcat(name," ",units);
 
-title(myTitle+" at level "+lvl+" of "+nameUnits(fld), 'Interpreter', 'none');
+% title(myTitle+" at level "+lvl+" of "+nameUnits(fld), 'Interpreter', 'none');
+title(nameUnits(fld)+" at level "+lvl+" of "+myTitle, 'Interpreter', 'none');
 xlabel ("ilon");
 ylabel ("iLat");
 
@@ -102,7 +121,8 @@ tmp(wet_loc) = tracer(:,lvl,fld);
 
 figure(figNum)
 
-surf (tmp, 'EdgeColor', 'none', 'FaceColor', 'interp'); view(2); colorbar;
+% surf (tmp, 'EdgeColor', 'none', 'FaceColor', 'interp'); view(15,55); colorbar;
+surf (tmp, 'EdgeColor', 'none', 'FaceColor', 'interp'); view(-20,27); colorbar;
 
 % Title and labels...
 
@@ -110,7 +130,8 @@ name  = tracer_names(0);
 units = tracer_units(0);
 nameUnits = strcat(name," ",units);
 
-title(myTitle+" at level "+lvl+" of "+nameUnits(fld), 'Interpreter', 'none');
+% title(myTitle+" at level "+lvl+" of "+nameUnits(fld), 'Interpreter', 'none');
+title(nameUnits(fld)+" at level "+lvl+" of "+myTitle, 'Interpreter', 'none');
 xlabel ("ilon");
 ylabel ("iLat");
 
