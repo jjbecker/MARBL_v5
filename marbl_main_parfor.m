@@ -84,7 +84,7 @@ for outerLoop_idx = 1:numOuterLoops
     tmpInputFile = strcat(myDataDir(), 'outerLoop_4.mat');
 %     tmpInputFile = strcat(myDataDir(), 'tmp/outerLoop_1_tmp.mat');    % restart from outerLoop_1_tmp
 %     tmpInputFile = strcat(myDataDir(), 'xouterLoop_1_tmp.mat');    % restart from outerLoop_1_tmp
-%     tmpInputFile = strcat(myDataDir(), 'passive_restart_init.mat');
+    tmpInputFile = strcat(myDataDir(), 'passive_restart_init.mat');
 %     tmpInputFile = sprintf('%s/%s_%d.mat', myDataDir(), 'outerLoop', outerLoop_idx-1);
 
     % outer loop #2 or greater?
@@ -158,8 +158,12 @@ sim.num_forward_iters = 15;  % years of all tracer relax; aka num of bgc = phi(b
 
     %%%
     [sim, bgc, MTM] = loadRestartFile(sim);
-    min(packMarbl( bgc.tracer, sim.domain.iwet_JJ ))
-    min(bgc.tracer(:))                          
+    fprintf('%s.m: "outer loop" %d: tracer min    ', mfilename, outerLoop_idx); fprintf(' %f', min(packMarbl( bgc.tracer, sim.domain.iwet_JJ ))); fprintf('\n');
+    fprintf('%s.m: "outer loop" %d: tracer max    ', mfilename, outerLoop_idx); fprintf(' %f', max(packMarbl( bgc.tracer, sim.domain.iwet_JJ ))); fprintf('\n');
+    fprintf('%s.m: "outer loop" %d: tracer med    ', mfilename, outerLoop_idx); fprintf(' %f', median(packMarbl( bgc.tracer, sim.domain.iwet_JJ ))); fprintf('\n');
+    fprintf('%s.m: "outer loop" %d: tracer med/min ', mfilename, outerLoop_idx); fprintf(' %f', min(packMarbl( bgc.tracer, sim.domain.iwet_JJ )) ./median(packMarbl( bgc.tracer, sim.domain.iwet_JJ ))); fprintf('\n');
+%     min(packMarbl( bgc.tracer, sim.domain.iwet_JJ ))
+%     min(bgc.tracer(:))                          
 %     bgc.tracer = max(-sqrt(eps), bgc.tracer);    % force nonnegative
 
     sim
