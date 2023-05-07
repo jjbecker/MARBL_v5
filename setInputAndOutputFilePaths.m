@@ -111,7 +111,7 @@ if  length(args) >= 2    % Input restart file INCLUDING PATH
         sim.inputRestartFile = args{2};
         % FIXME: what is start_yr? it's not in saved file, but it is in fname
         %         start_yr = 260;
-        start_yr = 777;
+        start_yr = 771;
         sim.start_yr = start_yr;
         fprintf('%s.m: FIXME Output solution files will be given an arbitrary year of %d\n', mfilename, sim.start_yr);
     else

@@ -1,14 +1,26 @@
 % %%
 % 
-% file_a = '/Users/jj/Desktop/relax/restart_790_relax.mat';
+% file_a = '/Users/jj/Desktop/relax/restart_777_relax.mat';
 % file_b = '/Users/jj/Desktop/relax/restart_791_relax.mat';
 % 
 % tracer_a = load(file_a, '-mat').tracer;
 % tracer_b = load(file_b, '-mat').tracer;
-% 
 % sim      = load(file_a, '-mat').sim;
-% M3d      = sim.domain.M3d;
 % 
+% sim      = load('/Users/jj/Desktop/relax/restart_777_relax.mat', '-mat').sim;
+% 
+% M3d      = sim.domain.M3d;
+% [~, sim.domain.wet_loc, sim.domain.iwet_FP, ~, sim.domain.bottom_lvl, ~] = createIwetEtc(sim.domain.M3d);
+% 
+% tracer_777 = load('/Users/jj/Desktop/relax/restart_777_relax.mat', '-mat').tracer;
+% tracer_778 = load('/Users/jj/Desktop/relax/restart_778_relax.mat', '-mat').tracer;
+% tracer_779 = load('/Users/jj/Desktop/relax/restart_779_relax.mat', '-mat').tracer;
+% tracer_781 = load('/Users/jj/Desktop/relax/restart_781_relax.mat', '-mat').tracer;
+% tracer_791 = load('/Users/jj/Desktop/relax/restart_791_relax.mat', '-mat').tracer;
+% 
+% coordTransform_fp2xyz(1277, sim, 999); title('Time Series "Peek" Localtion')
+
+
 % % tracer_names(0)
 % fld  = 5;   % Fe
 % lvl  = 1;
@@ -56,21 +68,21 @@ function [] = myDebugPlots(tracer_a, tracer_b, lvl, fld, M3d)
 
 %% Contour plot of Tracer A
 
-myContourPlot(tracer_a, lvl, fld, M3d, 201, "Tracer A");
+myContourPlot(tracer_a, lvl, fld, M3d, 301, "Tracer A");
 
 %% Contour plot of Tracer B
 
-myContourPlot(tracer_b, lvl, fld, M3d, 202, "Tracer B");
-% mySurfacePlot(tracer_b, lvl, fld, M3d, 202, "Interpolated 'surf plot' Tracer B");
+myContourPlot(tracer_b, lvl, fld, M3d, 302, "Tracer B");
+% mySurfacePlot(tracer_b, lvl, fld, M3d, 302, "Interpolated 'surf plot' Tracer B");
 
 %% Contour plot of Tracer B - Tracer A
 
-myContourPlot(tracer_b -tracer_a, lvl, fld, M3d, 203, "(Tracer B - Tracer A)");
+myContourPlot(tracer_b -tracer_a, lvl, fld, M3d, 303, "(Tracer B - Tracer A)");
 
 %% Make a cool 3D surf plot of Tracer A - Tracer B we can spin around...
 
-mySurfacePlot(tracer_b -tracer_a, lvl, fld, M3d, 204, "Interpolated (Tracer B - Tracer A)");
-% mySurfacePlot(tracer_b , lvl, fld, M3d, 204, "3D Surface Tracer B-A");
+% mySurfacePlot(tracer_b -tracer_a, lvl, fld, M3d, 304, "Interpolated (Tracer B - Tracer A)");
+% mySurfacePlot(tracer_b , lvl, fld, M3d, 304, "3D Surface Tracer B-A");
 
 end % myDebugPlots
 

@@ -100,14 +100,14 @@ while current_month < total_months
         %%%
 
         % save "x0" or initial state file...
-        myRestartFile = sprintf('%s/%s_restart_x0.mat', sim.outputRestartDir,tendStr);
-        saveRestartFiles(sim, bgc_0.tracer, myRestartFile);
+%         myRestartFile = sprintf('%s/%s_restart_x0.mat', sim.outputRestartDir,tendStr);
+%         saveRestartFiles(sim, bgc_0.tracer, myRestartFile);
 
         % save "x1" or final state file...
-%         myRestartFile = sprintf('%s/%s_restart_x1.mat', sim.outputRestartDir,tendStr);
-%         saveRestartFiles(sim, bgc.tracer, myRestartFile);
-        restartFileName_current_yr = sprintf('%s/restart_%d_relax.mat', sim.outputRestartDir, round(current_yr))
-        saveRestartFiles(sim, bgc.tracer, restartFileName_current_yr);
+        myRestartFile = sprintf('%s/%s_restart_x1.mat', sim.outputRestartDir,tendStr);
+        saveRestartFiles(sim, bgc.tracer, myRestartFile);
+%         restartFileName_current_yr = sprintf('%s/restart_%d_relax.mat', sim.outputRestartDir, round(current_yr))
+%         saveRestartFiles(sim, bgc.tracer, restartFileName_current_yr);
 
         %%%
 

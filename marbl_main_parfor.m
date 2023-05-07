@@ -111,13 +111,13 @@ for outerLoop_idx = 1:numOuterLoops
     %%%
     % Setup big picture parts of NK solution in marbl_solve():
     % relative tolerance; as fraction of f(x0)..
-sim.rtol     = 1e-3;        % marbl_solve(): stop if norm(G(x),2) < rtol * G(x0)
-sim.maxfeval = 1;           % DEBUG ONLY
+sim.rtol     = 1e-1;        % marbl_solve(): stop if norm(G(x),2) < rtol * G(x0)
+% sim.maxfeval = 1;           % DEBUG ONLY
 % sim.maxfeval = 3;           % marbl_solve(): max number of function evaluation
-% sim.maxfeval = 8;           % marbl_solve(): max number of function evaluation
-sim.num_forward_iters = 1;  % DEBUG ONLY
-% sim.num_forward_iters = 5;  % years of all tracer relax; aka num of bgc = phi(bgc) loops after marbl_solve.
-sim.num_forward_iters = 15;  % years of all tracer relax; aka num of bgc = phi(bgc) loops after marbl_solve.
+sim.maxfeval = 6;           % marbl_solve(): max number of function evaluation
+% sim.num_forward_iters = 1;  % DEBUG ONLY
+sim.num_forward_iters = 4;  % years of all tracer relax; aka num of bgc = phi(bgc) loops after marbl_solve.
+% sim.num_forward_iters = 15;  % years of all tracer relax; aka num of bgc = phi(bgc) loops after marbl_solve.
 
     %%%
     % Set some reasonable limit...
@@ -161,7 +161,7 @@ sim.num_forward_iters = 15;  % years of all tracer relax; aka num of bgc = phi(b
     fprintf('%s.m: "outer loop" %d: tracer min    ', mfilename, outerLoop_idx); fprintf(' %f', min(packMarbl( bgc.tracer, sim.domain.iwet_JJ ))); fprintf('\n');
     fprintf('%s.m: "outer loop" %d: tracer max    ', mfilename, outerLoop_idx); fprintf(' %f', max(packMarbl( bgc.tracer, sim.domain.iwet_JJ ))); fprintf('\n');
     fprintf('%s.m: "outer loop" %d: tracer med    ', mfilename, outerLoop_idx); fprintf(' %f', median(packMarbl( bgc.tracer, sim.domain.iwet_JJ ))); fprintf('\n');
-    fprintf('%s.m: "outer loop" %d: tracer med/min ', mfilename, outerLoop_idx); fprintf(' %f', min(packMarbl( bgc.tracer, sim.domain.iwet_JJ )) ./median(packMarbl( bgc.tracer, sim.domain.iwet_JJ ))); fprintf('\n');
+    fprintf('%s.m: "outer loop" %d: tracer min/med ', mfilename, outerLoop_idx); fprintf(' %f', min(packMarbl( bgc.tracer, sim.domain.iwet_JJ )) ./median(packMarbl( bgc.tracer, sim.domain.iwet_JJ ))); fprintf('\n');
 %     min(packMarbl( bgc.tracer, sim.domain.iwet_JJ ))
 %     min(bgc.tracer(:))                          
 %     bgc.tracer = max(-sqrt(eps), bgc.tracer);    % force nonnegative
