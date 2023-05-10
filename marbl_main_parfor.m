@@ -41,8 +41,8 @@ tmpTracer_loop  = tName(1:17);
 % diazFe might diverge if not single tracer solved
 % tmpTracer_loop  = {'Fe' 'DIC'}
 % tmpTracer_loop  = {'DOPr','DOCr', 'DONr'};
-% tmpTracer_loop  = {'O2' 'DOC' 'DON' 'DOP' 'DOPr' 'DONr' 'DOCr'};
-tmpTracer_loop  = {'DOPr'};
+tmpTracer_loop  = {'O2' 'DOC' 'DON' 'DOP' 'DOPr' 'DONr' 'DOCr'};
+% tmpTracer_loop  = {'DOPr'};
 
 % ignore "DIC_ALT" and "ALK_ALT"
 tmpTracer_loop(ismember(tmpTracer_loop,{'DIC_ALT_CO2' 'ALK_ALT_CO2'}) >0) = [];
@@ -80,12 +80,10 @@ for outerLoop_idx = 1:numOuterLoops
     % FIXME: Matlab can NOT use chmod a+w "locked" attribute set in the Finder. Have to make a writtable copy of inputRestartFile 
     % assume for simplicity it is (probably) first pass...
 %     tmpInputFile = strcat(myDataDir(), 'restart_260_integrate_from_0.mat');
-    % tmpInputFile = strcat(myDataDir(), 'restart_0_1_output/restart_260_integrate_from_0_DOP_DOC.mat');
-    tmpInputFile = strcat(myDataDir(), 'outerLoop_4.mat');
-%     tmpInputFile = strcat(myDataDir(), 'tmp/outerLoop_1_tmp.mat');    % restart from outerLoop_1_tmp
-%     tmpInputFile = strcat(myDataDir(), 'xouterLoop_1_tmp.mat');    % restart from outerLoop_1_tmp
-    tmpInputFile = strcat(myDataDir(), 'passive_restart_init.mat');
+%     tmpInputFile = strcat(myDataDir(), 'restart_0_1_output/restart_260_integrate_from_0_DOP_DOC.mat');
+%     tmpInputFile = strcat(myDataDir(), 'outerLoop_4.mat');
 %     tmpInputFile = sprintf('%s/%s_%d.mat', myDataDir(), 'outerLoop', outerLoop_idx-1);
+    tmpInputFile = strcat(myDataDir(), 'passive_restart_init.mat');
 
     % outer loop #2 or greater?
     if exist('newRestartFileName','var')
@@ -100,9 +98,6 @@ for outerLoop_idx = 1:numOuterLoops
         keyboard
     end
 
-    % sim = setInputAndOutputFilePaths({tmpTracer_loop, tmpInputFile, tmpTime_step_hr});    % Order of args IMPORTANT !!!
-    % sim = setInputAndOutputFilePaths({{'DOP' 'DOC'}, tmpInputFile, 12});                  % Order of args IMPORTANT !!!
-    % sim = setInputAndOutputFilePaths({{'DOP' 'DOC'}, tmpInputFile, 12, 0, 1, 0});         % Order of args IMPORTANT !!!
     sim = setInputAndOutputFilePaths({tmpTracer_loop, tmpInputFile, tmpTime_step_hr, ...
         tmpRecalculate_PQ_inv, tmpDebug_disable_phi, tmpLogTracer });                       % Order of args IMPORTANT !!!
 
@@ -111,13 +106,22 @@ for outerLoop_idx = 1:numOuterLoops
     %%%
     % Setup big picture parts of NK solution in marbl_solve():
     % relative tolerance; as fraction of f(x0)..
-sim.rtol     = 1e-1;        % marbl_solve(): stop if norm(G(x),2) < rtol * G(x0)
-% sim.maxfeval = 1;           % DEBUG ONLY
-% sim.maxfeval = 3;           % marbl_solve(): max number of function evaluation
-sim.maxfeval = 6;           % marbl_solve(): max number of function evaluation
-% sim.num_forward_iters = 1;  % DEBUG ONLY
-sim.num_forward_iters = 4;  % years of all tracer relax; aka num of bgc = phi(bgc) loops after marbl_solve.
-% sim.num_forward_iters = 15;  % years of all tracer relax; aka num of bgc = phi(bgc) loops after marbl_solve.
+
+    % sim.rtol     = 1e-1;        % marbl_solve(): stop if norm(G(x),2) < rtol * G(x0)
+    scaleFactor = 0.95;
+    sim.rtol = exp(-scaleFactor/outerLoop_idx) / exp(-scaleFactor/numOuterLoops);
+
+    sim.maxfeval = 2 +outerLoop_idx;
+    % sim.maxfeval = 1;           % DEBUG ONLY
+    % sim.maxfeval = 3;           % marbl_solve(): max number of function evaluation
+    % sim.num_forward_iters = 1;  % DEBUG ONLY
+
+    sim.num_forward_iters = 4;  % years of all tracer relax; aka num of bgc = phi(bgc) loops after marbl_solve.
+    % sim.num_forward_iters = 15; % years of all tracer relax; aka num of bgc = phi(bgc) loops after marbl_solve.
+    
+    fprintf('%s.m: sim.rtol = %.4f   \n', mfilename, sim.rtol);
+    fprintf('%s.m: sim.maxfeval = %d \n', mfilename, sim.maxfeval);
+    fprintf('%s.m: sim.num_forward_iters = %d \n', mfilename, sim.num_forward_iters);
 
     %%%
     % Set some reasonable limit...
