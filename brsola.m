@@ -171,9 +171,9 @@ while(itc < maxit && num_calls_f < maxfeval)
         ierr=2;
         it_hist=it_histx(1:itc+1,:)
         sol=xold;
-        if nargout == 4
-            x_hist=[x_hist,x];
-        end
+%         if nargout == 4
+%             x_hist=[x_hist,x];
+%         end
         fprintf('%s.m: outstat for tracer idx %d (%s) \n',mfilename, tracerIdx, tracerStr)
         disp(outstat); return;
     end
