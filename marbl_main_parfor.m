@@ -111,7 +111,10 @@ for outerLoop_idx = 1:numOuterLoops
     scaleFactor = 0.95;
     sim.rtol = exp(-scaleFactor/outerLoop_idx) / exp(-scaleFactor/numOuterLoops);
 
-    sim.maxfeval = 2 +outerLoop_idx;
+    % need 1 plus a multiple of 3 to allow for a "Three-point parabolic
+    % line search", or we basically waste 1 or 2 simulated years in line
+    % search that can't possibly finish
+    sim.maxfeval = 3 +outerLoop_idx; 
     % sim.maxfeval = 1;           % DEBUG ONLY
     % sim.maxfeval = 3;           % marbl_solve(): max number of function evaluation
 
