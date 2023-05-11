@@ -120,8 +120,9 @@ fprintf('%s.m: (%s) ###### fnrm = %g\n', mfilename, tracerStr, fnrm)
 % hard to understand...
 
 if ierr >1
-    fprintf('%s.m: (%s) ###### ierr = %d\n', mfilename, tracerStr, ierr);
+    fprintf('%s.m: (%s) ###### ierr = %d replacing sol with x0_hist(:,end-1)\n', mfilename, tracerStr, ierr);
 %     keyboard
+    sol = x0_hist(:,end-1);
 end
 
 tmpStr=sprintf('%g ', vecnorm(x0_hist));
