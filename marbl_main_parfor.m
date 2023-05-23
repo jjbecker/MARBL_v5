@@ -42,6 +42,7 @@ tmpTracer_loop  = tName(1:17);
 % tmpTracer_loop  = {'Fe' 'DIC'}
 % tmpTracer_loop  = {'DOPr','DOCr', 'DONr'};
 tmpTracer_loop  = {'O2' 'DOC' 'DON' 'DOP' 'DOPr' 'DONr' 'DOCr'};
+tmpTracer_loop  = {'O2' 'DOC' 'DON' 'DOP' 'NH4'  'NO3'  'Fe'  };
 % tmpTracer_loop  = {'DOPr'};
 
 % ignore "DIC_ALT" and "ALK_ALT"
@@ -51,7 +52,8 @@ tmpTracer_loop(ismember(tmpTracer_loop,{'DIC_ALT_CO2' 'ALK_ALT_CO2'}) >0) = [];
 % "" NH4 DIC ALK DOP spChl diatChl diazChl
 % except DOP might sove (DON and DOC do) once the autotropes are close.
 % tmpTracer_loop(ismember(tmpTracer_loop,{'NH4' 'Fe' 'DIC' 'ALK' 'DOP' 'spChl' 'diatChl' 'diazChl' 'spC' 'diatC' }) >0) = [];
-tmpTracer_loop(ismember(tmpTracer_loop,{  'NH4' 'Fe' 'DIC' 'ALK'       'spChl' 'diatChl' 'diazChl' }) >0) = [];
+% tmpTracer_loop(ismember(tmpTracer_loop,{  'NH4' 'Fe' 'DIC' 'ALK'       'spChl' 'diatChl' 'diazChl' }) >0) = [];
+tmpTracer_loop(ismember(tmpTracer_loop,{             'DIC' 'ALK'       'spChl' 'diatChl' 'diazChl' }) >0) = [];
 
 % Shuffle tracers: TRY to avoid blocking by slower tracers in parfor loop.
 % tmpTracer_loop = tmpTracer_loop ( randperm ( length ( tmpTracer_loop )))
@@ -84,6 +86,7 @@ for outerLoop_idx = 1:numOuterLoops
 %     tmpInputFile = strcat(myDataDir(), 'outerLoop_4.mat');
 %     tmpInputFile = sprintf('%s/%s_%d.mat', myDataDir(), 'outerLoop', outerLoop_idx-1);
     tmpInputFile = strcat(myDataDir(), 'passive_restart_init.mat');
+    tmpInputFile = strcat(myDataDir(), 'passive_Restart_3h_O2_DOx_DOXr_outerLoop_10.mat');
 
     % outer loop #2 or greater?
     if exist('newRestartFileName','var')
