@@ -14,6 +14,7 @@ tracerNorm  (:, tracerRange) = tmp_fnrm (:, parforIdxRange);
 % tmp_c_sol          (:, tracerRange) = tmp_xsol (:, parforIdxRange);
 
 ierrLimit = 1;
+ierrLimit = 2;
 
 bad_par_idx = parforIdxRange( tmp_ierr >  ierrLimit )
 badTracers  = sim.tracer_loop_idx ( bad_par_idx )

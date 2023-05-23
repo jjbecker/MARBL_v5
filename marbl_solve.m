@@ -122,6 +122,9 @@ fprintf('%s.m: (%s) ###### fnrm = %g\n', mfilename, tracerStr, fnrm)
 if ierr >1
     fprintf('%s.m: (%s) ###### ierr = %d replacing sol with x0_hist(:,end-1)\n', mfilename, tracerStr, ierr);
 %     keyboard
+    norm(sol)
+    norm(x0_hist( :,end  ))
+    norm(x0_hist( :,end-1))
     sol = x0_hist(:,end-1);
 end
 
