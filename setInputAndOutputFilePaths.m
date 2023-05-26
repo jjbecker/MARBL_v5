@@ -24,7 +24,7 @@ tName = tracer_names(0);    % no CISO tracers
 % disabledPreconditoners = { 'DIC' 'ALK' 'diatC' 'spChl' 'diatChl' 'diazChl'};
 disabledPreconditoners = { 'DIC' 'ALK'         'spChl' 'diatChl' 'diazChl'};
 % FIXME; Fe might not precondition correctly
-disabledPreconditoners(end+1) = {'Fe'};
+% disabledPreconditoners(end+1) = {'Fe'};
 
 disabledPreconditoners = unique( disabledPreconditoners);
 sim.disabledPreconditoners = disabledPreconditoners;

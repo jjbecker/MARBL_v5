@@ -126,6 +126,8 @@ if ierr >1
     norm(x0_hist( :,end  ))
     norm(x0_hist( :,end-1))
     sol = x0_hist(:,end-1);
+    [myMin, myIdx] = min(it_hist(:,1));
+    sol = x0_hist(:,myIdx);
 end
 
 tmpStr=sprintf('%g ', vecnorm(x0_hist));
